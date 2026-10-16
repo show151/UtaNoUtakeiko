@@ -5,6 +5,10 @@ using UnityEngine;
 public class NoteProgression : MonoBehaviour
 {
     [SerializeField] private JudgmentSystem judgmentSystem;
+    [SerializeField] private NoteDisplay noteDisplay;
+    [SerializeField] private JudgmentUI judgmentUI;
+
+
     [SerializeField]
     private float[] notePositions =
     {
@@ -17,35 +21,35 @@ public class NoteProgression : MonoBehaviour
 
     private void OnEnable()
     {
-        judgmentSystem.OnJudged += HandleJudgment;
+        if (judgmentSystem != null)
+            judgmentSystem.OnJudged += HandleJudgment;
     }
 
     private void OnDisable()
     {
-        judgmentSystem.OnJudged -= HandleJudgment;
+        if (judgmentSystem != null)
+            judgmentSystem.OnJudged -= HandleJudgment;
     }
-
 
     private void Start()
     {
         if (notePositions == null || notePositions.Length == 0)
         {
             Debug.LogError("譜面データが設定されていません。");
+            enabled = false;
             return;
         }
 
+        noteDisplay.Initialize(notePositions);
+
         currentNoteIndex = 0;
-
-        float firstTarget = Mathf.Clamp01(notePositions[0]);
-
-        judgmentSystem.ResetJudgment(firstTarget);
+        judgmentSystem.ResetJudgment(notePositions[0]);
 
         Debug.Log(
             $"Note 1/{notePositions.Length}, " +
-            $"Target: {firstTarget:F2}"
+            $"Target: {notePositions[0]:F2}"
         );
     }
-
 
     private void HandleJudgment(string result)
     {
@@ -56,13 +60,23 @@ public class NoteProgression : MonoBehaviour
     {
         yield return new WaitForSeconds(delayAfterJudgment);
 
-        currentNoteIndex++;
+        int nextIndex = currentNoteIndex + 1;
 
-        if (currentNoteIndex >= notePositions.Length)
+        if (nextIndex >= notePositions.Length)
         {
             Debug.Log("Game Finished!");
             yield break;
         }
+
+        yield return StartCoroutine(
+            noteDisplay.ScrollToNote(nextIndex)
+        );
+
+        currentNoteIndex = nextIndex;
+
+
+        judgmentUI.ClearJudgment();
+
 
         judgmentSystem.ResetJudgment(
             notePositions[currentNoteIndex]
