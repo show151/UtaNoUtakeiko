@@ -1,9 +1,13 @@
 
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System;
 
 public class JudgmentSystem : MonoBehaviour
 {
+
+    public event Action<string> OnJudged;
+
     [SerializeField] private MovingBar movingBar;
 
     [Range(0f, 1f)]
@@ -49,6 +53,9 @@ public class JudgmentSystem : MonoBehaviour
             $"Difference: {difference:F3}, " +
             $"Judgment: {result}"
         );
+
+        OnJudged?.Invoke(result);
+
     }
 
     public void ResetJudgment(float nextTargetPosition)
