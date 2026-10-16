@@ -8,11 +8,16 @@ public class MovingBar : MonoBehaviour
     [SerializeField] private float speed = 3f;
 
     private int direction = 1;
+    private bool isMoving = true;
+
+    public float NormalizedPosition =>
+        Mathf.InverseLerp(minY, maxY, transform.position.y);
 
     private void Update()
     {
-        Vector3 position = transform.position;
+        if (!isMoving) return;
 
+        Vector3 position = transform.position;
         position.y += direction * speed * Time.deltaTime;
 
         if (position.y >= maxY)
@@ -27,5 +32,15 @@ public class MovingBar : MonoBehaviour
         }
 
         transform.position = position;
+    }
+
+    public void StopMovement()
+    {
+        isMoving = false;
+    }
+
+    public void ResumeMovement()
+    {
+        isMoving = true;
     }
 }
