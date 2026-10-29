@@ -246,6 +246,124 @@ Transform:
   - {fileID: 179338129}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &860801487
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 860801489}
+  - component: {fileID: 860801488}
+  - component: {fileID: 860801490}
+  - component: {fileID: 860801491}
+  - component: {fileID: 860801492}
+  - component: {fileID: 860801493}
+  - component: {fileID: 860801494}
+  m_Layer: 0
+  m_Name: GameSessionManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &860801488
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860801487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95bf8293f86796c459c9866058a35151, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Uta.GameFlow.GameSessionManager
+--- !u!4 &860801489
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860801487}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.54733, y: 0.01851, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &860801490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860801487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25a13a191a3f1144f89665f9b10e0e9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Uta.GameFlow.GameSessionDebugController
+  sessionManager: {fileID: 860801488}
+  testSessionAdapter: {fileID: 860801491}
+--- !u!114 &860801491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860801487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b64baee16235bc4f8500a121a091bcf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Uta.GameFlow.TestSessionAdapter
+--- !u!114 &860801492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860801487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f43fd4238caf72643965057e3331dcfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Uta.GameFlow.GameSessionPlayConnector
+  sessionManager: {fileID: 860801488}
+  testSessionAdapter: {fileID: 860801491}
+  noteProgression: {fileID: 1438848604}
+--- !u!114 &860801493
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860801487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fead251370d004468d67f6cb83ce6a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Uta.GameFlow.GameSessionTimeout
+  sessionManager: {fileID: 860801488}
+  testTimeLimit: 60
+--- !u!114 &860801494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860801487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdb999ea542b0444d86650e0b5e86eab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Uta.GameFlow.GameSessionPlaybackConnector
+  sessionManager: {fileID: 860801488}
+  testPlaybackDuration: 3
 --- !u!1 &916216552
 GameObject:
   m_ObjectHideFlags: 0
@@ -1441,3 +1559,4 @@ SceneRoots:
   - {fileID: 999438129}
   - {fileID: 1472160053}
   - {fileID: 2001149492}
+  - {fileID: 860801489}
