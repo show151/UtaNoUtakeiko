@@ -1,13 +1,15 @@
 
+using System;
 using System.Collections;
 using UnityEngine;
 
 public class NoteProgression : MonoBehaviour
 {
+    public event Action OnCompleted;
+
     [SerializeField] private JudgmentSystem judgmentSystem;
     [SerializeField] private NoteDisplay noteDisplay;
     [SerializeField] private JudgmentUI judgmentUI;
-
 
     [SerializeField]
     private float[] notePositions =
@@ -17,7 +19,9 @@ public class NoteProgression : MonoBehaviour
 
     [SerializeField] private float delayAfterJudgment = 1f;
 
-    private int currentNoteIndex = 0;
+    private int currentNoteIndex;
+    private bool isPlaying;
+    private bool isAdvancing;
 
     private void OnEnable()
     {
@@ -29,30 +33,48 @@ public class NoteProgression : MonoBehaviour
     {
         if (judgmentSystem != null)
             judgmentSystem.OnJudged -= HandleJudgment;
+
+        StopPlayback();
     }
 
-    private void Start()
+    public void StartPlay(float[] positions)
     {
-        if (notePositions == null || notePositions.Length == 0)
+        if (positions == null || positions.Length == 0)
         {
-            Debug.LogError("譜面データが設定されていません。");
-            enabled = false;
+            Debug.LogError("譜面データが空です。");
             return;
         }
 
-        noteDisplay.Initialize(notePositions);
+        StopPlayback();
 
+        notePositions = (float[])positions.Clone();
         currentNoteIndex = 0;
+        isPlaying = true;
+        judgmentSystem.enabled = true;
+
+        noteDisplay.Initialize(notePositions);
+        judgmentUI.ClearJudgment();
         judgmentSystem.ResetJudgment(notePositions[0]);
 
-        Debug.Log(
-            $"Note 1/{notePositions.Length}, " +
-            $"Target: {notePositions[0]:F2}"
-        );
+        Debug.Log($"Note 1/{notePositions.Length}");
+    }
+
+    public void StopPlayback()
+    {
+        isPlaying = false;
+        isAdvancing = false;
+        StopAllCoroutines();
+
+        if (judgmentSystem != null)
+            judgmentSystem.enabled = false;
     }
 
     private void HandleJudgment(string result)
     {
+        if (!isPlaying || isAdvancing)
+            return;
+
+        isAdvancing = true;
         StartCoroutine(AdvanceAfterDelay());
     }
 
@@ -64,27 +86,20 @@ public class NoteProgression : MonoBehaviour
 
         if (nextIndex >= notePositions.Length)
         {
-            Debug.Log("Game Finished!");
+            StopPlayback();
+            Debug.Log("Note input completed!");
+            OnCompleted?.Invoke();
             yield break;
         }
 
-        yield return StartCoroutine(
-            noteDisplay.ScrollToNote(nextIndex)
-        );
+        yield return noteDisplay.ScrollToNote(nextIndex);
+
+        if (!isPlaying)
+            yield break;
 
         currentNoteIndex = nextIndex;
-
-
         judgmentUI.ClearJudgment();
-
-
-        judgmentSystem.ResetJudgment(
-            notePositions[currentNoteIndex]
-        );
-
-        Debug.Log(
-            $"Note {currentNoteIndex + 1}/{notePositions.Length}, " +
-            $"Target: {notePositions[currentNoteIndex]:F2}"
-        );
+        judgmentSystem.ResetJudgment(notePositions[currentNoteIndex]);
+        isAdvancing = false;
     }
 }
