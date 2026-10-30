@@ -19,6 +19,12 @@ namespace UtaNoUtakeiko.Gameplay
         private readonly Dictionary<string, int?> capturedPitchSteps =
             new Dictionary<string, int?>();
 
+        private readonly Dictionary<string, HoldJudgmentType> holdJudgments =
+            new Dictionary<string, HoldJudgmentType>();
+
+        private readonly HashSet<string> holdNoteIds =
+            new HashSet<string>();
+
         private bool isFinalized;
 
         public int TotalNotes => allowedNoteIds.Count;
@@ -46,6 +52,11 @@ namespace UtaNoUtakeiko.Gameplay
                 }
 
                 orderedNoteIds.Add(note.NoteId);
+
+                if (note.IsHold)
+                {
+                    holdNoteIds.Add(note.NoteId);
+                }
             }
         }
 
@@ -73,6 +84,25 @@ namespace UtaNoUtakeiko.Gameplay
             return true;
         }
 
+        public bool TryJudgeHold(
+            string noteId,
+            HoldJudgmentType holdJudgment)
+        {
+            if (isFinalized ||
+                string.IsNullOrWhiteSpace(noteId) ||
+                !holdNoteIds.Contains(noteId) ||
+                !results.ContainsKey(noteId) ||
+                holdJudgments.ContainsKey(noteId) ||
+                !Enum.IsDefined(
+                    typeof(HoldJudgmentType), holdJudgment))
+            {
+                return false;
+            }
+
+            holdJudgments.Add(noteId, holdJudgment);
+            return true;
+        }
+
         public void FinalizeSession()
         {
             if (isFinalized)
@@ -95,6 +125,15 @@ namespace UtaNoUtakeiko.Gameplay
                 }
             }
 
+            foreach (string noteId in holdNoteIds)
+            {
+                if (!holdJudgments.ContainsKey(noteId))
+                {
+                    throw new InvalidOperationException(
+                        $"長押し判定が未登録です: {noteId}");
+                }
+            }
+
             isFinalized = true;
         }
 
@@ -104,6 +143,18 @@ namespace UtaNoUtakeiko.Gameplay
             {
                 throw new InvalidOperationException(
                     "すでに確定済みのセッションです。");
+            }
+
+            // 通常判定済みで保持判定が未登録の音符は、
+            // 保持判定だけMissとして確定する
+            foreach (string noteId in holdNoteIds)
+            {
+                if (results.ContainsKey(noteId) &&
+                    !holdJudgments.ContainsKey(noteId))
+                {
+                    holdJudgments.Add(
+                        noteId, HoldJudgmentType.Miss);
+                }
             }
 
             isFinalized = true;
@@ -140,7 +191,12 @@ namespace UtaNoUtakeiko.Gameplay
                         InputState = InputState.Completed,
                         CapturedPitchStep = hasPitch ? pitch : null,
                         Judgment = noteResult.Judgment,
-                        BaseScore = 0
+                        BaseScore = 0,
+                        HoldJudgment = holdJudgments.TryGetValue(
+                            noteId, out var holdJudgment)
+                                ? holdJudgment
+                                : (HoldJudgmentType?)null,
+                        HoldScore = 0
                     });
                 }
                 else
