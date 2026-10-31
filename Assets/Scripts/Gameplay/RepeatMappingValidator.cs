@@ -14,7 +14,7 @@ namespace UtaNoUtakeiko.Gameplay
 
             if (mappings == null)
             {
-                error = "RepeatMappingˆê——‚ªnull‚Å‚·B";
+                error = "RepeatMappingä¸€è¦§ãŒnullã§ã™ã€‚";
                 return false;
             }
 
@@ -25,7 +25,7 @@ namespace UtaNoUtakeiko.Gameplay
             {
                 if (mapping == null)
                 {
-                    error = "null‚ÌRepeatMapping‚ª‚ ‚è‚Ü‚·B";
+                    error = "nullã®RepeatMappingãŒã‚ã‚Šã¾ã™ã€‚";
                     return false;
                 }
 
@@ -38,13 +38,13 @@ namespace UtaNoUtakeiko.Gameplay
                     string.IsNullOrWhiteSpace(mapping.SourceSectionId) ||
                     string.IsNullOrWhiteSpace(mapping.TargetSectionId))
                 {
-                    error = $"•K{ID‚ª•s³‚Å‚·: {context}";
+                    error = $"å¿…é ˆIDãŒä¸æ­£ã§ã™: {context}";
                     return false;
                 }
 
                 if (mapping.SourceSectionId == mapping.TargetSectionId)
                 {
-                    error = $"©ŒÈQÆ‚Í‹Ö~‚Å‚·: {context}";
+                    error = $"è‡ªå·±å‚ç…§ã¯ç¦æ­¢ã§ã™: {context}";
                     return false;
                 }
 
@@ -53,24 +53,24 @@ namespace UtaNoUtakeiko.Gameplay
                     mapping.SourceEndMeasure < mapping.SourceStartMeasure ||
                     mapping.TargetEndMeasure < mapping.TargetStartMeasure)
                 {
-                    error = $"¬ß”ÍˆÍ‚ª•s³‚Å‚·: {context}";
+                    error = $"å°ç¯€ç¯„å›²ãŒä¸æ­£ã§ã™: {context}";
                     return false;
                 }
 
                 if (mapping.SourceStartMeasure <= mapping.TargetEndMeasure &&
                     mapping.TargetStartMeasure <= mapping.SourceEndMeasure)
                 {
-                    error = $"Œ³‹æŠÔ‚ÆŒJ‚è•Ô‚µæ‚ªd•¡‚µ‚Ä‚¢‚Ü‚·: {context}";
+                    error = $"å…ƒåŒºé–“ã¨ç¹°ã‚Šè¿”ã—å…ˆãŒé‡è¤‡ã—ã¦ã„ã¾ã™: {context}";
                     return false;
                 }
 
-                // Šy‹È•Ê‚ÉŒJ‚è•Ô‚µæ‚ğŠÇ—
+                // æ¥½æ›²åˆ¥ã«ç¹°ã‚Šè¿”ã—å…ˆã‚’ç®¡ç†
                 string targetKey =
                     mapping.SongId + ":" + mapping.TargetSectionId;
 
                 if (!targetIds.Add(targetKey))
                 {
-                    error = $"ŒJ‚è•Ô‚µæ‚ªd•¡‚µ‚Ä‚¢‚Ü‚·: {context}";
+                    error = $"ç¹°ã‚Šè¿”ã—å…ˆãŒé‡è¤‡ã—ã¦ã„ã¾ã™: {context}";
                     return false;
                 }
 
@@ -78,7 +78,7 @@ namespace UtaNoUtakeiko.Gameplay
                     mapping.SongId + ":" + mapping.SourceSectionId);
             }
 
-            // Œ³‹æŠÔ‚ª•ÊMapping‚ÌŒJ‚è•Ô‚µæ‚Å‚ ‚ê‚Î“ü‚êq
+            // å…ƒåŒºé–“ãŒåˆ¥Mappingã®ç¹°ã‚Šè¿”ã—å…ˆã§ã‚ã‚Œã°å…¥ã‚Œå­
             foreach (var mapping in mappings)
             {
                 string sourceKey =
@@ -87,7 +87,7 @@ namespace UtaNoUtakeiko.Gameplay
                 if (targetIds.Contains(sourceKey))
                 {
                     error =
-                        $"“ü‚êqEzŠÂQÆ‚Í‹Ö~‚Å‚·: " +
+                        $"å…¥ã‚Œå­ãƒ»å¾ªç’°å‚ç…§ã¯ç¦æ­¢ã§ã™: " +
                         $"SongId={mapping.SongId}, " +
                         $"SectionId={mapping.SourceSectionId}";
                     return false;

@@ -35,7 +35,7 @@ public class NoteProgression : MonoBehaviour
     {
         if (notePositions == null || notePositions.Length == 0)
         {
-            Debug.LogError("•ˆ–Êƒf[ƒ^‚ªİ’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñB");
+            Debug.LogError("ï¿½ï¿½ï¿½Êƒfï¿½[ï¿½^ï¿½ï¿½ï¿½İ’è‚³ï¿½ï¿½Ä‚ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½B");
             enabled = false;
             return;
         }

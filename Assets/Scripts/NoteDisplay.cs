@@ -78,7 +78,7 @@ public class NoteDisplay : MonoBehaviour
 
             transform.position = Vector3.Lerp(from, to, t);
 
-            // ”»’èÏ‚Ý‚Ì‰¹•„‚ðƒXƒNƒ[ƒ‹‚É‡‚í‚¹‚ÄƒtƒF[ƒhƒAƒEƒg
+            // ï¿½ï¿½ï¿½ï¿½Ï‚Ý‚Ì‰ï¿½ï¿½ï¿½ï¿½ï¿½Xï¿½Nï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½Éï¿½ï¿½í‚¹ï¿½Äƒtï¿½Fï¿½[ï¿½hï¿½Aï¿½Eï¿½g
             int previousIndex = noteIndex - 1;
 
             if (previousIndex >= 0 &&
@@ -96,7 +96,7 @@ public class NoteDisplay : MonoBehaviour
 
         transform.position = to;
 
-        // ƒXƒNƒ[ƒ‹Š®—¹Žž‚É”»’èÏ‚Ý‚Ì‰¹•„‚ð”ñ•\Ž¦‚É‚·‚é
+        // ï¿½Xï¿½Nï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É”ï¿½ï¿½ï¿½Ï‚Ý‚Ì‰ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½\ï¿½ï¿½ï¿½É‚ï¿½ï¿½ï¿½
         int completedIndex = noteIndex - 1;
 
         if (completedIndex >= 0 &&
