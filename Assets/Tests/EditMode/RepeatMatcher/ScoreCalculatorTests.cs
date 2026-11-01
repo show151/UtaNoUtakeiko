@@ -136,7 +136,7 @@ namespace UtaNoUtakeiko.Tests
             Assert.AreEqual(1000000, score.MaxScore);
 
             Assert.AreEqual(1, score.GreatCount);
-            Assert.AreEqual(1, score.PerfectCount);
+            Assert.AreEqual(0, score.PerfectCount);
             Assert.AreEqual(0, score.MissCount);
         }
 

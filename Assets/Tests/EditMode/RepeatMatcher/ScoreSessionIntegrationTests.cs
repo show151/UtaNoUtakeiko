@@ -185,7 +185,7 @@ namespace UtaNoUtakeiko.Tests
             Assert.AreEqual(1000000, score.MaxScore);
 
             Assert.AreEqual(1, score.GreatCount);
-            Assert.AreEqual(1, score.PerfectCount);
+            Assert.AreEqual(0, score.PerfectCount);
             Assert.AreEqual(0, score.MissCount);
 
             // Ì“_“à–ó
@@ -239,7 +239,7 @@ namespace UtaNoUtakeiko.Tests
             // 4”»’è•ª‚ÌÅ‘åd‚İ400‚Ì‚¤‚¿Great‚Ì80‚¾‚¯Šl“¾
             Assert.AreEqual(200000, score.Score);
             Assert.AreEqual(1, score.GreatCount);
-            Assert.AreEqual(1, score.MissCount);
+            Assert.AreEqual(0, score.MissCount);
 
             Assert.AreEqual(InputState.Completed,
                 score.UnitResults[0].InputState);

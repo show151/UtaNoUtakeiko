@@ -432,6 +432,7 @@ MonoBehaviour:
   songChartJson: {fileID: 4900000, guid: 955f3cbc5acf119489e671609d33b33a, type: 3}
   minPitchStep: 0
   maxPitchStep: 9
+  holdToleranceSeconds: 0.05
 --- !u!114 &860801493
 MonoBehaviour:
   m_ObjectHideFlags: 0
