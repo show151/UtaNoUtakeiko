@@ -15,6 +15,29 @@ namespace Uta.GameFlow
         private bool isTransitioning;
         private bool recoveryRequested;
 
+        // 制限時間切れをゲーム処理へ通知する
+        public event Action OnSessionTimedOut;
+
+        public void NotifySessionTimedOut()
+        {
+            if (CurrentState != GameSessionState.Playing)
+                return;
+
+            Debug.LogWarning("Session timeout detected.");
+
+            OnSessionTimedOut?.Invoke();
+
+            // 通知先がなく、Playingから進めなかった場合の安全対策
+            if (CurrentState == GameSessionState.Playing)
+            {
+                Debug.LogError(
+                    "Timeout was not handled. Recovering to title."
+                );
+
+                RecoverToTitle();
+            }
+        }
+
         private void Start()
         {
             Debug.Log($"Session initialized: {CurrentState}");

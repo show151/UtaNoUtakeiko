@@ -47,6 +47,12 @@ public class InputManager : MonoBehaviour
     // 長押し判定済みか
     private bool isLongPress = false;
 
+    // ボタンを離したとき、実際の押下時間を通知する
+    public event Action<float> OnPressReleased;
+
+    // ボタンを押し始めた瞬間
+    public event Action OnPressStarted;
+
     private void Awake()
     {
         lastInputAvailable = IsInputAvailable;
@@ -109,6 +115,9 @@ public class InputManager : MonoBehaviour
                 pressStartTime = Time.time;
 
                 lastInputTime = Time.time;
+
+                // チャタリング判定を通過した押下だけ通知
+                OnPressStarted?.Invoke();
             }
         }
 
@@ -126,11 +135,26 @@ public class InputManager : MonoBehaviour
         // ボタンを離した瞬間
         if (releasedThisFrame)
         {
-            // 長押しでなければ短押しとして通知
-            if (isPressed && !isLongPress)
+            if (isPressed)
             {
-                Debug.Log("短押しを認識！");
-                OnShortPress?.Invoke();
+                float heldSeconds = Mathf.Max(
+                    0f,
+                    Time.time - pressStartTime
+                );
+
+                // 既存の短押し処理は維持する
+                if (!isLongPress)
+                {
+                    Debug.Log("短押しを認識！");
+                    OnShortPress?.Invoke();
+                }
+
+                // 短押し・長押しのどちらでも押下時間を通知
+                OnPressReleased?.Invoke(heldSeconds);
+
+                Debug.Log(
+                    $"ボタン押下時間: {heldSeconds:F2}秒"
+                );
             }
 
             isPressed = false;

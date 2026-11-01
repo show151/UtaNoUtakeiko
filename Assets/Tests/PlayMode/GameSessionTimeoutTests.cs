@@ -59,6 +59,12 @@ namespace Uta.Tests
             manager.TryTransition(GameSessionState.Countdown);
             manager.TryTransition(GameSessionState.Playing);
 
+            // 通知先が存在しない場合の安全復帰ログを検証
+            LogAssert.Expect(
+                LogType.Error,
+                "Timeout was not handled. Recovering to title."
+            );
+
             yield return new WaitForSeconds(0.25f);
 
             Assert.AreEqual(GameSessionState.Title, manager.CurrentState);
@@ -114,6 +120,12 @@ namespace Uta.Tests
             manager.TryTransition(GameSessionState.SongSelect);
             manager.TryTransition(GameSessionState.Countdown);
             manager.TryTransition(GameSessionState.Playing);
+
+            // 通知先が存在しない場合の安全復帰ログを検証
+            LogAssert.Expect(
+                LogType.Error,
+                "Timeout was not handled. Recovering to title."
+            );
 
             yield return new WaitForSeconds(0.25f);
 
