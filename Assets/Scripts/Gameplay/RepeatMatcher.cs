@@ -19,7 +19,7 @@ namespace UtaNoUtakeiko.Gameplay
 
             if (source == null || target == null)
             {
-                error = "Œ³‹æŠÔ‚Ü‚½‚Í‘ÎÛ‹æŠÔ‚ªnull‚Å‚·B";
+                error = "å…ƒåŒºé–“ã¾ãŸã¯å¯¾è±¡åŒºé–“ãŒnullã§ã™ã€‚";
                 return false;
             }
 
@@ -28,7 +28,7 @@ namespace UtaNoUtakeiko.Gameplay
                 $"Source={source.SectionId}, " +
                 $"Target={target.SectionId}";
 
-            // 1. Šî–{ƒf[ƒ^‚ÌŠm”F
+            // 1. åŸºæœ¬ãƒ‡ãƒ¼ã‚¿ã®ç¢ºèª
             if (string.IsNullOrWhiteSpace(source.SongId) ||
                 string.IsNullOrWhiteSpace(source.SectionId) ||
                 string.IsNullOrWhiteSpace(target.SongId) ||
@@ -36,66 +36,66 @@ namespace UtaNoUtakeiko.Gameplay
                 source.Notes == null ||
                 target.Notes == null)
             {
-                error = $"•s³‚È‹æŠÔƒf[ƒ^: {context}";
+                error = $"ä¸æ­£ãªåŒºé–“ãƒ‡ãƒ¼ã‚¿: {context}";
                 return false;
             }
 
-            // 2. Šy‹ÈID‚Ìˆê’v
+            // 2. æ¥½æ›²IDã®ä¸€è‡´
             if (source.SongId != target.SongId)
             {
-                error = $"Šy‹ÈID‚ªˆê’v‚µ‚Ü‚¹‚ñ: {context}";
+                error = $"æ¥½æ›²IDãŒä¸€è‡´ã—ã¾ã›ã‚“: {context}";
                 return false;
             }
 
-            // 3. ¬ß”ÍˆÍ‚ÌŠm”F
+            // 3. å°ç¯€ç¯„å›²ã®ç¢ºèª
             if (source.StartMeasure < 1 ||
                 target.StartMeasure < 1 ||
                 source.EndMeasure < source.StartMeasure ||
                 target.EndMeasure < target.StartMeasure)
             {
-                error = $"¬ß”ÍˆÍ‚ª•s³‚Å‚·: {context}";
+                error = $"å°ç¯€ç¯„å›²ãŒä¸æ­£ã§ã™: {context}";
                 return false;
             }
 
-            // Œ³‹æŠÔ‚ÆŒJ‚è•Ô‚µæ‚Ìd•¡‚ğ‹‘”Û
+            // å…ƒåŒºé–“ã¨ç¹°ã‚Šè¿”ã—å…ˆã®é‡è¤‡ã‚’æ‹’å¦
             if (source.StartMeasure <= target.EndMeasure &&
                 target.StartMeasure <= source.EndMeasure)
             {
-                error = $"¬ß”ÍˆÍ‚ªd•¡‚µ‚Ä‚¢‚Ü‚·: {context}";
+                error = $"å°ç¯€ç¯„å›²ãŒé‡è¤‡ã—ã¦ã„ã¾ã™: {context}";
                 return false;
             }
 
-            // 4. ‰¹•„ƒf[ƒ^‚ğŒŸØ
+            // 4. éŸ³ç¬¦ãƒ‡ãƒ¼ã‚¿ã‚’æ¤œè¨¼
             if (!ValidateNotes(source, out error) ||
                 !ValidateNotes(target, out error))
             {
                 return false;
             }
 
-            // 5. ‹x•„‚ğœ‚¢‚Ä¬ß‡E‰¹•„‡‚É®—ñ
+            // 5. ä¼‘ç¬¦ã‚’é™¤ã„ã¦å°ç¯€é †ãƒ»éŸ³ç¬¦é †ã«æ•´åˆ—
             List<Note> sourceNotes = GetPlayableNotes(source);
             List<Note> targetNotes = GetPlayableNotes(target);
 
-            // 6. ‰¹•„”‚ğ”äŠr
+            // 6. éŸ³ç¬¦æ•°ã‚’æ¯”è¼ƒ
             if (sourceNotes.Count != targetNotes.Count)
             {
-                error = $"‰¹•„”‚ªˆê’v‚µ‚Ü‚¹‚ñ: {context}";
+                error = $"éŸ³ç¬¦æ•°ãŒä¸€è‡´ã—ã¾ã›ã‚“: {context}";
                 return false;
             }
 
-            // 7. ‰¹’ö‚ğŠ®‘Sˆê’v‚Å”äŠr
+            // 7. éŸ³ç¨‹ã‚’å®Œå…¨ä¸€è‡´ã§æ¯”è¼ƒ
             for (int i = 0; i < sourceNotes.Count; i++)
             {
                 if (sourceNotes[i].TargetPitchStep !=
                     targetNotes[i].TargetPitchStep)
                 {
                     error =
-                        $"‰¹’ö‚ªˆê’v‚µ‚Ü‚¹‚ñ: {context}, NoteIndex={i}";
+                        $"éŸ³ç¨‹ãŒä¸€è‡´ã—ã¾ã›ã‚“: {context}, NoteIndex={i}";
                     return false;
                 }
             }
 
-            // 8. ˆê’v‚Ì‚İ‘Î‰ŠÖŒW‚ğ¶¬
+            // 8. ä¸€è‡´æ™‚ã®ã¿å¯¾å¿œé–¢ä¿‚ã‚’ç”Ÿæˆ
             mapping = new RepeatMapping
             {
                 SongId = source.SongId,
@@ -133,7 +133,7 @@ namespace UtaNoUtakeiko.Gameplay
                 if (note == null)
                 {
                     error =
-                        $"null‚Ì‰¹•„‚ª‚ ‚è‚Ü‚·: SongId={section.SongId}, SectionId={section.SectionId}";
+                        $"nullã®éŸ³ç¬¦ãŒã‚ã‚Šã¾ã™: SongId={section.SongId}, SectionId={section.SectionId}";
                     return false;
                 }
 
@@ -141,7 +141,7 @@ namespace UtaNoUtakeiko.Gameplay
                     !ids.Add(note.NoteId))
                 {
                     error =
-                        $"‰¹•„ID‚ª•s³‚Ü‚½‚Íd•¡‚µ‚Ä‚¢‚Ü‚·: SongId={section.SongId}, SectionId={section.SectionId}";
+                        $"éŸ³ç¬¦IDãŒä¸æ­£ã¾ãŸã¯é‡è¤‡ã—ã¦ã„ã¾ã™: SongId={section.SongId}, SectionId={section.SectionId}";
                     return false;
                 }
 
@@ -154,7 +154,7 @@ namespace UtaNoUtakeiko.Gameplay
                     (!note.IsRest && note.TargetPitchStep < 0))
                 {
                     error =
-                        $"‰¹•„ƒf[ƒ^‚ª•s³‚Å‚·: SongId={section.SongId}, SectionId={section.SectionId}, NoteId={note.NoteId}";
+                        $"éŸ³ç¬¦ãƒ‡ãƒ¼ã‚¿ãŒä¸æ­£ã§ã™: SongId={section.SongId}, SectionId={section.SectionId}, NoteId={note.NoteId}";
                     return false;
                 }
 
@@ -164,7 +164,7 @@ namespace UtaNoUtakeiko.Gameplay
                 if (!positions.Add(position))
                 {
                     error =
-                        $"‰¹•„ˆÊ’u‚ªd•¡‚µ‚Ä‚¢‚Ü‚·: SongId={section.SongId}, SectionId={section.SectionId}, Position={position}";
+                        $"éŸ³ç¬¦ä½ç½®ãŒé‡è¤‡ã—ã¦ã„ã¾ã™: SongId={section.SongId}, SectionId={section.SectionId}, Position={position}";
                     return false;
                 }
             }

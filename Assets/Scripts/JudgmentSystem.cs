@@ -9,24 +9,29 @@ public class JudgmentSystem : MonoBehaviour
     public event Action<string> OnJudged;
 
     [SerializeField] private MovingBar movingBar;
+    [SerializeField] private InputManager inputManager;
 
     [Range(0f, 1f)]
     [SerializeField] private float targetPosition = 0.5f;
 
     private bool hasJudged = false;
 
-    private void Update()
+    private void OnEnable()
     {
-        if (hasJudged) return;
+        if (inputManager != null)
+            inputManager.OnShortPress += Judge;
+    }
 
-        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
-        {
-            Judge();
-        }
+    private void OnDisable()
+    {
+        if (inputManager != null)
+            inputManager.OnShortPress -= Judge;
     }
 
     private void Judge()
     {
+        if (hasJudged) return;
+
         movingBar.StopMovement();
 
         float position = movingBar.NormalizedPosition;
