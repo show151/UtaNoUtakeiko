@@ -1,0 +1,159 @@
+@import url("https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap");
+
+:root {
+  --ink: #171717;
+  --muted: #656565;
+  --line: #dedede;
+  --paper: #fff;
+  --accent: #5548a5;
+  --soft-purple: #f3f1fb;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: "M PLUS Rounded 1c", "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  line-height: 1.8;
+}
+
+.page {
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 38px 0 96px;
+}
+
+.breadcrumb {
+  margin: 0 0 28px;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: .04em;
+}
+
+.breadcrumb a { color: inherit; text-decoration: none; }
+.breadcrumb a:hover { color: var(--accent); text-decoration: underline; }
+
+.hero {
+  border-left: 9px solid #8a8a8a;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+  padding: 0 18px 17px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(26px, 4vw, 36px);
+  letter-spacing: .04em;
+  line-height: 1.25;
+}
+
+.lead {
+  max-width: 760px;
+  margin: 13px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.contents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0 0 40px;
+  padding: 17px 20px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.contents strong { flex-basis: 100%; font-size: 14px; }
+.contents a { color: var(--accent); font-size: 14px; text-decoration: none; }
+.contents a:hover { text-decoration: underline; }
+
+section { scroll-margin-top: 20px; margin: 0 0 38px; }
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 17px;
+  padding: 5px 0 5px 14px;
+  border-bottom: 1px solid var(--line);
+  border-left: 9px solid var(--ink);
+  font-size: clamp(20px, 3vw, 24px);
+  line-height: 1.25;
+}
+
+.note-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 790px;
+}
+
+.note-image {
+  display: block;
+  width: min(100%, 380px);
+  height: auto;
+  object-fit: contain;
+}
+
+.description {
+  max-width: 920px;
+  margin: 14px 0 0;
+  color: #333;
+  font-size: 15px;
+}
+
+.description strong { color: var(--ink); }
+
+.tip {
+  margin-top: 16px;
+  padding: 14px 18px;
+  border-left: 4px solid var(--accent);
+  background: var(--soft-purple);
+  color: #39334f;
+  font-size: 14px;
+}
+
+.float-nav {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.float-nav a {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  border-radius: 8px;
+  background: #bdbdbd;
+  color: white;
+  font-size: 28px;
+  line-height: 1;
+  text-decoration: none;
+  transition: background .2s ease, transform .2s ease;
+}
+
+.float-nav a:hover { background: #777; transform: translateY(-2px); }
+
+footer {
+  margin-top: 54px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .page { width: min(100% - 28px, 1120px); padding-top: 24px; }
+  .float-nav { right: 12px; bottom: 12px; }
+  .float-nav a { width: 43px; height: 43px; font-size: 23px; }
+}

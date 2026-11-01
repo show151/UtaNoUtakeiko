@@ -1,0 +1,457 @@
+{
+  "SongId": "TWINKLE_TWINKLE",
+  "DifficultyId": "EASY",
+  "Bpm": 100,
+  "TimeSignatureNumerator": 4,
+  "TimeSignatureDenominator": 4,
+  "Sections": [
+    {
+      "SongId": "TWINKLE_TWINKLE",
+      "SectionId": "SECTION_A1",
+      "StartMeasure": 1,
+      "EndMeasure": 4,
+      "Notes": [
+        {
+          "NoteId": "TWINKLE_M01_N01",
+          "MeasureNumber": 1,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 0,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M01_N02",
+          "MeasureNumber": 1,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 0,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M01_N03",
+          "MeasureNumber": 1,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M01_N04",
+          "MeasureNumber": 1,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M02_N01",
+          "MeasureNumber": 2,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M02_N02",
+          "MeasureNumber": 2,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M02_N03",
+          "MeasureNumber": 2,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1.5,
+          "IsRest": false,
+          "IsHold": true
+        },
+        {
+          "NoteId": "TWINKLE_M02_N04",
+          "MeasureNumber": 2,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 0,
+          "DurationBeats": 0.5,
+          "IsRest": true,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M03_N01",
+          "MeasureNumber": 3,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M03_N02",
+          "MeasureNumber": 3,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M03_N03",
+          "MeasureNumber": 3,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 4,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M03_N04",
+          "MeasureNumber": 3,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 4,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M04_N01",
+          "MeasureNumber": 4,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 2,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M04_N02",
+          "MeasureNumber": 4,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 2,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M04_N03",
+          "MeasureNumber": 4,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 0,
+          "DurationBeats": 2,
+          "IsRest": false,
+          "IsHold": true
+        }
+      ]
+    },
+    {
+      "SongId": "TWINKLE_TWINKLE",
+      "SectionId": "SECTION_B1",
+      "StartMeasure": 5,
+      "EndMeasure": 6,
+      "Notes": [
+        {
+          "NoteId": "TWINKLE_M05_N01",
+          "MeasureNumber": 5,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M05_N02",
+          "MeasureNumber": 5,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M05_N03",
+          "MeasureNumber": 5,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M05_N04",
+          "MeasureNumber": 5,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M06_N01",
+          "MeasureNumber": 6,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 4,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M06_N02",
+          "MeasureNumber": 6,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 4,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M06_N03",
+          "MeasureNumber": 6,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 2,
+          "DurationBeats": 2,
+          "IsRest": false,
+          "IsHold": true
+        }
+      ]
+    },
+    {
+      "SongId": "TWINKLE_TWINKLE",
+      "SectionId": "SECTION_B2",
+      "StartMeasure": 7,
+      "EndMeasure": 8,
+      "Notes": [
+        {
+          "NoteId": "TWINKLE_M07_N01",
+          "MeasureNumber": 7,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M07_N02",
+          "MeasureNumber": 7,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M07_N03",
+          "MeasureNumber": 7,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M07_N04",
+          "MeasureNumber": 7,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M08_N01",
+          "MeasureNumber": 8,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 4,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M08_N02",
+          "MeasureNumber": 8,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 4,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M08_N03",
+          "MeasureNumber": 8,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 2,
+          "DurationBeats": 2,
+          "IsRest": false,
+          "IsHold": true
+        }
+      ]
+    },
+    {
+      "SongId": "TWINKLE_TWINKLE",
+      "SectionId": "SECTION_A2",
+      "StartMeasure": 9,
+      "EndMeasure": 12,
+      "Notes": [
+        {
+          "NoteId": "TWINKLE_M09_N01",
+          "MeasureNumber": 9,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 0,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M09_N02",
+          "MeasureNumber": 9,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 0,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M09_N03",
+          "MeasureNumber": 9,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M09_N04",
+          "MeasureNumber": 9,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M10_N01",
+          "MeasureNumber": 10,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M10_N02",
+          "MeasureNumber": 10,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M10_N03",
+          "MeasureNumber": 10,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1.5,
+          "IsRest": false,
+          "IsHold": true
+        },
+        {
+          "NoteId": "TWINKLE_M10_N04",
+          "MeasureNumber": 10,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 0,
+          "DurationBeats": 0.5,
+          "IsRest": true,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M11_N01",
+          "MeasureNumber": 11,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M11_N02",
+          "MeasureNumber": 11,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M11_N03",
+          "MeasureNumber": 11,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 4,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M11_N04",
+          "MeasureNumber": 11,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 4,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M12_N01",
+          "MeasureNumber": 12,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 2,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M12_N02",
+          "MeasureNumber": 12,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 2,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "TWINKLE_M12_N03",
+          "MeasureNumber": 12,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 0,
+          "DurationBeats": 2,
+          "IsRest": false,
+          "IsHold": true
+        }
+      ]
+    }
+  ],
+  "RepeatMappings": [
+    {
+      "SongId": "TWINKLE_TWINKLE",
+      "SourceSectionId": "SECTION_B1",
+      "TargetSectionId": "SECTION_B2",
+      "SourceStartMeasure": 5,
+      "SourceEndMeasure": 6,
+      "TargetStartMeasure": 7,
+      "TargetEndMeasure": 8
+    },
+    {
+      "SongId": "TWINKLE_TWINKLE",
+      "SourceSectionId": "SECTION_A1",
+      "TargetSectionId": "SECTION_A2",
+      "SourceStartMeasure": 1,
+      "SourceEndMeasure": 4,
+      "TargetStartMeasure": 9,
+      "TargetEndMeasure": 12
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+
+{
+  "name": "Uta.GameFlow.PlayModeTests",
+  "rootNamespace": "Uta.Tests",
+  "references": [
+    "Uta.GameFlow.Core"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
