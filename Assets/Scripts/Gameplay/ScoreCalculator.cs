@@ -141,13 +141,6 @@ namespace UtaNoUtakeiko.Gameplay
 
                         earnedWeight += holdWeight;
                         scoredUnit.HoldScore = holdWeight;
-
-                        AddJudgmentCount(
-                            scoreResult,
-                            unit.HoldJudgment.Value ==
-                                HoldJudgmentType.Perfect
-                                    ? JudgmentType.Perfect
-                                    : JudgmentType.Miss);
                     }
                     else if (unit.HoldJudgment.HasValue)
                     {

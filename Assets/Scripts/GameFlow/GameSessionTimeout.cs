@@ -52,7 +52,8 @@ namespace Uta.GameFlow
 
             Debug.LogWarning("Session timeout!");
 
-            sessionManager.RecoverToTitle();
+            // Ì“_‘¤‚ÉŠÔØ‚ê‚ğ’Ê’m‚·‚é
+            sessionManager.NotifySessionTimedOut();
         }
 
         private void HandleStateChanged(
