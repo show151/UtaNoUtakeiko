@@ -46,22 +46,26 @@ namespace Uta.GameFlow
         private void OnEnable()
         {
             if (sessionManager != null)
+            {
                 sessionManager.OnStateChanged += HandleStateChanged;
                 sessionManager.OnSessionTimedOut += HandleSessionTimedOut;
-
+            }
+        
             if (noteProgression != null)
             {
                 noteProgression.OnCompleted += HandlePlayCompleted;
                 noteProgression.OnNoteJudgedWithDuration += HandleNoteJudged;
             }
         }
-
+        
         private void OnDisable()
         {
             if (sessionManager != null)
+            {
                 sessionManager.OnStateChanged -= HandleStateChanged;
                 sessionManager.OnSessionTimedOut -= HandleSessionTimedOut;
-
+            }
+        
             if (noteProgression != null)
             {
                 noteProgression.OnCompleted -= HandlePlayCompleted;
