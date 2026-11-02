@@ -460,7 +460,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Uta.GameFlow.GameSessionPlaybackConnector
   sessionManager: {fileID: 860801488}
-  testPlaybackDuration: 3
+  playConnector: {fileID: 860801492}
 --- !u!1 &916216552
 GameObject:
   m_ObjectHideFlags: 0
