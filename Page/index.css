@@ -14,6 +14,7 @@
 html { scroll-behavior: smooth; }
 
 body {
+  padding-top: 20px;
   margin: 0;
   color: var(--ink);
   background: var(--paper);
@@ -21,10 +22,31 @@ body {
   line-height: 1.8;
 }
 
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: #b9e8f5;
+  padding: 14px 18px;
+}
+
+.site-header a {
+  display: block;
+  line-height: 0;
+}
+
+.site-header img {
+  display: block;
+  width: min(150px, 24vw);
+  height: auto;
+}
+
 .page {
   width: min(1120px, calc(100% - 48px));
   margin: 0 auto;
-  padding: 38px 0 96px;
+  padding: 92px 0 96px;
 }
 
 .breadcrumb {
@@ -41,7 +63,7 @@ body {
   border-left: 9px solid #8a8a8a;
   border-bottom: 1px solid var(--line);
   margin-bottom: 28px;
-  padding: 0 18px 17px;
+  padding: 8px 18px 10px;
 }
 
 h1 {
@@ -153,7 +175,9 @@ footer {
 }
 
 @media (max-width: 640px) {
-  .page { width: min(100% - 28px, 1120px); padding-top: 24px; }
+  .site-header { padding: 10px 12px; }
+  .site-header img { width: min(120px, 30vw); }
+  .page { width: min(100% - 28px, 1120px); padding-top: 78px; }
   .float-nav { right: 12px; bottom: 12px; }
   .float-nav a { width: 43px; height: 43px; font-size: 23px; }
 }
