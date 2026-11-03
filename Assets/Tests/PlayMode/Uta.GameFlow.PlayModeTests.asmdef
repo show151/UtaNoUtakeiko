@@ -3,7 +3,8 @@
   "name": "Uta.GameFlow.PlayModeTests",
   "rootNamespace": "Uta.Tests",
   "references": [
-    "Uta.GameFlow.Core"
+    "Uta.GameFlow.Core",
+    "Uta.Runtime"
   ],
   "optionalUnityReferences": [
     "TestAssemblies"
