@@ -6,9 +6,13 @@ public class JudgmentSystem : MonoBehaviour
 {
     public event Action<string> OnJudged;
 
+    // Used only by the Issue #53 timed input trial to pin the press to its unit.
+    public event Action<float> OnPressPositionCaptured;
+    public bool HasCapturedPress => hasCapturedPress;
+
     public event Action<string, float> OnJudgedWithPosition;
 
-    // ”»’è–¼A“ü—Í‰¹’öˆÊ’uAÀÛ‚Ì‰Ÿ‰º•b”
+    // åˆ¤å®šåã€å…¥åŠ›éŸ³ç¨‹ä½ç½®ã€å®Ÿéš›ã®æŠ¼ä¸‹ç§’æ•°
     public event Action<string, float, float>
         OnJudgedWithPositionAndDuration;
 
@@ -49,10 +53,11 @@ public class JudgmentSystem : MonoBehaviour
 
         hasCapturedPress = true;
 
-        // ‰Ÿ‚µ‚½uŠÔ‚Ì‰¹’öˆÊ’u‚ğ‹L˜^
+        // æŠ¼ã—ãŸç¬é–“ã®éŸ³ç¨‹ä½ç½®ã‚’è¨˜éŒ²
         capturedPosition = movingBar.NormalizedPosition;
 
         movingBar.StopMovement();
+        OnPressPositionCaptured?.Invoke(capturedPosition);
     }
 
     private void HandlePressReleased(float heldSeconds)
@@ -97,17 +102,17 @@ public class JudgmentSystem : MonoBehaviour
             $"Held={heldSeconds:F2}s"
         );
 
-        // Ÿ‚ÌƒXƒeƒbƒv‚Å’·‰Ÿ‚µÌ“_‚ÉÚ‘±‚·‚é
+        // æ¬¡ã®ã‚¹ãƒ†ãƒƒãƒ—ã§é•·æŠ¼ã—æ¡ç‚¹ã«æ¥ç¶šã™ã‚‹
         OnJudgedWithPositionAndDuration?.Invoke(
             result,
             position,
             heldSeconds
         );
 
-        // Šù‘¶‚ÌNoteId˜AŒg‚ğˆÛ
+        // æ—¢å­˜ã®NoteIdé€£æºã‚’ç¶­æŒ
         OnJudgedWithPosition?.Invoke(result, position);
 
-        // Šù‘¶‚Ì‰¹•„isEUI˜AŒg‚ğˆÛ
+        // æ—¢å­˜ã®éŸ³ç¬¦é€²è¡Œãƒ»UIé€£æºã‚’ç¶­æŒ
         OnJudged?.Invoke(result);
     }
 
