@@ -76,6 +76,50 @@ namespace UtaNoUtakeiko.Tests
         }
 
         [Test]
+        public void RepeatedVocalSections_ReuseSourceNotesFromExpandedResults()
+        {
+            string path = Path.Combine(Application.dataPath, "Data", "Songs", "twinkle_easy.json");
+            SongChart chart = JsonUtility.FromJson<SongChart>(File.ReadAllText(path));
+            Assert.IsTrue(PlanBuilder.TryBuild(chart.Sections, chart.RepeatMappings,
+                out PlayPlan plan, out PlaybackPlan playback, out string error), error);
+            Assert.IsTrue(InputUnitBuilder.TryBuild(chart, plan,
+                out List<InputUnit> units, out error), error);
+
+            var trials = units.Select(u => new TimedInputTrialResult
+            {
+                UnitId = u.UnitId,
+                PitchJudgment = "Perfect",
+                CapturedPosition = u.TargetPitchStep / 9f,
+                HoldSucceeded = u.IsHold ? (bool?)true : null,
+                TimedOut = false
+            }).ToList();
+            ScoreResult grouped = GroupedInputScoreAdapter.Calculate(
+                plan, units, trials, DefaultPolicy(), Difficulty.Easy, 0, 9);
+            ScoreResult expanded = GroupedInputScoreAdapter.ExpandForVocalPlayback(grouped, units);
+            var knownSources = new HashSet<string>(expanded.UnitResults.Select(r => r.UnitId));
+
+            int singingNotes = 0;
+            int repeatedNotes = 0;
+            foreach (var section in playback.Sections)
+            {
+                for (int i = 0; i < section.Notes.Count; i++)
+                {
+                    if (section.Notes[i].IsRest)
+                        continue;
+                    singingNotes++;
+                    if (section.IsRepeated)
+                        repeatedNotes++;
+                    Assert.IsTrue(knownSources.Contains(section.SourceNoteIds[i]),
+                        "Source note missing: " + section.SourceNoteIds[i]);
+                }
+            }
+
+            Assert.AreEqual(42, singingNotes);
+            Assert.Greater(repeatedNotes, 0);
+            Assert.AreEqual(21, expanded.UnitResults.Count);
+        }
+
+        [Test]
         public void GroupedHold_UsesOneResultForEverySourceNote()
         {
             LoadTwinkle(out var play, out var units);
