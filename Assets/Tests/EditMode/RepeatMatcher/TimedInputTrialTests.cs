@@ -39,7 +39,7 @@ namespace UtaNoUtakeiko.Tests
             Assert.AreEqual(1, trial.ActiveIndexAt(0.71f));
 
             bool accepted = trial.TryRecordRelease(
-                0, 0.74f, "Perfect", 0.74f, 0.05f);
+                0, 0.74f, "Perfect", 0.5f, 0.74f, 0.05f);
 
             Assert.IsTrue(accepted);
             Assert.IsTrue(trial.IsResolved(0));
@@ -78,12 +78,12 @@ namespace UtaNoUtakeiko.Tests
             trial.OnResolved += results.Add;
 
             Assert.IsTrue(trial.TryRecordRelease(
-                0, 0.4f, "Great", 0.4f, 0.05f));
+                0, 0.4f, "Great", 0.4f, 0.4f, 0.05f));
 
             Assert.AreEqual(false, results[0].HoldSucceeded);
             Assert.IsFalse(results[0].TimedOut);
             Assert.IsFalse(trial.TryRecordRelease(
-                0, 0.5f, "Perfect", 0.5f, 0.05f));
+                0, 0.5f, "Perfect", 0.5f, 0.5f, 0.05f));
             Assert.AreEqual(1, trial.ResolvedCount);
         }
 
@@ -94,7 +94,7 @@ namespace UtaNoUtakeiko.Tests
             trial.Expire(0.83f);
 
             Assert.IsFalse(trial.TryRecordRelease(
-                0, 0.84f, "Perfect", 0.7f, 0.05f));
+                0, 0.84f, "Perfect", 0.5f, 0.7f, 0.05f));
             Assert.AreEqual(1, trial.ResolvedCount);
         }
 
