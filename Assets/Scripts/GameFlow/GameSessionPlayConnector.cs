@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UtaNoUtakeiko.Data;
 using UtaNoUtakeiko.Gameplay;
@@ -51,6 +52,8 @@ namespace Uta.GameFlow
         }
 
         public ScoreResult CurrentScoreResult { get; private set; }
+        public ScoreResult CurrentVocalScoreResult { get; private set; }
+        public List<InputUnit> CurrentInputUnits { get; private set; }
 
         public SongChart CurrentSongChart { get; private set; }
 
@@ -155,6 +158,8 @@ namespace Uta.GameFlow
             currentBpm = 0;
 
             CurrentScoreResult = null;
+            CurrentVocalScoreResult = null;
+            CurrentInputUnits = null;
 
             CurrentSongChart = null;
 
@@ -307,6 +312,7 @@ namespace Uta.GameFlow
                 $"holds={units.FindAll(u => u.IsHold).Count}, " +
                 $"duration={units[units.Count - 1].EndSeconds:F2}s");
 
+            CurrentInputUnits = units;
             return noteProgression.StartTimedInputTrial(
                 units, positions, holdToleranceSeconds);
         }
@@ -317,8 +323,50 @@ namespace Uta.GameFlow
                 sessionManager.CurrentState != GameSessionState.Playing)
                 return;
 
-            // This mode does not produce a score; return to title safely.
-            sessionManager.RecoverToTitle();
+            if (CurrentScoreResult != null)
+                return;
+
+            try
+            {
+                var trialResults = noteProgression.LastTimedTrialResults;
+                if (CurrentInputUnits == null || trialResults == null)
+                    throw new InvalidOperationException("Timed input results are missing.");
+
+                var policy = new ScorePolicy(
+                    perfect: 100, great: 80, good: 60,
+                    bad: 30, miss: 0, holdPerfect: 100, holdMiss: 0);
+
+                Difficulty difficulty = Difficulty.Easy;
+                if (CurrentSongChart != null &&
+                    !string.IsNullOrWhiteSpace(CurrentSongChart.DifficultyId))
+                    Enum.TryParse(CurrentSongChart.DifficultyId, true, out difficulty);
+
+                CurrentScoreResult = GroupedInputScoreAdapter.Calculate(
+                    CurrentPlayPlan, CurrentInputUnits, trialResults,
+                    policy, difficulty, minPitchStep, maxPitchStep);
+
+                CurrentVocalScoreResult =
+                    GroupedInputScoreAdapter.ExpandForVocalPlayback(
+                        CurrentScoreResult, CurrentInputUnits);
+
+                Debug.Log(
+                    $"[Issue #53] Grouped scoring complete: " +
+                    $"{CurrentScoreResult.Score:N0}/" +
+                    $"{CurrentScoreResult.MaxScore:N0}; " +
+                    $"inputUnits={CurrentScoreResult.UnitResults.Count}, " +
+                    $"vocalNotes={CurrentVocalScoreResult.UnitResults.Count}");
+
+                if (!sessionManager.TryTransition(GameSessionState.Playback))
+                    sessionManager.RecoverToTitle();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[Issue #53] Grouped score/audio setup failed.");
+                Debug.LogException(ex);
+                CurrentScoreResult = null;
+                CurrentVocalScoreResult = null;
+                sessionManager.RecoverToTitle();
+            }
         }
 
         // Preview is deliberately non-scored and must not enter Vocal Playback.
@@ -389,6 +437,13 @@ namespace Uta.GameFlow
 
         private void HandleSessionTimedOut()
         {
+            if (enableTimedInputTrial || enableTimingPreview)
+            {
+                Debug.LogWarning("Preview/trial session time limit reached.");
+                sessionManager?.RecoverToTitle();
+                return;
+            }
+
             Debug.LogWarning(
                 "時間切れのため、未入力音符を確定します。"
             );
