@@ -22,14 +22,23 @@ public class NoteDisplay : MonoBehaviour
 
     private Vector3 initialPosition;
 
+    private void Awake()
+    {
+        // シーン開始時の位置を一度だけ保存
+        initialPosition = transform.position;
+    }
+
     public void Initialize(float[] notePositions)
     {
-        noteRenderers.Clear();
+        // 毎回、最初の譜面位置へ戻す
+        transform.position = initialPosition;
 
-        initialPosition = transform.position;
+        noteRenderers.Clear();
 
         foreach (Transform child in transform)
         {
+            // 以前の音符を即座に非表示
+            child.gameObject.SetActive(false);
             Destroy(child.gameObject);
         }
 

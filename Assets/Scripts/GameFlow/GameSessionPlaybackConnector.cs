@@ -1,22 +1,38 @@
 
+using System;
 using System.Collections;
 using UnityEngine;
 
 namespace Uta.GameFlow
 {
-    /// <summary>
-    /// 正式な歌唱再生処理が完成するまでの仮アダプター。
-    /// Playback状態で一定時間待ち、Resultへ進む。
-    /// </summary>
     public class GameSessionPlaybackConnector : MonoBehaviour
     {
         [SerializeField]
         private GameSessionManager sessionManager;
 
-        [SerializeField, Min(0.1f)]
-        private float testPlaybackDuration = 3f;
+        [SerializeField]
+        private GameSessionPlayConnector playConnector;
 
+        private AudioSource audioSource;
+        private AudioClip generatedClip;
         private Coroutine playbackCoroutine;
+
+        private void Awake()
+        {
+            if (playConnector == null)
+            {
+                playConnector = GetComponent<GameSessionPlayConnector>();
+            }
+
+            audioSource = GetComponent<AudioSource>();
+
+            if (audioSource == null)
+                audioSource = gameObject.AddComponent<AudioSource>();
+
+            audioSource.playOnAwake = false;
+            audioSource.loop = false;
+            audioSource.spatialBlend = 0f;
+        }
 
         private void OnEnable()
         {
@@ -29,7 +45,7 @@ namespace Uta.GameFlow
             if (sessionManager != null)
                 sessionManager.OnStateChanged -= HandleStateChanged;
 
-            StopTestPlayback();
+            StopPlayback();
         }
 
         private void HandleStateChanged(
@@ -37,45 +53,147 @@ namespace Uta.GameFlow
             GameSessionState next)
         {
             if (previous == GameSessionState.Playback)
-                StopTestPlayback();
+                StopPlayback();
 
             if (next == GameSessionState.Playback)
-                StartTestPlayback();
-        }
-
-        private void StartTestPlayback()
-        {
-            StopTestPlayback();
-
-            Debug.Log("TEMP playback started.");
-
-            playbackCoroutine = StartCoroutine(PlaybackRoutine());
+            {
+                StopPlayback();
+                playbackCoroutine = StartCoroutine(PlaybackRoutine());
+            }
         }
 
         private IEnumerator PlaybackRoutine()
         {
-            yield return new WaitForSeconds(testPlaybackDuration);
+            // 状態遷移処理が終わってから歌唱を生成する
+            yield return null;
+
+            if (!IsPlayback())
+            {
+                playbackCoroutine = null;
+                yield break;
+            }
+
+            if (playConnector == null ||
+                playConnector.CurrentSongChart == null ||
+                playConnector.CurrentPlaybackPlan == null ||
+                playConnector.CurrentScoreResult == null)
+            {
+
+                Debug.LogError(
+                    "歌唱再生データ確認:\n" +
+                    $"PlayConnector: {playConnector != null}\n" +
+                    $"SongChart: {playConnector != null && playConnector.CurrentSongChart != null}\n" +
+                    $"PlaybackPlan: {playConnector != null && playConnector.CurrentPlaybackPlan != null}\n" +
+                    $"ScoreResult: {playConnector != null && playConnector.CurrentScoreResult != null}"
+                );
+                playbackCoroutine = null;
+                sessionManager.RecoverToTitle();
+                yield break;
+            }
+
+            double endTime = 0;
+            bool playbackStarted = false;
+
+            try
+            {
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+                try
+                {
+                    generatedClip = VocalPlaybackComposer.Compose(
+                        playConnector.CurrentSongChart,
+                        playConnector.CurrentPlaybackPlan,
+                        playConnector.CurrentScoreResult
+                    );
+                }
+                finally
+                {
+                    stopwatch.Stop();
+
+                    Debug.Log(
+                        $"[歌唱パフォーマンス] 生成時間: " +
+                        $"{stopwatch.Elapsed.TotalMilliseconds:F2} ms"
+                    );
+                }
+
+                if (generatedClip == null)
+                    throw new InvalidOperationException(
+                        "歌唱音声を生成できませんでした。"
+                    );
+
+                audioSource.clip = generatedClip;
+
+                double startTime = AudioSettings.dspTime + 0.15;
+                endTime = startTime + generatedClip.length;
+
+                audioSource.PlayScheduled(startTime);
+
+                playbackStarted = true;
+
+                Debug.Log(
+                    $"歌唱再生開始: {generatedClip.length:F2}秒"
+                );
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+
+            // 例外発生時はタイトルへ復帰
+            if (!playbackStarted)
+            {
+                playbackCoroutine = null;
+                sessionManager.RecoverToTitle();
+                yield break;
+            }
+
+            // try-catchの外側で再生終了を待つ
+            while (IsPlayback() &&
+                   AudioSettings.dspTime < endTime)
+            {
+                yield return null;
+            }
 
             playbackCoroutine = null;
 
-            if (sessionManager == null ||
-                sessionManager.CurrentState != GameSessionState.Playback)
-                yield break;
+            if (IsPlayback())
+            {
+                Debug.Log("歌唱再生完了");
 
-            Debug.Log("TEMP playback completed.");
-
-            sessionManager.TryTransition(GameSessionState.Result);
+                if (!sessionManager.TryTransition(
+                    GameSessionState.Result))
+                {
+                    sessionManager.RecoverToTitle();
+                }
+            }
         }
 
-        private void StopTestPlayback()
+        private bool IsPlayback()
         {
-            if (playbackCoroutine == null)
-                return;
+            return sessionManager != null &&
+                   sessionManager.CurrentState ==
+                   GameSessionState.Playback;
+        }
 
-            StopCoroutine(playbackCoroutine);
-            playbackCoroutine = null;
+        private void StopPlayback()
+        {
+            if (playbackCoroutine != null)
+            {
+                StopCoroutine(playbackCoroutine);
+                playbackCoroutine = null;
+            }
 
-            Debug.Log("TEMP playback stopped.");
+            if (audioSource != null)
+            {
+                audioSource.Stop();
+                audioSource.clip = null;
+            }
+
+            if (generatedClip != null)
+            {
+                Destroy(generatedClip);
+                generatedClip = null;
+            }
         }
     }
 }

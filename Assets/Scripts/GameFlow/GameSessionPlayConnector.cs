@@ -43,6 +43,8 @@ namespace Uta.GameFlow
 
         public ScoreResult CurrentScoreResult { get; private set; }
 
+        public SongChart CurrentSongChart { get; private set; }
+
         private void OnEnable()
         {
             if (sessionManager != null)
@@ -120,6 +122,8 @@ namespace Uta.GameFlow
             currentBpm = 0;
 
             CurrentScoreResult = null;
+
+            CurrentSongChart = null;
 
             if (songChartJson == null)
             {
@@ -214,6 +218,8 @@ namespace Uta.GameFlow
 
                 return false;
             }
+
+            CurrentSongChart = chart;
 
             Debug.Log(
                 $"正式譜面読込成功: {chart.SongId} / " +
