@@ -208,7 +208,8 @@ public class NoteProgression : MonoBehaviour
         if (units == null || units.Count == 0 ||
             positions == null || positions.Length != units.Count ||
             judgmentSystem == null || noteDisplay == null ||
-            judgmentUI == null || holdTolerance < 0f)
+            judgmentUI == null || float.IsNaN(holdTolerance) ||
+            float.IsInfinity(holdTolerance) || holdTolerance < 0f)
         {
             Debug.LogError("時間制入力テストの設定が不正です。");
             return false;
@@ -228,6 +229,7 @@ public class NoteProgression : MonoBehaviour
         StopPlayback();
 
         timedTrial = newTrial;
+        holdToleranceSeconds = holdTolerance;
         timedTrial.OnResolved += HandleTrialResolved;
         notePositions = (float[])positions.Clone();
         noteIds = new string[units.Count];
