@@ -9,6 +9,7 @@ namespace UtaNoUtakeiko.Gameplay
     {
         public string UnitId;
         public string PitchJudgment;
+        public float? CapturedPosition;
         public bool? HoldSucceeded;
         public float HeldSeconds;
         public bool TimedOut;
@@ -78,11 +79,15 @@ namespace UtaNoUtakeiko.Gameplay
             int index,
             float releasedAtSeconds,
             string pitchJudgment,
+            float capturedPosition,
             float heldSeconds,
             float holdToleranceSeconds)
         {
             if (index < 0 || index >= units.Count || IsResolved(index) ||
                 string.IsNullOrWhiteSpace(pitchJudgment) ||
+                float.IsNaN(capturedPosition) ||
+                float.IsInfinity(capturedPosition) ||
+                capturedPosition < 0f || capturedPosition > 1f ||
                 float.IsNaN(releasedAtSeconds) ||
                 float.IsNaN(heldSeconds) || float.IsInfinity(heldSeconds) ||
                 heldSeconds < 0f || float.IsNaN(holdToleranceSeconds) ||
@@ -102,6 +107,7 @@ namespace UtaNoUtakeiko.Gameplay
             {
                 UnitId = unit.UnitId,
                 PitchJudgment = pitchJudgment,
+                CapturedPosition = capturedPosition,
                 HeldSeconds = heldSeconds,
                 HoldSucceeded = hold,
                 TimedOut = false
