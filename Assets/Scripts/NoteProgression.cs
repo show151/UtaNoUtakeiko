@@ -16,6 +16,7 @@ public class NoteProgression : MonoBehaviour
     // Isolated interactive test: results are never forwarded to the old score path.
     public event Action OnTimedTrialCompleted;
     public event Action<TimedInputTrialResult> OnTimedTrialResolved;
+    public IReadOnlyList<TimedInputTrialResult> LastTimedTrialResults { get; private set; }
 
     // NoteId、判定名、実際の入力位置
     public event Action<string, string, float> OnNoteJudged;
@@ -44,6 +45,7 @@ public class NoteProgression : MonoBehaviour
     private bool isTimedPreview;
     private bool isTimedTrial;
     private TimedInputTrial timedTrial;
+    private readonly List<TimedInputTrialResult> completedTrialResults = new List<TimedInputTrialResult>();
     private float trialStartedAt;
     private int pendingPressIndex = -1;
     private float holdToleranceSeconds = 0.05f;
@@ -228,6 +230,8 @@ public class NoteProgression : MonoBehaviour
 
         StopPlayback();
 
+        completedTrialResults.Clear();
+        LastTimedTrialResults = null;
         timedTrial = newTrial;
         holdToleranceSeconds = holdTolerance;
         timedTrial.OnResolved += HandleTrialResolved;
@@ -266,6 +270,7 @@ public class NoteProgression : MonoBehaviour
 
     private void HandleTrialResolved(TimedInputTrialResult result)
     {
+        completedTrialResults.Add(result);
         Debug.Log(
             $"[Issue #53] Input result {result.UnitId}: " +
             $"{result.PitchJudgment}, hold={result.HoldSucceeded}, " +
@@ -315,6 +320,7 @@ public class NoteProgression : MonoBehaviour
             $"{resolved}/{timedTrial.Count} resolved / " +
             $"{totalSeconds:F2}s + release grace");
 
+        LastTimedTrialResults = completedTrialResults.AsReadOnly();
         StopPlayback();
         OnTimedTrialCompleted?.Invoke();
     }
@@ -409,7 +415,7 @@ public class NoteProgression : MonoBehaviour
             {
                 bool accepted = timedTrial.TryRecordRelease(
                     sourceIndex, Time.time - trialStartedAt,
-                    result, heldSeconds, holdToleranceSeconds);
+                    result, position, heldSeconds, holdToleranceSeconds);
                 if (!accepted)
                     Debug.Log($"[Issue #53] Late/duplicate release ignored: {sourceIndex}");
             }
