@@ -29,6 +29,10 @@ namespace Uta.GameFlow
         [SerializeField, Range(0f, 0.2f)]
         private float holdToleranceSeconds = 0.05f;
 
+        // Enable only for a visual timing test; scoring and audio are intentionally skipped.
+        [SerializeField]
+        private bool enableTimingPreview = false;
+
         private int currentBpm;
 
         // 後続の採点・歌唱処理で使う
@@ -56,6 +60,7 @@ namespace Uta.GameFlow
             if (noteProgression != null)
             {
                 noteProgression.OnCompleted += HandlePlayCompleted;
+                noteProgression.OnTimedPreviewCompleted += HandleTimedPreviewCompleted;
                 noteProgression.OnNoteJudgedWithDuration += HandleNoteJudged;
             }
         }
@@ -71,6 +76,7 @@ namespace Uta.GameFlow
             if (noteProgression != null)
             {
                 noteProgression.OnCompleted -= HandlePlayCompleted;
+                noteProgression.OnTimedPreviewCompleted -= HandleTimedPreviewCompleted;
                 noteProgression.OnNoteJudgedWithDuration -= HandleNoteJudged;
                 noteProgression.StopPlayback();
             }
@@ -98,6 +104,16 @@ namespace Uta.GameFlow
                 );
 
                 sessionManager?.RecoverToTitle();
+                return;
+            }
+
+            if (enableTimingPreview)
+            {
+                if (!TryStartTimingPreview())
+                {
+                    Debug.LogError("70%時間軸プレビューの開始に失敗しました。");
+                    sessionManager?.RecoverToTitle();
+                }
                 return;
             }
 
@@ -234,6 +250,62 @@ namespace Uta.GameFlow
             currentBpm = chart.Bpm;
 
             return true;
+        }
+
+        // Preview is deliberately non-scored and must not enter Vocal Playback.
+        private bool TryStartTimingPreview()
+        {
+            if (CurrentSongChart == null || CurrentPlayPlan == null ||
+                !InputUnitBuilder.TryBuild(
+                    CurrentSongChart,
+                    CurrentPlayPlan,
+                    out var units,
+                    out string error))
+            {
+                Debug.LogError("InputUnit生成失敗: " + error);
+                return false;
+            }
+
+            var positions = new float[units.Count];
+            var ids = new string[units.Count];
+            var starts = new float[units.Count];
+
+            for (int i = 0; i < units.Count; i++)
+            {
+                var unit = units[i];
+                if (unit.TargetPitchStep < minPitchStep ||
+                    unit.TargetPitchStep > maxPitchStep)
+                {
+                    Debug.LogError("入力区間の音程が表示範囲外: " + unit.UnitId);
+                    return false;
+                }
+
+                positions[i] = Mathf.InverseLerp(
+                    minPitchStep, maxPitchStep, unit.TargetPitchStep);
+                ids[i] = unit.UnitId;
+                starts[i] = unit.StartSeconds;
+            }
+
+            float totalSeconds = units[units.Count - 1].EndSeconds;
+            Debug.Log(
+                $"[Issue #53] Preview: BPM={CurrentSongChart.Bpm}, " +
+                $"units={units.Count}, holds={units.FindAll(u => u.IsHold).Count}, " +
+                $"length={totalSeconds:F2}s"
+            );
+
+            return noteProgression.StartTimedPreview(
+                positions, ids, starts, totalSeconds);
+        }
+
+        private void HandleTimedPreviewCompleted()
+        {
+            if (!enableTimingPreview || sessionManager == null ||
+                sessionManager.CurrentState != GameSessionState.Playing)
+                return;
+
+            // Avoid normal score finalization because the old score session still
+            // expects individual notes rather than grouped input units.
+            sessionManager.RecoverToTitle();
         }
 
         private void HandlePlayCompleted()
