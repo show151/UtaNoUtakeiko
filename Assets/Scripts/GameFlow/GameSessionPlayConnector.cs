@@ -33,6 +33,11 @@ namespace Uta.GameFlow
         [SerializeField]
         private bool enableTimingPreview = false;
 
+        // Issue #53: test real Space/button presses with a 70% fixed timeline.
+        // Does not calculate a score or play vocals yet.
+        [SerializeField]
+        private bool enableTimedInputTrial = false;
+
         private int currentBpm;
 
         // 後続の採点・歌唱処理で使う
@@ -61,6 +66,7 @@ namespace Uta.GameFlow
             {
                 noteProgression.OnCompleted += HandlePlayCompleted;
                 noteProgression.OnTimedPreviewCompleted += HandleTimedPreviewCompleted;
+                noteProgression.OnTimedTrialCompleted += HandleTimedTrialCompleted;
                 noteProgression.OnNoteJudgedWithDuration += HandleNoteJudged;
             }
         }
@@ -77,6 +83,7 @@ namespace Uta.GameFlow
             {
                 noteProgression.OnCompleted -= HandlePlayCompleted;
                 noteProgression.OnTimedPreviewCompleted -= HandleTimedPreviewCompleted;
+                noteProgression.OnTimedTrialCompleted -= HandleTimedTrialCompleted;
                 noteProgression.OnNoteJudgedWithDuration -= HandleNoteJudged;
                 noteProgression.StopPlayback();
             }
@@ -104,6 +111,16 @@ namespace Uta.GameFlow
                 );
 
                 sessionManager?.RecoverToTitle();
+                return;
+            }
+
+            if (enableTimedInputTrial)
+            {
+                if (!TryStartTimedInputTrial())
+                {
+                    Debug.LogError("時間制入力テストの開始に失敗しました。");
+                    sessionManager?.RecoverToTitle();
+                }
                 return;
             }
 
@@ -250,6 +267,58 @@ namespace Uta.GameFlow
             currentBpm = chart.Bpm;
 
             return true;
+        }
+
+        // Trial is also non-scored; old JudgmentSession is note-based, not unit-based.
+        private bool TryStartTimedInputTrial()
+        {
+            if (CurrentSongChart == null || CurrentPlayPlan == null)
+            {
+                Debug.LogError("時間制入力テストに譜面がありません。");
+                return false;
+            }
+
+            if (!InputUnitBuilder.TryBuild(
+                CurrentSongChart, CurrentPlayPlan,
+                out var units, out string error))
+            {
+                Debug.LogError("InputUnit生成失敗: " + error);
+                return false;
+            }
+
+            var positions = new float[units.Count];
+            for (int i = 0; i < units.Count; i++)
+            {
+                if (units[i].TargetPitchStep < minPitchStep ||
+                    units[i].TargetPitchStep > maxPitchStep)
+                {
+                    Debug.LogError(
+                        "入力区間の音程が表示範囲外: " + units[i].UnitId);
+                    return false;
+                }
+                positions[i] = Mathf.InverseLerp(
+                    minPitchStep, maxPitchStep,
+                    units[i].TargetPitchStep);
+            }
+
+            Debug.Log(
+                $"[Issue #53] Interactive trial: " +
+                $"units={units.Count}, " +
+                $"holds={units.FindAll(u => u.IsHold).Count}, " +
+                $"duration={units[units.Count - 1].EndSeconds:F2}s");
+
+            return noteProgression.StartTimedInputTrial(
+                units, positions, holdToleranceSeconds);
+        }
+
+        private void HandleTimedTrialCompleted()
+        {
+            if (!enableTimedInputTrial || sessionManager == null ||
+                sessionManager.CurrentState != GameSessionState.Playing)
+                return;
+
+            // This mode does not produce a score; return to title safely.
+            sessionManager.RecoverToTitle();
         }
 
         // Preview is deliberately non-scored and must not enter Vocal Playback.
