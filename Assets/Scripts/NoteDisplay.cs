@@ -70,6 +70,26 @@ public class NoteDisplay : MonoBehaviour
     }
 
 
+    // #53: jump to the scheduled input unit without adding scroll animation time.
+    // Legacy ScrollToNote remains unchanged for the current gameplay route.
+    public void SeekToNote(int noteIndex)
+    {
+        if (noteIndex < 0 || noteIndex >= noteRenderers.Count)
+            return;
+
+        transform.position = initialPosition +
+            Vector3.left * (noteIndex * noteSpacing);
+
+        for (int i = 0; i < noteRenderers.Count; i++)
+        {
+            SpriteRenderer renderer = noteRenderers[i];
+
+            if (renderer != null)
+                renderer.enabled = i >= noteIndex;
+        }
+    }
+
+
     public IEnumerator ScrollToNote(int noteIndex)
     {
         Vector3 from = transform.position;
