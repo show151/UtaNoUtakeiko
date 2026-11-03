@@ -255,12 +255,17 @@ namespace Uta.GameFlow
         // Preview is deliberately non-scored and must not enter Vocal Playback.
         private bool TryStartTimingPreview()
         {
-            if (CurrentSongChart == null || CurrentPlayPlan == null ||
-                !InputUnitBuilder.TryBuild(
-                    CurrentSongChart,
-                    CurrentPlayPlan,
-                    out var units,
-                    out string error))
+            if (CurrentSongChart == null || CurrentPlayPlan == null)
+            {
+                Debug.LogError("時間軸プレビューの譜面データがありません。");
+                return false;
+            }
+
+            if (!InputUnitBuilder.TryBuild(
+                CurrentSongChart,
+                CurrentPlayPlan,
+                out var units,
+                out string error))
             {
                 Debug.LogError("InputUnit生成失敗: " + error);
                 return false;
