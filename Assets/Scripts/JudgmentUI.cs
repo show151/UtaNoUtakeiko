@@ -11,6 +11,8 @@ public class JudgmentUI : MonoBehaviour
     [SerializeField] private MovingBar movingBar;
     [SerializeField] private SliderTicks sliderTicks;
 
+    private bool timedInputFeedback;
+
     private void OnEnable()
     {
         if (judgmentSystem != null)
@@ -34,6 +36,8 @@ public class JudgmentUI : MonoBehaviour
 
     private void ShowJudgment(string result)
     {
+        if (timedInputFeedback)
+            return;
         judgmentText.text = result;
 
         switch (result)
@@ -64,6 +68,42 @@ public class JudgmentUI : MonoBehaviour
         );
     }
 
+
+    // In the timed route, each input can be TAP or HOLD without changing
+    // the existing legacy JudgmentSystem event contract.
+    public void SetTimedInputFeedback(bool enabled)
+    {
+        timedInputFeedback = enabled;
+        ClearJudgment();
+    }
+
+    public void ShowTimedInputPrompt(bool isHold)
+    {
+        if (!timedInputFeedback || judgmentText == null)
+            return;
+        judgmentText.text = isHold ? "HOLD - keep pressing" : "TAP";
+        judgmentText.color = isHold ? new Color(1f, 0.7f, 0.24f) : Color.white;
+    }
+
+    public void ShowTimedHoldProgress(float fraction)
+    {
+        if (!timedInputFeedback || judgmentText == null)
+            return;
+        judgmentText.text = $"HOLD {Mathf.RoundToInt(Mathf.Clamp01(fraction) * 100f)}%";
+        judgmentText.color = new Color(1f, 0.7f, 0.24f);
+    }
+
+    public void ShowTimedInputResult(string pitch, bool? holdSucceeded, bool timedOut)
+    {
+        if (!timedInputFeedback || judgmentText == null)
+            return;
+        judgmentText.text = timedOut ? "Miss" :
+            holdSucceeded.HasValue
+                ? $"{pitch} / HOLD {(holdSucceeded.Value ? "OK" : "MISS")}" : pitch;
+        judgmentText.color = timedOut || holdSucceeded == false
+            ? new Color(1f, 0.45f, 0.38f)
+            : Color.green;
+    }
 
     public void ClearJudgment()
     {
