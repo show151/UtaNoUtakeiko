@@ -81,7 +81,7 @@ public class JudgmentUI : MonoBehaviour
     {
         if (!timedInputFeedback || judgmentText == null)
             return;
-        judgmentText.text = isHold ? "HOLD - keep pressing" : "TAP";
+        judgmentText.text = isHold ? "長押し！" : "押して離そう";
         judgmentText.color = isHold ? new Color(1f, 0.7f, 0.24f) : Color.white;
     }
 
@@ -89,7 +89,7 @@ public class JudgmentUI : MonoBehaviour
     {
         if (!timedInputFeedback || judgmentText == null)
             return;
-        judgmentText.text = $"HOLD {Mathf.RoundToInt(Mathf.Clamp01(fraction) * 100f)}%";
+        judgmentText.text = $"長押し {Mathf.RoundToInt(Mathf.Clamp01(fraction) * 100f)}%";
         judgmentText.color = new Color(1f, 0.7f, 0.24f);
     }
 
@@ -99,7 +99,7 @@ public class JudgmentUI : MonoBehaviour
             return;
         judgmentText.text = timedOut ? "Miss" :
             holdSucceeded.HasValue
-                ? $"{pitch} / HOLD {(holdSucceeded.Value ? "OK" : "MISS")}" : pitch;
+                ? $"{pitch} / HOLD {(holdSucceeded.Value ? "成功" : "失敗")}" : pitch;
         judgmentText.color = timedOut || holdSucceeded == false
             ? new Color(1f, 0.45f, 0.38f)
             : Color.green;
