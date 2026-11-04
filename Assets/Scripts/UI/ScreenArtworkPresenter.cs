@@ -219,9 +219,17 @@ namespace Uta.GameFlow
             // Keep the input and judgment scene unobstructed.
             screenCanvas.gameObject.SetActive(!isPlaying);
 
-            Sprite backdrop = useWorldWallpaper ? null : titleArtwork;
+            bool isFullScreenSelection =
+                state == GameSessionState.DifficultySelect ||
+                state == GameSessionState.SongSelect;
+            Sprite backdrop = useWorldWallpaper || isFullScreenSelection
+                ? null
+                : titleArtwork;
             backgroundImage.sprite = backdrop;
-            backgroundImage.gameObject.SetActive(backdrop != null);
+            backgroundImage.color = isFullScreenSelection
+                ? new Color(0.035f, 0.08f, 0.14f, 1f)
+                : Color.white;
+            backgroundImage.gameObject.SetActive(backdrop != null || isFullScreenSelection);
 
             Sprite character = CharacterFor(state);
             characterImage.sprite = character;
