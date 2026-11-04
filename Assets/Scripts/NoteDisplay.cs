@@ -7,12 +7,16 @@ public class NoteDisplay : MonoBehaviour
 
     private readonly System.Collections.Generic.List<SpriteRenderer> noteRenderers
         = new System.Collections.Generic.List<SpriteRenderer>();
+    private readonly System.Collections.Generic.List<Transform> noteRoots
+        = new System.Collections.Generic.List<Transform>();
 
     [SerializeField] private Sprite noteSprite;
 
     // A solid white square sprite is used for the HOLD shaft instead of
     // stretching the rounded/irregular note sprite into a triangle.
     private Sprite holdShaftSprite;
+    private Sprite holdStartSprite;
+    private Sprite holdEndSprite;
     private readonly System.Collections.Generic.List<SpriteRenderer> holdCapRenderers
         = new System.Collections.Generic.List<SpriteRenderer>();
     private const float HoldBarLength = 3f;
@@ -31,7 +35,7 @@ public class NoteDisplay : MonoBehaviour
     [SerializeField] private float noteSpacing = 1.5f;
     [SerializeField] private float minY = -3f;
     [SerializeField] private float maxY = 3f;
-    [SerializeField] private float noteSize = 1f;
+    [SerializeField] private float noteSize = 0.35f;
 
     [Header("Scroll")]
     [SerializeField] private float scrollDuration = 0.4f;
@@ -50,6 +54,7 @@ public class NoteDisplay : MonoBehaviour
         transform.position = initialPosition;
 
         noteRenderers.Clear();
+        noteRoots.Clear();
         holdBodyRenderers.Clear();
         holdCapRenderers.Clear();
         holdProgressRenderers.Clear();
@@ -78,14 +83,20 @@ public class NoteDisplay : MonoBehaviour
             note.transform.localScale =
                 new Vector3(noteSize, noteSize, 1f);
 
+            // Scale the group for display size; the circle and bar retain
+            // their requested local scales of (1,1,1) and (3,1,1).
+            GameObject head = new GameObject("NoteHead");
+            head.transform.SetParent(note.transform, false);
+            head.transform.localScale = Vector3.one;
             SpriteRenderer renderer =
-                note.AddComponent<SpriteRenderer>();
+                head.AddComponent<SpriteRenderer>();
 
             renderer.sprite = noteSprite;
             renderer.color = new Color32(36, 91, 133, 255);
             renderer.sortingOrder = 2;
 
             noteRenderers.Add(renderer);
+            noteRoots.Add(note.transform);
             holdBodyRenderers.Add(null);
             holdCapRenderers.Add(null);
             holdProgressRenderers.Add(null);
@@ -112,15 +123,17 @@ public class NoteDisplay : MonoBehaviour
         for (int i = 0; i < units.Count; i++)
         {
             SpriteRenderer head = noteRenderers[i];
-            Vector3 position = head.transform.localPosition;
+            Vector3 position = noteRoots[i].localPosition;
             position.x = nextX;
-            head.transform.localPosition = position;
+            noteRoots[i].localPosition = position;
             // Keep the following note beyond the HOLD's end cap.
             nextX += noteSpacing + (units[i].IsHold ? HoldBarLength * noteSize : 0f);
             if (!units[i].IsHold)
                 continue;
 
             holdFlags[i] = true;
+            EnsureHoldEndSprites();
+            head.sprite = holdStartSprite != null ? holdStartSprite : noteSprite;
             head.color = new Color32(255, 175, 66, 255);
 
             if (holdShaftSprite == null)
@@ -165,11 +178,45 @@ public class NoteDisplay : MonoBehaviour
                 HoldBarLength, 0f, 0f);
             cap.transform.localScale = Vector3.one;
             SpriteRenderer capRenderer = cap.AddComponent<SpriteRenderer>();
-            capRenderer.sprite = noteSprite;
+            capRenderer.sprite = holdEndSprite != null ? holdEndSprite : noteSprite;
             capRenderer.color = new Color32(255, 175, 66, 255);
             capRenderer.sortingOrder = head.sortingOrder;
             holdCapRenderers[i] = capRenderer;
         }
+    }
+
+    // Reuse the source texture and split its geometry at the middle.
+    // The start extends left of the bar, the end extends right of it.
+    private void EnsureHoldEndSprites()
+    {
+        if (noteSprite == null || (holdStartSprite != null && holdEndSprite != null))
+            return;
+
+        Rect rect = noteSprite.rect;
+        Vector2 pivot = noteSprite.pivot;
+        float ppu = noteSprite.pixelsPerUnit;
+        Vector2 normalizedPivot = new Vector2(pivot.x / rect.width, pivot.y / rect.height);
+        float left = -pivot.x / ppu;
+        float middle = (rect.width * 0.5f - pivot.x) / ppu;
+        float right = (rect.width - pivot.x) / ppu;
+        float bottom = -pivot.y / ppu;
+        float top = (rect.height - pivot.y) / ppu;
+        ushort[] triangles = { 0, 1, 2, 2, 3, 0 };
+
+        holdStartSprite = Sprite.Create(noteSprite.texture, rect, normalizedPivot,
+            ppu, 0, SpriteMeshType.FullRect);
+        holdStartSprite.OverrideGeometry(new[]
+        {
+            new Vector2(left, bottom), new Vector2(left, top),
+            new Vector2(middle, top), new Vector2(middle, bottom)
+        }, triangles);
+        holdEndSprite = Sprite.Create(noteSprite.texture, rect, normalizedPivot,
+            ppu, 0, SpriteMeshType.FullRect);
+        holdEndSprite.OverrideGeometry(new[]
+        {
+            new Vector2(middle, bottom), new Vector2(middle, top),
+            new Vector2(right, top), new Vector2(right, bottom)
+        }, triangles);
     }
 
     public void ShowHoldProgress(int index, float progress)
@@ -254,7 +301,7 @@ public class NoteDisplay : MonoBehaviour
             return;
 
         transform.position = initialPosition +
-            Vector3.left * (noteRenderers[noteIndex].transform.localPosition.x - startX);
+            Vector3.left * (noteRoots[noteIndex].localPosition.x - startX);
 
         for (int i = 0; i < noteRenderers.Count; i++)
         {
@@ -280,13 +327,17 @@ public class NoteDisplay : MonoBehaviour
     {
         if (holdShaftSprite != null)
             Destroy(holdShaftSprite);
+        if (holdStartSprite != null)
+            Destroy(holdStartSprite);
+        if (holdEndSprite != null)
+            Destroy(holdEndSprite);
     }
 
     public IEnumerator ScrollToNote(int noteIndex)
     {
         Vector3 from = transform.position;
         Vector3 to = initialPosition +
-            Vector3.left * (noteRenderers[noteIndex].transform.localPosition.x - startX);
+            Vector3.left * (noteRoots[noteIndex].localPosition.x - startX);
 
         float elapsed = 0f;
 

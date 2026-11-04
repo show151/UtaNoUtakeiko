@@ -1009,7 +1009,7 @@ MonoBehaviour:
   noteSpacing: 1.5
   minY: -3
   maxY: 3
-  noteSize: 1
+  noteSize: 0.35
   scrollDuration: 0.4
 --- !u!4 &1461365692
 Transform:

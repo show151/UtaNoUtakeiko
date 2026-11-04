@@ -14,7 +14,7 @@ namespace UtaNoUtakeiko.Tests
             var go = new GameObject("NoteDisplay_Test");
             var texture = new Texture2D(8, 8);
             var sprite = Sprite.Create(
-                texture, new Rect(0f, 0f, 8f, 8f), new Vector2(0.5f, 0.5f));
+                texture, new Rect(0f, 0f, 8f, 8f), new Vector2(0.5f, 0.5f), 8f);
             try
             {
                 var display = go.AddComponent<NoteDisplay>();
@@ -38,31 +38,42 @@ namespace UtaNoUtakeiko.Tests
                         }
                     });
 
-                var shaft = go.transform.Find("Note_1/HoldBody");
-                var cap = go.transform.Find("Note_1/HoldEndCap");
-                var fill = go.transform.Find("Note_1/HoldProgress");
+                var shaft = go.transform.Find("Note_1/NoteHead/HoldBody");
+                var cap = go.transform.Find("Note_1/NoteHead/HoldEndCap");
+                var fill = go.transform.Find("Note_1/NoteHead/HoldProgress");
                 Assert.IsNotNull(shaft);
                 Assert.IsNotNull(cap);
                 Assert.IsNotNull(fill);
-                Assert.IsNull(go.transform.Find("Note_2/HoldProgress"));
-                Assert.IsNull(go.transform.Find("Note_2/HoldBody"));
-                Assert.IsNull(go.transform.Find("Note_2/HoldEndCap"));
+                Assert.IsNull(go.transform.Find("Note_2/NoteHead/HoldProgress"));
+                Assert.IsNull(go.transform.Find("Note_2/NoteHead/HoldBody"));
+                Assert.IsNull(go.transform.Find("Note_2/NoteHead/HoldEndCap"));
 
                 // The shaft is a solid square, not a stretched copy of the
                 // round note sprite, and it is visibly longer than tall.
                 var shaftRenderer = shaft.GetComponent<SpriteRenderer>();
                 Assert.AreNotSame(sprite, shaftRenderer.sprite);
-                Assert.AreEqual(Vector3.one, go.transform.Find("Note_1").localScale);
+                Assert.AreEqual(new Vector3(0.35f, 0.35f, 1f), go.transform.Find("Note_1").localScale);
+                Assert.AreEqual(Vector3.one, go.transform.Find("Note_1/NoteHead").localScale);
                 Assert.AreEqual(Vector3.one, cap.localScale);
                 Assert.AreEqual(new Vector3(3f, 1f, 1f), shaft.localScale);
                 Assert.AreEqual(shaft.localPosition.x * 2f, cap.localPosition.x, 0.001f);
                 Assert.Greater(go.transform.Find("Note_2").localPosition.x,
-                    go.transform.Find("Note_1").localPosition.x + cap.localPosition.x);
+                    go.transform.Find("Note_1").localPosition.x + cap.localPosition.x * 0.35f);
+
+                var headSprite = go.transform.Find("Note_1/NoteHead").GetComponent<SpriteRenderer>().sprite;
+                var capSprite = cap.GetComponent<SpriteRenderer>().sprite;
+                Assert.AreNotSame(sprite, headSprite);
+                Assert.AreNotSame(sprite, capSprite);
+                foreach (Vector2 vertex in headSprite.vertices)
+                    Assert.LessOrEqual(vertex.x, 0.001f);
+                foreach (Vector2 vertex in capSprite.vertices)
+                    Assert.GreaterOrEqual(vertex.x, -0.001f);
+                Assert.AreSame(sprite, go.transform.Find("Note_2/NoteHead").GetComponent<SpriteRenderer>().sprite);
 
                 var fillRenderer = fill.GetComponent<SpriteRenderer>();
                 Assert.IsFalse(fillRenderer.enabled);
                 display.ShowHoldProgress(0, 0.5f);
-                var headRenderer = go.transform.Find("Note_1").GetComponent<SpriteRenderer>();
+                var headRenderer = go.transform.Find("Note_1/NoteHead").GetComponent<SpriteRenderer>();
                 Assert.Greater(headRenderer.color.g, 0.9f, "The first circle lights while held.");
                 Assert.Less(cap.GetComponent<SpriteRenderer>().color.g, 0.9f, "The far circle waits for the fill.");
                 Assert.IsTrue(fillRenderer.enabled);
@@ -79,21 +90,21 @@ namespace UtaNoUtakeiko.Tests
                 float firstTargetX = go.transform.Find("Note_1").position.x;
                 display.SeekToNote(1);
                 Assert.AreEqual(firstTargetX, go.transform.Find("Note_2").position.x, 0.001f);
-                Assert.IsFalse(go.transform.Find("Note_1")
+                Assert.IsFalse(go.transform.Find("Note_1/NoteHead")
                     .GetComponent<SpriteRenderer>().enabled);
-                Assert.IsFalse(go.transform.Find("Note_1/HoldBody")
+                Assert.IsFalse(go.transform.Find("Note_1/NoteHead/HoldBody")
                     .GetComponent<SpriteRenderer>().enabled);
-                Assert.IsFalse(go.transform.Find("Note_1/HoldEndCap")
+                Assert.IsFalse(go.transform.Find("Note_1/NoteHead/HoldEndCap")
                     .GetComponent<SpriteRenderer>().enabled);
                 Assert.IsFalse(fillRenderer.enabled);
 
                 display.ShowHoldProgress(0, 1f);
-                Color completedColor = go.transform.Find("Note_1")
+                Color completedColor = go.transform.Find("Note_1/NoteHead")
                     .GetComponent<SpriteRenderer>().color;
                 Assert.Greater(completedColor.g, completedColor.r);
 
                 display.ShowInputResolution(1, false);
-                Color missedColor = go.transform.Find("Note_2")
+                Color missedColor = go.transform.Find("Note_2/NoteHead")
                     .GetComponent<SpriteRenderer>().color;
                 Assert.AreEqual(missedColor.r, missedColor.g, 0.05f);
             }
