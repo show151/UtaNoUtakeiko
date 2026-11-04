@@ -276,6 +276,8 @@ public class NoteProgression : MonoBehaviour
             currentGameplayUnits != null && currentGameplayUnits[pendingPressIndex].IsHold;
         pendingUnitDuration = pendingPressIndex >= 0 && currentGameplayUnits != null
             ? currentGameplayUnits[pendingPressIndex].DurationSeconds : 0f;
+        Debug.Log($"[InputTrace] CAPTURE unit={pendingPressIndex + 1}/" +
+                  $"{gameplayTrial.Count} frame={Time.frameCount}");
     }
 
     private void HandleGameplayResolved(TimedInputTrialResult result)
@@ -466,6 +468,8 @@ public class NoteProgression : MonoBehaviour
                 return;
 
             isAdvancing = true;
+            Debug.Log($"[InputTrace] RESOLVE unit={sourceIndex + 1}/" +
+                      $"{gameplayTrial.Count} held={heldSeconds:F3}s frame={Time.frameCount}");
             bool accepted = gameplayTrial.TryRecordPlayerRelease(
                 sourceIndex, result, position, heldSeconds,
                 holdToleranceSeconds);
