@@ -203,7 +203,7 @@ namespace Uta.GameFlow
             text.fontSize = fontSize;
             text.color = color;
             text.alignment = alignment;
-            text.enableWordWrapping = true;
+            text.textWrappingMode = TextWrappingModes.Normal;
             text.raycastTarget = false;
             return text;
         }
