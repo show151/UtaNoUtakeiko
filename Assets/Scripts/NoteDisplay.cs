@@ -283,9 +283,7 @@ public class NoteDisplay : MonoBehaviour
 
         noteRenderers[index].color = color;
         if (holdProgressRenderers[index] != null)
-            holdProgressRenderers[index].color = succeeded
-                ? new Color32(185, 255, 215, 255)
-                : new Color32(165, 165, 175, 255);
+            holdProgressRenderers[index].color = color;
         if (holdBodyRenderers[index] != null)
             holdBodyRenderers[index].color = color;
         if (holdCapRenderers[index] != null)

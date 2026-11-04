@@ -89,6 +89,9 @@ namespace UtaNoUtakeiko.Tests
                 display.ShowInputResolution(0, true);
                 Assert.AreEqual(shaft.localScale.x, fill.localScale.x, 0.001f);
                 Assert.Greater(cap.GetComponent<SpriteRenderer>().color.g, 0.9f);
+                Assert.AreEqual(headRenderer.color, shaftRenderer.color);
+                Assert.AreEqual(headRenderer.color, fillRenderer.color);
+                Assert.AreEqual(headRenderer.color, cap.GetComponent<SpriteRenderer>().color);
 
                 // Skipping past a HOLD must hide its note and every child bar.
                 float firstTargetX = go.transform.Find("Note_1").position.x;
