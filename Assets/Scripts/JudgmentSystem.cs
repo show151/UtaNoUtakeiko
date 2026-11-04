@@ -10,6 +10,8 @@ public class JudgmentSystem : MonoBehaviour
     public event Action<float> OnPressPositionCaptured;
     public event Action OnPressCaptureCanceled;
     public bool HasCapturedPress => hasCapturedPress;
+    public float CapturedPosition => capturedPosition;
+    public string CapturedPitchJudgment => GetPitchJudgment(capturedPosition);
     public bool IsInputHeld => inputManager != null && inputManager.IsPhysicallyPressed;
 
     public event Action<string, float> OnJudgedWithPosition;
@@ -100,22 +102,7 @@ public class JudgmentSystem : MonoBehaviour
 
         float position = capturedPosition;
 
-        float difference = Mathf.Abs(
-            position - targetPosition
-        );
-
-        string result;
-
-        if (difference <= 0.02f)
-            result = "Perfect";
-        else if (difference <= 0.05f)
-            result = "Great";
-        else if (difference <= 0.10f)
-            result = "Good";
-        else if (difference <= 0.20f)
-            result = "Bad";
-        else
-            result = "Miss";
+        string result = GetPitchJudgment(position);
 
         Debug.Log(
             $"Position={position:F3}, " +
@@ -136,6 +123,16 @@ public class JudgmentSystem : MonoBehaviour
 
         // 既存の音符進行・UI連携を維持
         OnJudged?.Invoke(result);
+    }
+
+    private string GetPitchJudgment(float position)
+    {
+        float difference = Mathf.Abs(position - targetPosition);
+        if (difference <= 0.02f) return "Perfect";
+        if (difference <= 0.05f) return "Great";
+        if (difference <= 0.10f) return "Good";
+        if (difference <= 0.20f) return "Bad";
+        return "Miss";
     }
 
     public void ResetJudgment(float nextTargetPosition)
