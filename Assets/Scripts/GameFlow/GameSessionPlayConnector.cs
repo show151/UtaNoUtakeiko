@@ -30,17 +30,6 @@ namespace Uta.GameFlow
         [SerializeField, Range(0f, 0.2f)]
         private float holdToleranceSeconds = 0.05f;
 
-        // Enable only for a visual timing test; scoring and audio are intentionally skipped.
-        [SerializeField]
-        private bool enableTimingPreview = false;
-
-        // Issue #53: test real Space/button presses with a 70% fixed timeline.
-        // Does not calculate a score or play vocals yet.
-        [SerializeField]
-        private bool enableTimedInputTrial = false;
-
-        private int currentBpm;
-
         // 後続の採点・歌唱処理で使う
         public PlayPlan CurrentPlayPlan { get; private set; }
         public PlaybackPlan CurrentPlaybackPlan { get; private set; }
@@ -67,10 +56,7 @@ namespace Uta.GameFlow
         
             if (noteProgression != null)
             {
-                noteProgression.OnCompleted += HandlePlayCompleted;
-                noteProgression.OnTimedPreviewCompleted += HandleTimedPreviewCompleted;
-                noteProgression.OnTimedTrialCompleted += HandleTimedTrialCompleted;
-                noteProgression.OnNoteJudgedWithDuration += HandleNoteJudged;
+                noteProgression.OnGameplayCompleted += HandleGameplayCompleted;
             }
         }
         
@@ -84,10 +70,7 @@ namespace Uta.GameFlow
         
             if (noteProgression != null)
             {
-                noteProgression.OnCompleted -= HandlePlayCompleted;
-                noteProgression.OnTimedPreviewCompleted -= HandleTimedPreviewCompleted;
-                noteProgression.OnTimedTrialCompleted -= HandleTimedTrialCompleted;
-                noteProgression.OnNoteJudgedWithDuration -= HandleNoteJudged;
+                noteProgression.OnGameplayCompleted -= HandleGameplayCompleted;
                 noteProgression.StopPlayback();
             }
         }
@@ -117,35 +100,13 @@ namespace Uta.GameFlow
                 return;
             }
 
-            if (enableTimedInputTrial)
+            // Production Playing always uses scheduled, player-driven
+            // InputUnits (TAP/HOLD). No preview or legacy note-by-note fallback.
+            if (!TryStartGameplay())
             {
-                if (!TryStartTimedInputTrial())
-                {
-                    Debug.LogError("時間制入力テストの開始に失敗しました。");
-                    sessionManager?.RecoverToTitle();
-                }
-                return;
+                Debug.LogError("本番ゲームプレイの開始に失敗しました。");
+                sessionManager?.RecoverToTitle();
             }
-
-            if (enableTimingPreview)
-            {
-                if (!TryStartTimingPreview())
-                {
-                    Debug.LogError("70%時間軸プレビューの開始に失敗しました。");
-                    sessionManager?.RecoverToTitle();
-                }
-                return;
-            }
-
-            string[] noteIds =
-                new string[CurrentPlayPlan.Notes.Count];
-
-            for (int i = 0; i < noteIds.Length; i++)
-            {
-                noteIds[i] = CurrentPlayPlan.Notes[i].NoteId;
-            }
-
-            noteProgression.StartPlay(notePositions, noteIds);
         }
 
         private bool TryPreparePlay(out float[] notePositions)
@@ -154,8 +115,6 @@ namespace Uta.GameFlow
             CurrentPlayPlan = null;
             CurrentPlaybackPlan = null;
             CurrentJudgmentSession = null;
-
-            currentBpm = 0;
 
             CurrentScoreResult = null;
             CurrentVocalScoreResult = null;
@@ -269,17 +228,16 @@ namespace Uta.GameFlow
                 $"再生区間数: {playbackPlan.Sections.Count}"
             );
 
-            currentBpm = chart.Bpm;
-
             return true;
         }
 
-        // Trial is also non-scored; old JudgmentSession is note-based, not unit-based.
-        private bool TryStartTimedInputTrial()
+        // The regular Playing state always uses the grouped InputUnit model.
+        // A hold is determined by contiguous source notes, never Note.IsHold.
+        private bool TryStartGameplay()
         {
             if (CurrentSongChart == null || CurrentPlayPlan == null)
             {
-                Debug.LogError("時間制入力テストに譜面がありません。");
+                Debug.LogError("ゲームプレイ用の譜面がありません。");
                 return false;
             }
 
@@ -301,36 +259,34 @@ namespace Uta.GameFlow
                         "入力区間の音程が表示範囲外: " + units[i].UnitId);
                     return false;
                 }
+
                 positions[i] = Mathf.InverseLerp(
                     minPitchStep, maxPitchStep,
                     units[i].TargetPitchStep);
             }
 
             Debug.Log(
-                $"[Issue #53] Interactive trial: " +
-                $"units={units.Count}, " +
-                $"holds={units.FindAll(u => u.IsHold).Count}, " +
-                $"duration={units[units.Count - 1].EndSeconds:F2}s");
+                $"本番ゲームプレイ: 入力区間={units.Count}, " +
+                $"長押し={units.FindAll(u => u.IsHold).Count}, " +
+                $"時間={units[units.Count - 1].EndSeconds:F2}s");
 
             CurrentInputUnits = units;
-            return noteProgression.StartTimedInputTrial(
+            return noteProgression.StartGameplayInput(
                 units, positions, holdToleranceSeconds);
         }
 
-        private void HandleTimedTrialCompleted()
+        private void HandleGameplayCompleted()
         {
-            if (!enableTimedInputTrial || sessionManager == null ||
-                sessionManager.CurrentState != GameSessionState.Playing)
-                return;
-
-            if (CurrentScoreResult != null)
+            if (sessionManager == null ||
+                sessionManager.CurrentState != GameSessionState.Playing ||
+                CurrentScoreResult != null)
                 return;
 
             try
             {
-                var trialResults = noteProgression.LastTimedTrialResults;
-                if (CurrentInputUnits == null || trialResults == null)
-                    throw new InvalidOperationException("Timed input results are missing.");
+                var results = noteProgression.LastGameplayResults;
+                if (CurrentInputUnits == null || results == null)
+                    throw new InvalidOperationException("ゲームプレイの判定結果がありません。");
 
                 var policy = new ScorePolicy(
                     perfect: 100, great: 80, good: 60,
@@ -342,7 +298,7 @@ namespace Uta.GameFlow
                     Enum.TryParse(CurrentSongChart.DifficultyId, true, out difficulty);
 
                 CurrentScoreResult = GroupedInputScoreAdapter.Calculate(
-                    CurrentPlayPlan, CurrentInputUnits, trialResults,
+                    CurrentPlayPlan, CurrentInputUnits, results,
                     policy, difficulty, minPitchStep, maxPitchStep);
 
                 CurrentVocalScoreResult =
@@ -350,18 +306,17 @@ namespace Uta.GameFlow
                         CurrentScoreResult, CurrentInputUnits);
 
                 Debug.Log(
-                    $"[Issue #53] Grouped scoring complete: " +
-                    $"{CurrentScoreResult.Score:N0}/" +
-                    $"{CurrentScoreResult.MaxScore:N0}; " +
-                    $"inputUnits={CurrentScoreResult.UnitResults.Count}, " +
-                    $"vocalNotes={CurrentVocalScoreResult.UnitResults.Count}");
+                    $"本番プレイ採点完了: {CurrentScoreResult.Score:N0}/" +
+                    $"{CurrentScoreResult.MaxScore:N0}, " +
+                    $"入力区間={CurrentScoreResult.UnitResults.Count}, " +
+                    $"歌唱音符={CurrentVocalScoreResult.UnitResults.Count}");
 
                 if (!sessionManager.TryTransition(GameSessionState.Playback))
                     sessionManager.RecoverToTitle();
             }
             catch (Exception ex)
             {
-                Debug.LogError("[Issue #53] Grouped score/audio setup failed.");
+                Debug.LogError("本番プレイの採点・歌唱準備に失敗しました。");
                 Debug.LogException(ex);
                 CurrentScoreResult = null;
                 CurrentVocalScoreResult = null;
@@ -369,282 +324,16 @@ namespace Uta.GameFlow
             }
         }
 
-        // Preview is deliberately non-scored and must not enter Vocal Playback.
-        private bool TryStartTimingPreview()
-        {
-            if (CurrentSongChart == null || CurrentPlayPlan == null)
-            {
-                Debug.LogError("時間軸プレビューの譜面データがありません。");
-                return false;
-            }
-
-            if (!InputUnitBuilder.TryBuild(
-                CurrentSongChart,
-                CurrentPlayPlan,
-                out var units,
-                out string error))
-            {
-                Debug.LogError("InputUnit生成失敗: " + error);
-                return false;
-            }
-
-            var positions = new float[units.Count];
-            var ids = new string[units.Count];
-            var starts = new float[units.Count];
-
-            for (int i = 0; i < units.Count; i++)
-            {
-                var unit = units[i];
-                if (unit.TargetPitchStep < minPitchStep ||
-                    unit.TargetPitchStep > maxPitchStep)
-                {
-                    Debug.LogError("入力区間の音程が表示範囲外: " + unit.UnitId);
-                    return false;
-                }
-
-                positions[i] = Mathf.InverseLerp(
-                    minPitchStep, maxPitchStep, unit.TargetPitchStep);
-                ids[i] = unit.UnitId;
-                starts[i] = unit.StartSeconds;
-            }
-
-            float totalSeconds = units[units.Count - 1].EndSeconds;
-            Debug.Log(
-                $"[Issue #53] Preview: BPM={CurrentSongChart.Bpm}, " +
-                $"units={units.Count}, holds={units.FindAll(u => u.IsHold).Count}, " +
-                $"length={totalSeconds:F2}s"
-            );
-
-            return noteProgression.StartTimedPreview(
-                positions, ids, starts, totalSeconds);
-        }
-
-        private void HandleTimedPreviewCompleted()
-        {
-            if (!enableTimingPreview || sessionManager == null ||
-                sessionManager.CurrentState != GameSessionState.Playing)
-                return;
-
-            // Avoid normal score finalization because the old score session still
-            // expects individual notes rather than grouped input units.
-            sessionManager.RecoverToTitle();
-        }
-
-        private void HandlePlayCompleted()
-        {
-            FinalizeScoreAndAdvance(timedOut: false);
-        }
-
         private void HandleSessionTimedOut()
         {
-            if (enableTimedInputTrial || enableTimingPreview)
-            {
-                Debug.LogWarning("Preview/trial session time limit reached.");
-                sessionManager?.RecoverToTitle();
-                return;
-            }
-
-            Debug.LogWarning(
-                "時間切れのため、未入力音符を確定します。"
-            );
-
-            FinalizeScoreAndAdvance(timedOut: true);
-        }
-
-        private void FinalizeScoreAndAdvance(bool timedOut)
-        {
+            // This is the global emergency timeout, not each input unit's
+            // scheduled auto-Miss. An abnormal timeout returns to the title.
             if (sessionManager == null ||
                 sessionManager.CurrentState != GameSessionState.Playing)
-            {
-                return;
-            }
-
-            // スコアは1セッションにつき1回だけ確定
-            if (CurrentScoreResult != null)
                 return;
 
-            if (CurrentJudgmentSession == null ||
-                CurrentPlayPlan == null)
-            {
-                Debug.LogError("採点に必要なデータがありません。");
-                sessionManager.RecoverToTitle();
-                return;
-            }
-
-            try
-            {
-                if (timedOut)
-                {
-                    // 未入力音符をTimedOutとして確定
-                    CurrentJudgmentSession.FinalizeTimedOut();
-                }
-                else
-                {
-                    // 全音符の入力完了を確認して確定
-                    CurrentJudgmentSession.FinalizeSession();
-                }
-
-                var unitResults =
-                    CurrentJudgmentSession.GetUnitResults();
-
-                // 既存Step 11と同じ暫定配点
-                var scorePolicy = new ScorePolicy(
-                    perfect: 100,
-                    great: 80,
-                    good: 60,
-                    bad: 30,
-                    miss: 0,
-                    holdPerfect: 100,
-                    holdMiss: 0
-                );
-
-                CurrentScoreResult = ScoreCalculator.Calculate(
-                    CurrentPlayPlan,
-                    unitResults,
-                    scorePolicy,
-                    Difficulty.Easy,
-                    timedOut
-                );
-
-                var score = CurrentScoreResult;
-
-                Debug.Log(
-                    "===== スコア確定 =====\n" +
-                    $"時間切れ: {score.TimedOut}\n" +
-                    $"スコア: {score.Score:N0} / {score.MaxScore:N0}\n" +
-                    $"達成率: {score.AchievementRate:F2}%\n" +
-                    $"Perfect: {score.PerfectCount}\n" +
-                    $"Great: {score.GreatCount}\n" +
-                    $"Good: {score.GoodCount}\n" +
-                    $"Bad: {score.BadCount}\n" +
-                    $"Miss: {score.MissCount}\n" +
-                    $"入力済み音符数: " +
-                    $"{CurrentJudgmentSession.JudgedNotes}/" +
-                    $"{CurrentJudgmentSession.TotalNotes}"
-                );
-
-                // 通常終了・時間切れの両方でPlaybackへ
-                if (!sessionManager.TryTransition(
-                    GameSessionState.Playback))
-                {
-                    Debug.LogError(
-                        "Playbackへの遷移に失敗しました。"
-                    );
-
-                    CurrentScoreResult = null;
-                    sessionManager.RecoverToTitle();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError("スコア確定に失敗しました。");
-                Debug.LogException(ex);
-
-                CurrentScoreResult = null;
-                sessionManager.RecoverToTitle();
-            }
-        }
-
-        private void HandleNoteJudged(
-            string noteId,
-            string result,
-            float position,
-            float heldSeconds)
-        {
-            if (sessionManager == null ||
-                sessionManager.CurrentState != GameSessionState.Playing ||
-                CurrentJudgmentSession == null ||
-                CurrentPlayPlan == null ||
-                currentBpm <= 0)
-            {
-                return;
-            }
-
-            if (!Enum.TryParse<JudgmentType>(
-                result, out var judgment) ||
-                !Enum.IsDefined(typeof(JudgmentType), judgment))
-            {
-                Debug.LogError($"不明な判定: {result}");
-                return;
-            }
-
-            if (float.IsNaN(position) ||
-                float.IsInfinity(position) ||
-                position < 0f ||
-                position > 1f ||
-                float.IsNaN(heldSeconds) ||
-                float.IsInfinity(heldSeconds) ||
-                heldSeconds < 0f)
-            {
-                Debug.LogError("入力データが不正です。");
-                return;
-            }
-
-            // PlayPlanから対象音符を取得
-            Note targetNote = null;
-
-            foreach (Note note in CurrentPlayPlan.Notes)
-            {
-                if (note.NoteId == noteId)
-                {
-                    targetNote = note;
-                    break;
-                }
-            }
-
-            if (targetNote == null)
-            {
-                Debug.LogError($"音符が見つかりません: {noteId}");
-                return;
-            }
-
-            int capturedPitchStep = Mathf.RoundToInt(
-                Mathf.Lerp(minPitchStep, maxPitchStep, position)
-            );
-
-            // 通常の5段階判定を一度だけ登録
-            if (!CurrentJudgmentSession.TryJudge(
-                noteId,
-                capturedPitchStep,
-                judgment))
-            {
-                Debug.LogError($"通常判定の登録失敗: {noteId}");
-                return;
-            }
-
-            // 長押し音符だけ保持判定を追加
-            if (targetNote.IsHold)
-            {
-                float requiredSeconds =
-                    targetNote.DurationBeats * 60f / currentBpm;
-
-                HoldJudgmentType holdJudgment =
-                    heldSeconds + holdToleranceSeconds >= requiredSeconds
-                        ? HoldJudgmentType.Perfect
-                        : HoldJudgmentType.Miss;
-
-                if (!CurrentJudgmentSession.TryJudgeHold(
-                    noteId, holdJudgment))
-                {
-                    Debug.LogError($"保持判定の登録失敗: {noteId}");
-                    return;
-                }
-
-                Debug.Log(
-                    $"保持判定: {noteId}, " +
-                    $"必要={requiredSeconds:F2}s, " +
-                    $"実際={heldSeconds:F2}s, " +
-                    $"結果={holdJudgment}"
-                );
-            }
-
-            Debug.Log(
-                $"判定登録成功: {noteId}, " +
-                $"Pitch={capturedPitchStep}, " +
-                $"Judgment={judgment}, " +
-                $"Count={CurrentJudgmentSession.JudgedNotes}/" +
-                $"{CurrentJudgmentSession.TotalNotes}"
-            );
+            Debug.LogWarning("全体制限時間を超えたため、タイトルに戻ります。");
+            sessionManager.RecoverToTitle();
         }
     }
 }
