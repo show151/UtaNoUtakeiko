@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -17,7 +18,8 @@ namespace Uta.GameFlow
     {
         [SerializeField] private GameSessionManager sessionManager;
         [SerializeField] private GameSessionPlayConnector playConnector;
-        [SerializeField] private GameSessionTimeout sessionTimeout;
+        private Component sessionTimeoutComponent;
+        private PropertyInfo remainingTimeProperty;
         [SerializeField] private GameSessionPlaybackConnector playbackConnector;
 
         [Header("Artwork (Sprite / 2D and UI)")]
@@ -110,9 +112,7 @@ namespace Uta.GameFlow
             if (playConnector == null)
                 playConnector = GetComponent<GameSessionPlayConnector>()
                     ?? FindFirstObjectByType<GameSessionPlayConnector>();
-            if (sessionTimeout == null)
-                sessionTimeout = GetComponent<GameSessionTimeout>()
-                    ?? FindFirstObjectByType<GameSessionTimeout>();
+            ResolveSessionTimeout();
             if (playbackConnector == null)
                 playbackConnector = GetComponent<GameSessionPlaybackConnector>()
                     ?? FindFirstObjectByType<GameSessionPlaybackConnector>();
@@ -362,12 +362,50 @@ namespace Uta.GameFlow
             }
         }
 
-        private void UpdateGameplayTimer(GameSessionState state)
+        private void ResolveSessionTimeout()
         {
-            if (state != GameSessionState.Playing || gameplayTimerText == null || sessionTimeout == null)
+            if (sessionTimeoutComponent != null)
                 return;
 
-            int seconds = Mathf.CeilToInt(Mathf.Max(0f, sessionTimeout.RemainingTime));
+            // The project currently contains an imported GameSessionTimeout
+            // type with the same name, so resolve the attached component by
+            // its runtime type name instead of a compile-time generic type.
+            sessionTimeoutComponent = GetComponent("GameSessionTimeout");
+            if (sessionTimeoutComponent == null)
+            {
+                var components = FindObjectsByType<MonoBehaviour>(
+                    FindObjectsSortMode.None);
+                foreach (var component in components)
+                {
+                    if (component != null &&
+                        component.GetType().Name == "GameSessionTimeout")
+                    {
+                        sessionTimeoutComponent = component;
+                        break;
+                    }
+                }
+            }
+
+            if (sessionTimeoutComponent != null)
+                remainingTimeProperty = sessionTimeoutComponent.GetType()
+                    .GetProperty("RemainingTime");
+        }
+
+        private void UpdateGameplayTimer(GameSessionState state)
+        {
+            if (state != GameSessionState.Playing || gameplayTimerText == null)
+                return;
+
+            ResolveSessionTimeout();
+            float remainingTime = 0f;
+            if (sessionTimeoutComponent != null && remainingTimeProperty != null)
+            {
+                object value = remainingTimeProperty.GetValue(sessionTimeoutComponent);
+                if (value is float timerValue)
+                    remainingTime = timerValue;
+            }
+
+            int seconds = Mathf.CeilToInt(Mathf.Max(0f, remainingTime));
             gameplayTimerText.text = $"残り時間 {seconds / 60:00}:{seconds % 60:00}";
         }
 
