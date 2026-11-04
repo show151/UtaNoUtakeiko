@@ -16,6 +16,7 @@ namespace UtaNoUtakeiko.Tests
                     UnitId = "A",
                     TargetPitchStep = 0,
                     IsHold = true,
+                    HoldDurationSeconds = 0.7f,
                     StartSeconds = 0f,
                     EndSeconds = 0.7f
                 },
