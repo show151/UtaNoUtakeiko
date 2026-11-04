@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UtaNoUtakeiko.Gameplay;
 
 namespace Uta.GameFlow
 {
@@ -39,9 +40,7 @@ namespace Uta.GameFlow
         private SpriteRenderer wallpaperRenderer;
         private Camera gameplayCamera;
         private RectTransform uiRoot;
-        private Text screenTitle;
         private Text selectionValue;
-        private Text statusText;
         private InputField playerNameInput;
         private Text rankingListText;
         private int difficultyIndex;
@@ -237,9 +236,7 @@ namespace Uta.GameFlow
                 return;
 
             ClearChildren(uiRoot);
-            screenTitle = null;
             selectionValue = null;
-            statusText = null;
             playerNameInput = null;
             rankingListText = null;
 
