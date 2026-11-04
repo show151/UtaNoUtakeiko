@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
@@ -117,6 +118,92 @@ namespace UtaNoUtakeiko.Tests
                 Object.DestroyImmediate(sprite);
                 Object.DestroyImmediate(texture);
             }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void CompletedHold_ScrollsWhileHeld_AndRearmsOnlyAfterRelease(bool releaseDuringSlide)
+        {
+            var go = new GameObject("Advance_Test");
+            var textGo = new GameObject("JudgmentText_Test", typeof(RectTransform));
+            textGo.SetActive(false);
+            try
+            {
+                var display = go.AddComponent<NoteDisplay>();
+                var input = go.AddComponent<InputManager>();
+                var judgment = go.AddComponent<JudgmentSystem>();
+                var ui = go.AddComponent<JudgmentUI>();
+                var ticks = go.AddComponent<SliderTicks>();
+                var progression = go.AddComponent<NoteProgression>();
+                var positions = new[] { 0.2f, 0.8f };
+                display.Initialize(positions);
+                SetPrivate(display, "scrollDuration", 0f);
+                SetPrivate(input, "isTestMode", false);
+                SetPrivate(input, "isPressed", true);
+                SetPrivate(judgment, "inputManager", input);
+
+                var textField = typeof(JudgmentUI).GetField(
+                    "judgmentText", BindingFlags.Instance | BindingFlags.NonPublic);
+                var textType = textField.FieldType.Assembly.GetType("TMPro.TextMeshProUGUI");
+                Assert.IsNotNull(textType);
+                textField.SetValue(ui, textGo.AddComponent(textType));
+                SetPrivate(ui, "sliderTicks", ticks);
+
+                SetPrivate(progression, "noteDisplay", display);
+                SetPrivate(progression, "judgmentSystem", judgment);
+                SetPrivate(progression, "judgmentUI", ui);
+                SetPrivate(progression, "notePositions", positions);
+                SetPrivate(progression, "currentGameplayUnits", new List<InputUnit>
+                {
+                    new InputUnit { UnitId = "H1", IsHold = true },
+                    new InputUnit { UnitId = "T2", IsHold = false }
+                });
+                SetPrivate(progression, "isGameplayInput", true);
+                SetPrivate(progression, "isAdvancing", true);
+
+                var method = typeof(NoteProgression).GetMethod(
+                    "AdvanceGameplay", BindingFlags.Instance | BindingFlags.NonPublic);
+                var advance = (IEnumerator)method.Invoke(progression, new object[] { 1, true });
+
+                Assert.IsTrue(advance.MoveNext(), "Scroll starts before release.");
+                var slide = advance.Current as IEnumerator;
+                Assert.IsNotNull(slide);
+                float before = display.transform.position.x;
+                if (releaseDuringSlide)
+                    SetPrivate(input, "isPressed", false);
+                Assert.IsFalse(slide.MoveNext());
+                Assert.Less(display.transform.position.x, before);
+
+                if (!releaseDuringSlide)
+                {
+                    Assert.IsTrue(advance.MoveNext(), "Still held after scroll: keep waiting.");
+                    Assert.IsNull(advance.Current);
+                    Assert.IsTrue((bool)GetPrivate(progression, "isAdvancing"));
+                    Assert.AreEqual(0, GetPrivate(progression, "currentNoteIndex"));
+                    SetPrivate(input, "isPressed", false);
+                }
+
+                Assert.IsFalse(advance.MoveNext());
+                Assert.AreEqual(1, GetPrivate(progression, "currentNoteIndex"));
+                Assert.IsFalse((bool)GetPrivate(progression, "isAdvancing"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+                Object.DestroyImmediate(textGo);
+            }
+        }
+
+        private static void SetPrivate(object target, string name, object value)
+        {
+            target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(target, value);
+        }
+
+        private static object GetPrivate(object target, string name)
+        {
+            return target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(target);
         }
     }
 }

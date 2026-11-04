@@ -355,41 +355,53 @@ public class NoteProgression : MonoBehaviour
         pendingPressIndex = -1;
         pendingIsHold = false;
         pendingUnitDuration = 0f;
-        StartCoroutine(AdvanceGameplayAfterRelease(completedIndex + 1));
+        StartCoroutine(AdvanceGameplay(completedIndex + 1, scrollBeforeRelease: true));
     }
 
-    // Input is disabled while the current note (including its HOLD body)
-    // slides away. No subsequent unit can be consumed by the same press.
-    private IEnumerator AdvanceGameplayAfterRelease(int nextIndex)
+    // Successful HOLDs scroll immediately; input remains locked until both
+    // scrolling and the physical release have completed.
+    private IEnumerator AdvanceGameplay(int nextIndex, bool scrollBeforeRelease)
     {
-        // Do not scroll until the input has been physically released.
+        if (!scrollBeforeRelease)
+        {
+            while (isGameplayInput && judgmentSystem.IsInputHeld)
+                yield return null;
+
+            if (!isGameplayInput)
+                yield break;
+
+            // Keep early-release HOLD results readable.
+            if (currentGameplayUnits != null && nextIndex > 0 &&
+                currentGameplayUnits[nextIndex - 1].IsHold)
+            {
+                yield return new WaitForSecondsRealtime(0.75f);
+                if (!isGameplayInput)
+                    yield break;
+            }
+        }
+
+        if (nextIndex < notePositions.Length)
+        {
+            Debug.Log($"[Gameplay] Slide to input {nextIndex + 1}/{notePositions.Length}");
+            yield return noteDisplay.ScrollToNote(nextIndex);
+        }
+
+        if (!isGameplayInput || currentGameplayUnits == null)
+            yield break;
+
+        // Also wait when the previous press was released and another press
+        // began during the slide; no held press can become the next input.
         while (isGameplayInput && judgmentSystem.IsInputHeld)
             yield return null;
 
-        if (!isGameplayInput)
+        if (!isGameplayInput || currentGameplayUnits == null)
             yield break;
-
-        // Keep both judgments readable after a HOLD release, including on
-        // the last note before the gameplay screen transitions away.
-        if (currentGameplayUnits != null && nextIndex > 0 &&
-            currentGameplayUnits[nextIndex - 1].IsHold)
-        {
-            yield return new WaitForSecondsRealtime(0.75f);
-            if (!isGameplayInput)
-                yield break;
-        }
 
         if (nextIndex >= notePositions.Length)
         {
             CompleteGameplayInput();
             yield break;
         }
-
-        Debug.Log($"[Gameplay] Slide to input {nextIndex + 1}/{notePositions.Length}");
-        yield return noteDisplay.ScrollToNote(nextIndex);
-
-        if (!isGameplayInput || currentGameplayUnits == null)
-            yield break;
 
         currentNoteIndex = nextIndex;
         judgmentUI.ClearJudgment();
@@ -546,7 +558,7 @@ public class NoteProgression : MonoBehaviour
                 return;
             }
 
-            StartCoroutine(AdvanceGameplayAfterRelease(next));
+            StartCoroutine(AdvanceGameplay(next, scrollBeforeRelease: false));
             return;
         }
 
