@@ -8,6 +8,7 @@ public class JudgmentSystem : MonoBehaviour
 
     // Used only by the Issue #53 timed input trial to pin the press to its unit.
     public event Action<float> OnPressPositionCaptured;
+    public event Action OnPressCaptureCanceled;
     public bool HasCapturedPress => hasCapturedPress;
     public bool IsInputHeld => inputManager != null && inputManager.IsPhysicallyPressed;
 
@@ -34,6 +35,7 @@ public class JudgmentSystem : MonoBehaviour
 
         inputManager.OnPressStarted += HandlePressStarted;
         inputManager.OnPressReleased += HandlePressReleased;
+        inputManager.OnPressCanceled += HandlePressCanceled;
     }
 
     private void OnDisable()
@@ -42,6 +44,7 @@ public class JudgmentSystem : MonoBehaviour
         {
             inputManager.OnPressStarted -= HandlePressStarted;
             inputManager.OnPressReleased -= HandlePressReleased;
+            inputManager.OnPressCanceled -= HandlePressCanceled;
         }
 
         hasCapturedPress = false;
@@ -59,6 +62,17 @@ public class JudgmentSystem : MonoBehaviour
 
         movingBar.StopMovement();
         OnPressPositionCaptured?.Invoke(capturedPosition);
+    }
+
+    private void HandlePressCanceled()
+    {
+        if (!hasCapturedPress || hasJudged)
+            return;
+
+        hasCapturedPress = false;
+        if (movingBar != null)
+            movingBar.ResumeMovement();
+        OnPressCaptureCanceled?.Invoke();
     }
 
     private void HandlePressReleased(float heldSeconds)
