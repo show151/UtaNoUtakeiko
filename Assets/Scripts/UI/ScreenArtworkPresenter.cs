@@ -14,6 +14,9 @@ namespace Uta.GameFlow
         [SerializeField] private GameSessionManager sessionManager;
         [SerializeField] private GameSessionPlayConnector playConnector;
 
+        [Header("Typography")]
+        [SerializeField] private TMP_FontAsset japaneseFont;
+
         [Header("Artwork (Sprite / 2D and UI)")]
         [SerializeField] private Sprite titleArtwork;
         [SerializeField] private Sprite normalCharacter;
@@ -39,12 +42,16 @@ namespace Uta.GameFlow
         {
             if (sessionManager != null)
                 sessionManager.OnStateChanged += HandleStateChanged;
+            if (screenCanvas != null)
+                screenCanvas.gameObject.SetActive(true);
         }
 
         private void OnDisable()
         {
             if (sessionManager != null)
                 sessionManager.OnStateChanged -= HandleStateChanged;
+            if (screenCanvas != null)
+                screenCanvas.gameObject.SetActive(false);
         }
 
         private void Start()
@@ -76,8 +83,6 @@ namespace Uta.GameFlow
                 typeof(Canvas),
                 typeof(CanvasScaler),
                 typeof(GraphicRaycaster));
-            canvasObject.transform.SetParent(transform, false);
-
             screenCanvas = canvasObject.GetComponent<Canvas>();
             screenCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             screenCanvas.sortingOrder = 20;
@@ -168,7 +173,7 @@ namespace Uta.GameFlow
             return image;
         }
 
-        private static TMP_Text CreateText(
+        private TMP_Text CreateText(
             string objectName,
             Transform parent,
             Vector2 anchorMin,
@@ -191,8 +196,10 @@ namespace Uta.GameFlow
             rect.sizeDelta = size;
 
             var text = textObject.GetComponent<TextMeshProUGUI>();
-            text.font = Resources.Load<TMP_FontAsset>(
-                "Fonts & Materials/LiberationSans SDF");
+            text.font = japaneseFont != null
+                ? japaneseFont
+                : Resources.Load<TMP_FontAsset>(
+                    "Fonts & Materials/LiberationSans SDF");
             text.fontSize = fontSize;
             text.color = color;
             text.alignment = alignment;

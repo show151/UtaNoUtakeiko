@@ -1,5 +1,7 @@
 # UI artwork import slots
 
+Assign a Japanese-capable TMP font asset to the presenter’s **Japanese Font** field. The repository only includes Liberation Sans, which does not contain Japanese glyphs; the UI shell falls back to it until a suitable font is assigned.
+
 Drop the delivered PNG files in this folder, then assign them to the matching
 `ScreenArtworkPresenter` fields on `GameSessionManager` in `Assets/Scenes/Game.unity`.
 
