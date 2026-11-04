@@ -144,6 +144,29 @@ namespace UtaNoUtakeiko.Tests
         }
 
         [Test]
+        public void SessionTimeout_MarksOnlyUnresolvedUnitsAsTimedOutMisses()
+        {
+            TimedInputTrial trial = CreateTrial();
+            var results = new List<TimedInputTrialResult>();
+            trial.OnResolved += results.Add;
+
+            Assert.IsTrue(trial.TryRecordPlayerRelease(
+                0, "Great", 0.5f, 0.4f, 0.05f));
+            TimedInputTrialResult playerResult = results[0];
+
+            trial.ResolveRemainingAsTimedOut();
+            trial.ResolveRemainingAsTimedOut();
+
+            Assert.AreEqual(2, trial.ResolvedCount);
+            Assert.AreEqual(2, results.Count);
+            Assert.AreSame(playerResult, results[0]);
+            Assert.AreEqual("B", results[1].UnitId);
+            Assert.AreEqual("Miss", results[1].PitchJudgment);
+            Assert.IsTrue(results[1].TimedOut);
+            Assert.IsNull(results[1].HoldSucceeded);
+        }
+
+        [Test]
         public void TooShortHoldIsMiss_AndDuplicateReleaseIsRejected()
         {
             TimedInputTrial trial = CreateTrial();
