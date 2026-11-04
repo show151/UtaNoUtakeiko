@@ -38,14 +38,26 @@ namespace UtaNoUtakeiko.Tests
                         }
                     });
 
-                Assert.IsNotNull(go.transform.Find("Note_1/HoldBody"));
+                var shaft = go.transform.Find("Note_1/HoldBody");
+                var cap = go.transform.Find("Note_1/HoldEndCap");
+                Assert.IsNotNull(shaft);
+                Assert.IsNotNull(cap);
                 Assert.IsNull(go.transform.Find("Note_2/HoldBody"));
+                Assert.IsNull(go.transform.Find("Note_2/HoldEndCap"));
+
+                // The shaft is a solid square, not a stretched copy of the
+                // round note sprite, and it is visibly longer than tall.
+                var shaftRenderer = shaft.GetComponent<SpriteRenderer>();
+                Assert.AreNotSame(sprite, shaftRenderer.sprite);
+                Assert.Greater(shaft.lossyScale.x, shaft.lossyScale.y * 3f);
 
                 // Skipping past a HOLD must hide BOTH its note and child bar.
                 display.SeekToNote(1);
                 Assert.IsFalse(go.transform.Find("Note_1")
                     .GetComponent<SpriteRenderer>().enabled);
                 Assert.IsFalse(go.transform.Find("Note_1/HoldBody")
+                    .GetComponent<SpriteRenderer>().enabled);
+                Assert.IsFalse(go.transform.Find("Note_1/HoldEndCap")
                     .GetComponent<SpriteRenderer>().enabled);
 
                 display.ShowHoldProgress(0, 1f);
