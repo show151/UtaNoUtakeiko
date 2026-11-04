@@ -52,6 +52,11 @@ public class InputManager : MonoBehaviour
     // 長押し判定済みか
     private bool isLongPress = false;
 
+    // One physical down/up cycle is exactly one action.
+    // Press IDs make duplicate or repeated input events visible in Console.
+    private int pressSequenceId;
+    private int activePressId;
+
     // ボタンを離したとき、実際の押下時間を通知する
     public event Action<float> OnPressReleased;
 
@@ -111,17 +116,19 @@ public class InputManager : MonoBehaviour
         // =================================
 
         // ボタンが押された瞬間
-        if (pressedThisFrame)
+        if (pressedThisFrame && isHolding && !isPressed)
         {
             if (Time.time - lastInputTime >= debounceTime)
             {
                 isPressed = true;
                 isLongPress = false;
+                activePressId = ++pressSequenceId;
                 pressStartTime = Time.time;
 
                 lastInputTime = Time.time;
 
-                // チャタリング判定を通過した押下だけ通知
+                // Only a fresh physical down edge may start an input.
+                Debug.Log($"[InputTrace] DOWN id={activePressId} frame={Time.frameCount}");
                 OnPressStarted?.Invoke();
             }
         }
@@ -132,7 +139,7 @@ public class InputManager : MonoBehaviour
             if (Time.time - pressStartTime >= longPressThreshold)
             {
                 isLongPress = true;
-                Debug.Log("長押しを認識！");
+                Debug.Log($"[InputTrace] HOLD id={activePressId} frame={Time.frameCount}");
                 OnLongPress?.Invoke();
             }
         }
@@ -147,19 +154,23 @@ public class InputManager : MonoBehaviour
                     Time.time - pressStartTime
                 );
 
-                // 既存の短押し処理は維持する
-                if (!isLongPress)
-                {
-                    Debug.Log("短押しを認識！");
-                    OnShortPress?.Invoke();
-                }
+                bool wasLongPress = isLongPress;
+                int completedPressId = activePressId;
 
-                // 短押し・長押しのどちらでも押下時間を通知
-                OnPressReleased?.Invoke(heldSeconds);
+                // Clear the physical cycle BEFORE notifying listeners, so
+                // no reentrant handler can consume the same release twice.
+                isPressed = false;
+                isLongPress = false;
+                activePressId = 0;
 
                 Debug.Log(
-                    $"ボタン押下時間: {heldSeconds:F2}秒"
-                );
+                    $"[InputTrace] UP id={completedPressId} " +
+                    $"held={heldSeconds:F3}s long={wasLongPress} frame={Time.frameCount}");
+
+                if (!wasLongPress)
+                    OnShortPress?.Invoke();
+
+                OnPressReleased?.Invoke(heldSeconds);
             }
 
             isPressed = false;
