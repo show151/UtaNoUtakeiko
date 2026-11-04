@@ -775,8 +775,10 @@ namespace Uta.GameFlow
         private void BuildCarousel(string title, string value, string selectLabel, string confirmLabel)
         {
             AddText(title, 56, new Vector2(0.5f, 0.75f), new Vector2(1400, 110));
-            AddText("どれにする？いっしょに選ぼう！", 30,
-                new Vector2(0.5f, 0.34f), new Vector2(1100, 64));
+            var characterLine = AddText(
+                "どれにする？いっしょに選ぼう！", 34,
+                new Vector2(0.5f, 0.34f), new Vector2(1100, 72));
+            characterLine.color = new Color(0.04f, 0.16f, 0.28f, 1f);
             AddText("‹", 70, new Vector2(0.22f, 0.5f), new Vector2(120, 150));
             selectionValue = AddText(value, 74, new Vector2(0.5f, 0.5f), new Vector2(900, 180));
             AddText("›", 70, new Vector2(0.78f, 0.5f), new Vector2(120, 150));
