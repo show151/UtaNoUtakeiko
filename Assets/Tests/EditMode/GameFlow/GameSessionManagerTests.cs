@@ -156,19 +156,35 @@ namespace Uta.Tests
             manager.TryTransition(GameSessionState.Playing);
 
             bool first = manager.TryTransition(
-                GameSessionState.Playback
+                GameSessionState.GameFinished
             );
 
             bool second = manager.TryTransition(
-                GameSessionState.Playback
+                GameSessionState.GameFinished
             );
 
             Assert.IsTrue(first);
             Assert.IsFalse(second);
             Assert.AreEqual(
-                GameSessionState.Playback,
+                GameSessionState.GameFinished,
                 manager.CurrentState
             );
+        }
+
+
+        [Test]
+        public void GameplayCompletion_TransitionsThroughFinishBeforePlayback()
+        {
+            manager.TryTransition(GameSessionState.DifficultySelect);
+            manager.TryTransition(GameSessionState.SongSelect);
+            manager.TryTransition(GameSessionState.Countdown);
+            manager.TryTransition(GameSessionState.Playing);
+
+            Assert.IsTrue(manager.TryTransition(GameSessionState.GameFinished));
+            Assert.AreEqual(GameSessionState.GameFinished, manager.CurrentState);
+
+            Assert.IsTrue(manager.TryTransition(GameSessionState.Playback));
+            Assert.AreEqual(GameSessionState.Playback, manager.CurrentState);
         }
 
         [Test]
