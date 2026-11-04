@@ -436,7 +436,7 @@ namespace Uta.GameFlow
             var inputLegend = CreateChildText(
                 "Player Pitch Legend", playbackScorePanel, "● 入力音程", 24,
                 new Vector2(0.7f, 0.68f), new Vector2(300, 52));
-            inputLegend.color = new Color(0.28f, 0.9f, 1f, 1f);
+            inputLegend.color = new Color(1f, 0.78f, 0.2f, 1f);
 
             for (int i = 0; i < 5; i++)
             {
@@ -479,21 +479,31 @@ namespace Uta.GameFlow
                 if (section == null || section.Notes == null)
                     continue;
 
-                var orderedNotes = new List<Note>(section.Notes);
-                orderedNotes.Sort((a, b) =>
+                var orderedNoteIndices = new List<int>();
+                for (int i = 0; i < section.Notes.Count; i++)
+                    orderedNoteIndices.Add(i);
+                orderedNoteIndices.Sort((a, b) =>
                 {
-                    int measureOrder = a.MeasureNumber.CompareTo(b.MeasureNumber);
+                    int measureOrder = section.Notes[a].MeasureNumber.CompareTo(
+                        section.Notes[b].MeasureNumber);
                     return measureOrder != 0
                         ? measureOrder
-                        : a.NoteIndexInMeasure.CompareTo(b.NoteIndexInMeasure);
+                        : section.Notes[a].NoteIndexInMeasure.CompareTo(
+                            section.Notes[b].NoteIndexInMeasure);
                 });
 
                 int currentMeasure = -1;
                 double elapsedBeats = 0d;
-                foreach (var note in orderedNotes)
+                foreach (int noteIndex in orderedNoteIndices)
                 {
+                    var note = section.Notes[noteIndex];
                     if (note == null)
                         continue;
+                    string sourceNoteId =
+                        section.SourceNoteIds != null &&
+                        noteIndex < section.SourceNoteIds.Count
+                            ? section.SourceNoteIds[noteIndex]
+                            : note.NoteId;
 
                     if (note.MeasureNumber != currentMeasure)
                     {
@@ -513,8 +523,9 @@ namespace Uta.GameFlow
                         note.IsRest ? "𝄽" : "●", note.IsRest ? 30 : 42,
                         "Playback Note");
 
-                    if (!note.IsRest && capturedPitchByNoteId.TryGetValue(
-                        note.NoteId, out var captured) &&
+                    if (!note.IsRest && !string.IsNullOrWhiteSpace(sourceNoteId) &&
+                        capturedPitchByNoteId.TryGetValue(
+                        sourceNoteId, out var captured) &&
                         captured.InputState == InputState.Completed &&
                         captured.CapturedPitchStep.HasValue)
                     {
@@ -604,13 +615,11 @@ namespace Uta.GameFlow
                 visual.Text.rectTransform.anchoredPosition =
                     new Vector2(x - centerX + pitchOffset, y);
                 bool current = now >= visual.StartSeconds && now < visual.EndSeconds;
-                visual.Text.color = current
-                    ? (visual.IsPlayerPitch
-                        ? new Color(0.28f, 0.9f, 1f, 1f)
-                        : new Color(1f, 0.82f, 0.26f, 1f))
-                    : (visual.IsPlayerPitch
-                        ? new Color(0.28f, 0.9f, 1f, 1f)
-                        : new Color(0.92f, 0.96f, 1f, 1f));
+                visual.Text.color = visual.IsPlayerPitch
+                    ? (current
+                        ? new Color(1f, 0.82f, 0.26f, 1f)
+                        : new Color(0.86f, 0.62f, 0.16f, 1f))
+                    : new Color(0.92f, 0.96f, 1f, 1f);
             }
 
             if (string.IsNullOrEmpty(activeLyric))
