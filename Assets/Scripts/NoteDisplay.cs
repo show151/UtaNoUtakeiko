@@ -21,6 +21,8 @@ public class NoteDisplay : MonoBehaviour
     // Gameplay input visuals: a connected-pitch unit is shown as a long bar.
     private readonly System.Collections.Generic.List<SpriteRenderer> holdBodyRenderers
         = new System.Collections.Generic.List<SpriteRenderer>();
+    private readonly System.Collections.Generic.List<SpriteRenderer> holdProgressRenderers
+        = new System.Collections.Generic.List<SpriteRenderer>();
     private readonly System.Collections.Generic.List<bool> holdFlags
         = new System.Collections.Generic.List<bool>();
 
@@ -50,6 +52,7 @@ public class NoteDisplay : MonoBehaviour
         noteRenderers.Clear();
         holdBodyRenderers.Clear();
         holdCapRenderers.Clear();
+        holdProgressRenderers.Clear();
         holdFlags.Clear();
 
         foreach (Transform child in transform)
@@ -85,6 +88,7 @@ public class NoteDisplay : MonoBehaviour
             noteRenderers.Add(renderer);
             holdBodyRenderers.Add(null);
             holdCapRenderers.Add(null);
+            holdProgressRenderers.Add(null);
             holdFlags.Add(false);
         }
     }
@@ -139,6 +143,21 @@ public class NoteDisplay : MonoBehaviour
             bodyRenderer.sortingOrder = head.sortingOrder - 1;
             holdBodyRenderers[i] = bodyRenderer;
 
+            // A bright overlay grows from the head to the end of the HOLD bar.
+            GameObject progress = new GameObject("HoldProgress");
+            progress.transform.SetParent(head.transform, false);
+            progress.transform.localPosition = Vector3.zero;
+            progress.transform.localScale = new Vector3(0f,
+                HoldBarThickness * inverseHeadScale, 1f);
+            SpriteRenderer progressRenderer = progress.AddComponent<SpriteRenderer>();
+            progressRenderer.sprite = holdShaftSprite;
+            progressRenderer.color = new Color32(255, 255, 150, 255);
+            progressRenderer.sortingOrder = head.sortingOrder;
+            progressRenderer.enabled = false;
+            holdProgressRenderers[i] = progressRenderer;
+
+            // Draw the note head and cap above the lit portion.
+            head.sortingOrder = progressRenderer.sortingOrder + 1;
             GameObject cap = new GameObject("HoldEndCap");
             cap.transform.SetParent(head.transform, false);
             cap.transform.localPosition = new Vector3(
@@ -158,20 +177,38 @@ public class NoteDisplay : MonoBehaviour
             return;
 
         float fraction = Mathf.Clamp01(progress);
-        noteRenderers[index].color = Color.Lerp(
-            new Color32(255, 175, 66, 255),
-            new Color32(91, 235, 168, 255),
-            fraction);
-        if (holdBodyRenderers[index] != null)
-            holdBodyRenderers[index].color = noteRenderers[index].color;
-        if (holdCapRenderers[index] != null)
-            holdCapRenderers[index].color = noteRenderers[index].color;
+        SpriteRenderer fill = holdProgressRenderers[index];
+        if (fill == null)
+            return;
+        float inverseHeadScale = 1f / Mathf.Max(noteSize, 0.01f);
+        float length = HoldBarLength * fraction * inverseHeadScale;
+        fill.transform.localPosition = new Vector3(length * 0.5f, 0f, 0f);
+        fill.transform.localScale = new Vector3(length,
+            HoldBarThickness * inverseHeadScale, 1f);
+        fill.enabled = fraction > 0f && noteRenderers[index].enabled;
+        if (fraction >= 1f)
+        {
+            noteRenderers[index].color = new Color32(91, 235, 168, 255);
+            if (holdCapRenderers[index] != null)
+                holdCapRenderers[index].color = noteRenderers[index].color;
+        }
     }
 
     public void ResetInputProgress(int index)
     {
         if (index < 0 || index >= noteRenderers.Count || !holdFlags[index])
             return;
+
+        SpriteRenderer fill = holdProgressRenderers[index];
+        if (fill != null)
+        {
+            fill.enabled = false;
+            fill.transform.localPosition = Vector3.zero;
+            Vector3 scale = fill.transform.localScale;
+            scale.x = 0f;
+            fill.transform.localScale = scale;
+            fill.color = new Color32(255, 255, 150, 255);
+        }
 
         Color original = new Color32(255, 175, 66, 255);
         noteRenderers[index].color = original;
@@ -186,11 +223,20 @@ public class NoteDisplay : MonoBehaviour
         if (index < 0 || index >= noteRenderers.Count)
             return;
 
+        // A completed HOLD always lights the whole bar, including a release
+        // at the threshold between Update frames.
+        if (holdFlags[index] && succeeded)
+            ShowHoldProgress(index, 1f);
+
         Color color = succeeded
             ? new Color32(91, 235, 168, 255)
             : new Color32(165, 165, 175, 255);
 
         noteRenderers[index].color = color;
+        if (holdProgressRenderers[index] != null)
+            holdProgressRenderers[index].color = succeeded
+                ? new Color32(185, 255, 215, 255)
+                : new Color32(165, 165, 175, 255);
         if (holdBodyRenderers[index] != null)
             holdBodyRenderers[index].color = color;
         if (holdCapRenderers[index] != null)
@@ -220,6 +266,9 @@ public class NoteDisplay : MonoBehaviour
                 holdBodyRenderers[i].enabled = i >= noteIndex;
             if (holdCapRenderers[i] != null)
                 holdCapRenderers[i].enabled = i >= noteIndex;
+            if (holdProgressRenderers[i] != null)
+                holdProgressRenderers[i].enabled = i >= noteIndex &&
+                    holdProgressRenderers[i].transform.localScale.x > 0f;
         }
     }
 
@@ -267,6 +316,13 @@ public class NoteDisplay : MonoBehaviour
                     bodyColor.a = 1f - t;
                     body.color = bodyColor;
                 }
+                if (holdProgressRenderers[previousIndex] != null)
+                {
+                    var fill = holdProgressRenderers[previousIndex];
+                    Color fillColor = fill.color;
+                    fillColor.a = 1f - t;
+                    fill.color = fillColor;
+                }
                 if (holdCapRenderers[previousIndex] != null)
                 {
                     var cap = holdCapRenderers[previousIndex];
@@ -292,6 +348,8 @@ public class NoteDisplay : MonoBehaviour
                 holdBodyRenderers[completedIndex].enabled = false;
             if (holdCapRenderers[completedIndex] != null)
                 holdCapRenderers[completedIndex].enabled = false;
+            if (holdProgressRenderers[completedIndex] != null)
+                holdProgressRenderers[completedIndex].enabled = false;
         }
     }
 }

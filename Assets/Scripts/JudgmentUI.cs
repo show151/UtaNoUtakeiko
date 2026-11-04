@@ -85,24 +85,27 @@ public class JudgmentUI : MonoBehaviour
         judgmentText.color = isHold ? new Color(1f, 0.7f, 0.24f) : Color.white;
     }
 
-    public void ShowTimedHoldProgress(float fraction)
+    // Pitch is captured at the press; HOLD remains pending until completion.
+    public void ShowTimedCapturedPitch(string pitch, bool isHold)
     {
         if (!timedInputFeedback || judgmentText == null)
             return;
-        judgmentText.text = $"HOLD {Mathf.RoundToInt(Mathf.Clamp01(fraction) * 100f)}%";
-        judgmentText.color = new Color(1f, 0.7f, 0.24f);
+        judgmentText.text = isHold
+            ? $"PITCH: {pitch}\nHOLD: ..."
+            : $"PITCH: {pitch}";
+        judgmentText.color = Color.white;
     }
 
     public void ShowTimedInputResult(string pitch, bool? holdSucceeded, bool timedOut)
     {
         if (!timedInputFeedback || judgmentText == null)
             return;
-        judgmentText.text = timedOut ? "Miss" :
-            holdSucceeded.HasValue
-                ? $"{pitch} / HOLD {(holdSucceeded.Value ? "OK" : "MISS")}" : pitch;
-        judgmentText.color = timedOut || holdSucceeded == false
-            ? new Color(1f, 0.45f, 0.38f)
-            : Color.green;
+        string pitchResult = timedOut ? "MISS" : pitch;
+        judgmentText.text = holdSucceeded.HasValue
+            ? $"PITCH: {pitchResult}\nHOLD: {(holdSucceeded.Value ? "PERFECT" : "MISS")}"
+            : $"PITCH: {pitchResult}";
+        // Keep the shared text neutral: pitch and HOLD can have different results.
+        judgmentText.color = Color.white;
     }
 
     public void ClearJudgment()

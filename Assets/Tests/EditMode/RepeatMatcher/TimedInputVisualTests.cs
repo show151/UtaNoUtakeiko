@@ -40,8 +40,11 @@ namespace UtaNoUtakeiko.Tests
 
                 var shaft = go.transform.Find("Note_1/HoldBody");
                 var cap = go.transform.Find("Note_1/HoldEndCap");
+                var fill = go.transform.Find("Note_1/HoldProgress");
                 Assert.IsNotNull(shaft);
                 Assert.IsNotNull(cap);
+                Assert.IsNotNull(fill);
+                Assert.IsNull(go.transform.Find("Note_2/HoldProgress"));
                 Assert.IsNull(go.transform.Find("Note_2/HoldBody"));
                 Assert.IsNull(go.transform.Find("Note_2/HoldEndCap"));
 
@@ -51,7 +54,19 @@ namespace UtaNoUtakeiko.Tests
                 Assert.AreNotSame(sprite, shaftRenderer.sprite);
                 Assert.Greater(shaft.lossyScale.x, shaft.lossyScale.y * 3f);
 
-                // Skipping past a HOLD must hide BOTH its note and child bar.
+                var fillRenderer = fill.GetComponent<SpriteRenderer>();
+                Assert.IsFalse(fillRenderer.enabled);
+                display.ShowHoldProgress(0, 0.5f);
+                Assert.IsTrue(fillRenderer.enabled);
+                Assert.AreEqual(shaft.localScale.x * 0.5f, fill.localScale.x, 0.001f);
+                Assert.AreEqual(fill.localScale.x * 0.5f, fill.localPosition.x, 0.001f);
+                display.ResetInputProgress(0);
+                Assert.IsFalse(fillRenderer.enabled);
+                Assert.AreEqual(0f, fill.localScale.x, 0.001f);
+                display.ShowInputResolution(0, true);
+                Assert.AreEqual(shaft.localScale.x, fill.localScale.x, 0.001f);
+
+                // Skipping past a HOLD must hide its note and every child bar.
                 display.SeekToNote(1);
                 Assert.IsFalse(go.transform.Find("Note_1")
                     .GetComponent<SpriteRenderer>().enabled);
@@ -59,6 +74,7 @@ namespace UtaNoUtakeiko.Tests
                     .GetComponent<SpriteRenderer>().enabled);
                 Assert.IsFalse(go.transform.Find("Note_1/HoldEndCap")
                     .GetComponent<SpriteRenderer>().enabled);
+                Assert.IsFalse(fillRenderer.enabled);
 
                 display.ShowHoldProgress(0, 1f);
                 Color completedColor = go.transform.Find("Note_1")

@@ -278,6 +278,9 @@ public class NoteProgression : MonoBehaviour
             currentGameplayUnits != null && currentGameplayUnits[pendingPressIndex].IsHold;
         pendingUnitDuration = pendingPressIndex >= 0 && currentGameplayUnits != null && pendingIsHold
             ? currentGameplayUnits[pendingPressIndex].RequiredHoldSeconds : 0f;
+        if (pendingPressIndex >= 0)
+            judgmentUI.ShowTimedCapturedPitch(
+                judgmentSystem.CapturedPitchJudgment, pendingIsHold);
         Debug.Log($"[InputTrace] CAPTURE unit={pendingPressIndex + 1}/" +
                   $"{gameplayTrial.Count} frame={Time.frameCount}");
     }
@@ -304,8 +307,11 @@ public class NoteProgression : MonoBehaviour
             {
                 if (currentGameplayUnits[i].UnitId != result.UnitId)
                     continue;
+                // The HOLD bar reflects HOLD alone; pitch remains a separate judgment.
                 bool succeeded = !result.TimedOut &&
-                    result.PitchJudgment != "Miss" && result.HoldSucceeded != false;
+                    (currentGameplayUnits[i].IsHold
+                        ? result.HoldSucceeded == true
+                        : result.PitchJudgment != "Miss");
                 noteDisplay.ShowInputResolution(i, succeeded);
                 if (i == currentNoteIndex)
                     judgmentUI.ShowTimedInputResult(
@@ -331,7 +337,6 @@ public class NoteProgression : MonoBehaviour
         float heldSeconds = Time.unscaledTime - timedPressStartedAt;
         float fraction = Mathf.Clamp01(heldSeconds / pendingUnitDuration);
         noteDisplay.ShowHoldProgress(pendingPressIndex, fraction);
-        judgmentUI.ShowTimedHoldProgress(fraction);
 
         if (fraction < 1f)
             return;
@@ -363,6 +368,16 @@ public class NoteProgression : MonoBehaviour
 
         if (!isGameplayInput)
             yield break;
+
+        // Keep both judgments readable after a HOLD release, including on
+        // the last note before the gameplay screen transitions away.
+        if (currentGameplayUnits != null && nextIndex > 0 &&
+            currentGameplayUnits[nextIndex - 1].IsHold)
+        {
+            yield return new WaitForSecondsRealtime(0.75f);
+            if (!isGameplayInput)
+                yield break;
+        }
 
         if (nextIndex >= notePositions.Length)
         {
@@ -525,7 +540,7 @@ public class NoteProgression : MonoBehaviour
             }
 
             int next = sourceIndex + 1;
-            if (next >= notePositions.Length)
+            if (next >= notePositions.Length && !wasHold)
             {
                 CompleteGameplayInput();
                 return;
