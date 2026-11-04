@@ -273,7 +273,7 @@ public class NoteProgression : MonoBehaviour
                             active < gameplayTrial.Count &&
                             !gameplayTrial.IsResolved(active)
             ? active : -1;
-        timedPressStartedAt = Time.time;
+        timedPressStartedAt = Time.unscaledTime;
         pendingIsHold = pendingPressIndex >= 0 &&
             currentGameplayUnits != null && currentGameplayUnits[pendingPressIndex].IsHold;
         pendingUnitDuration = pendingPressIndex >= 0 && currentGameplayUnits != null
@@ -328,10 +328,29 @@ public class NoteProgression : MonoBehaviour
             gameplayTrial.IsResolved(pendingPressIndex))
             return;
 
-        float fraction = Mathf.Clamp01(
-            (Time.time - timedPressStartedAt) / pendingUnitDuration);
+        float heldSeconds = Time.unscaledTime - timedPressStartedAt;
+        float fraction = Mathf.Clamp01(heldSeconds / pendingUnitDuration);
         noteDisplay.ShowHoldProgress(pendingPressIndex, fraction);
         judgmentUI.ShowTimedHoldProgress(fraction);
+
+        if (fraction < 1f)
+            return;
+
+        int completedIndex = pendingPressIndex;
+        isAdvancing = true;
+        bool accepted = gameplayTrial.TryRecordHoldSuccess(
+            completedIndex, judgmentSystem.CapturedPitchJudgment,
+            judgmentSystem.CapturedPosition, heldSeconds);
+        if (!accepted)
+        {
+            isAdvancing = false;
+            return;
+        }
+
+        pendingPressIndex = -1;
+        pendingIsHold = false;
+        pendingUnitDuration = 0f;
+        StartCoroutine(AdvanceGameplayAfterRelease(completedIndex + 1));
     }
 
     // Input is disabled while the current note (including its HOLD body)
@@ -344,6 +363,12 @@ public class NoteProgression : MonoBehaviour
 
         if (!isGameplayInput)
             yield break;
+
+        if (nextIndex >= notePositions.Length)
+        {
+            CompleteGameplayInput();
+            yield break;
+        }
 
         Debug.Log($"[Gameplay] Slide to input {nextIndex + 1}/{notePositions.Length}");
         yield return noteDisplay.ScrollToNote(nextIndex);
@@ -487,7 +512,7 @@ public class NoteProgression : MonoBehaviour
                       $"{gameplayTrial.Count} held={heldSeconds:F3}s frame={Time.frameCount}");
             bool accepted = gameplayTrial.TryRecordPlayerRelease(
                 sourceIndex, result, position, heldSeconds,
-                holdToleranceSeconds);
+                pendingIsHold ? 0f : holdToleranceSeconds);
 
             if (!accepted)
             {
