@@ -321,6 +321,14 @@ public class NoteProgression : MonoBehaviour
     // slides away. No subsequent unit can be consumed by the same press.
     private IEnumerator AdvanceGameplayAfterRelease(int nextIndex)
     {
+        // Do not scroll until the input has been physically released.
+        while (isGameplayInput && judgmentSystem.IsInputHeld)
+            yield return null;
+
+        if (!isGameplayInput)
+            yield break;
+
+        Debug.Log($"[Gameplay] Slide to input {nextIndex + 1}/{notePositions.Length}");
         yield return noteDisplay.ScrollToNote(nextIndex);
 
         if (!isGameplayInput || currentGameplayUnits == null)
@@ -441,6 +449,14 @@ public class NoteProgression : MonoBehaviour
             // Lock advancement before notifying results or moving any sprites.
             if (isAdvancing)
                 return;
+
+            // A HOLD remains active until the actual input device is released.
+            // This also guards against unexpected duplicate judgment callbacks.
+            if (judgmentSystem.IsInputHeld)
+            {
+                Debug.LogWarning("[Gameplay] Release ignored: Space/pedal still held.");
+                return;
+            }
 
             int sourceIndex = pendingPressIndex;
             pendingPressIndex = -1;
