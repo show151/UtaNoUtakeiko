@@ -1,19 +1,20 @@
 namespace Uta.GameFlow
 {
     /// <summary>
-    /// ƒQ[ƒ€ƒZƒbƒVƒ‡ƒ“‘S‘Ì‚Ìisó‘ÔB
+    /// ã‚²ãƒ¼ãƒ ã‚»ãƒƒã‚·ãƒ§ãƒ³å…¨ä½“ã®é€²è¡ŒçŠ¶æ…‹ã€‚
     /// </summary>
     public enum GameSessionState
     {
-        Title,              // ƒ^ƒCƒgƒ‹‰æ–Ê
-        DifficultySelect,   // “ïˆÕ“x‘I‘ð
-        SongSelect,         // Šy‹È‘I‘ð
-        Countdown,          // ƒvƒŒƒCŠJŽnƒJƒEƒ“ƒgƒ_ƒEƒ“
-        Playing,            // ‰¹•„“ü—ÍƒtƒF[ƒY
-        Playback,           // ‰Ì¥Ä¶ƒtƒF[ƒY
-        Result,             // ƒŠƒUƒ‹ƒg‰æ–Ê
-        Ranking,            // ƒ‰ƒ“ƒLƒ“ƒO‰æ–Ê
-        Announcement,       // X-LIVE’m‰æ–Ê
-        Error               // ƒGƒ‰[”­¶E•œ‹Œˆ—
+        Title,              // ã‚¿ã‚¤ãƒˆãƒ«ç”»é¢
+        DifficultySelect,   // é›£æ˜“åº¦é¸æŠž
+        SongSelect,         // æ¥½æ›²é¸æŠž
+        Countdown,          // ãƒ—ãƒ¬ã‚¤é–‹å§‹ã‚«ã‚¦ãƒ³ãƒˆãƒ€ã‚¦ãƒ³
+        Playing,            // éŸ³ç¬¦å…¥åŠ›ãƒ•ã‚§ãƒ¼ã‚º
+        GameFinished,       // ãƒ—ãƒ¬ã‚¤çµ‚äº†æ¼”å‡º
+        Playback,           // æ­Œå”±å†ç”Ÿãƒ•ã‚§ãƒ¼ã‚º
+        Result,             // ãƒªã‚¶ãƒ«ãƒˆç”»é¢
+        Ranking,            // ãƒ©ãƒ³ã‚­ãƒ³ã‚°ç”»é¢
+        Announcement,       // X-LIVEå‘ŠçŸ¥ç”»é¢
+        Error               // ã‚¨ãƒ©ãƒ¼ç™ºç”Ÿãƒ»å¾©æ—§å‡¦ç†
     }
 }
