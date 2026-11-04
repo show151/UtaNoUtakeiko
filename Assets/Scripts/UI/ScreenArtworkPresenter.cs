@@ -438,11 +438,11 @@ namespace Uta.GameFlow
             measureText.color = new Color(0.75f, 0.82f, 0.9f, 1f);
 
             var targetLegend = CreateChildText(
-                "Target Pitch Legend", playbackScorePanel, "● 目標音程", 24,
+                "Target Pitch Legend", playbackScorePanel, "● 本来の音", 24,
                 new Vector2(0.3f, 0.68f), new Vector2(300, 52));
             targetLegend.color = new Color(0.92f, 0.96f, 1f, 1f);
             var inputLegend = CreateChildText(
-                "Player Pitch Legend", playbackScorePanel, "● 入力音程", 24,
+                "Player Pitch Legend", playbackScorePanel, "● 入力結果", 24,
                 new Vector2(0.7f, 0.68f), new Vector2(300, 52));
             inputLegend.color = new Color(1f, 0.78f, 0.2f, 1f);
 
@@ -672,7 +672,7 @@ namespace Uta.GameFlow
                     ? PitchStepLabel(activeInputPitchStep.Value)
                     : "—";
                 playbackPitchText.text =
-                    $"目標音程: {targetPitch}　入力音程: {inputPitch}";
+                    $"本来の音: {targetPitch}　入力結果: {inputPitch}";
             }
 
             if (string.IsNullOrEmpty(activeLyric))
@@ -773,6 +773,13 @@ namespace Uta.GameFlow
                 rect.anchoredPosition = new Vector2(-70f, 180f);
                 rect.sizeDelta = new Vector2(590f, 770f);
             }
+            else if (state == GameSessionState.Result)
+            {
+                rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
+                rect.pivot = new Vector2(1f, 0f);
+                rect.anchoredPosition = new Vector2(-20f, 10f);
+                rect.sizeDelta = new Vector2(440f, 590f);
+            }
             else
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
@@ -810,24 +817,66 @@ namespace Uta.GameFlow
                 : null;
             float rate = result != null ? result.AchievementRate : 0f;
             string rank = RankLabel(rate);
-            string message = rate >= 95f ? "すごくきれいな歌だったよ！"
-                : rate >= 70f ? "一緒に歌えてうれしかったよ！"
-                : "次はもっと一緒に歌おうね！";
+            string message = rate >= 95f ? "すごい！ほとんど音が合ってたよ。次はパーフェクトを目指そう♪"
+                : rate >= 70f ? "一緒に歌えてうれしかったよ！次も楽しく歌おうね♪"
+                : "最後までよく頑張ったね！次はもっと一緒に歌おう♪";
 
-            AddText("リザルト", 56, new Vector2(0.5f, 0.86f), new Vector2(1000, 100));
-            AddText($"スコア  {result?.Score ?? 0:N0}", 42,
-                new Vector2(0.5f, 0.69f), new Vector2(1100, 80));
-            AddText($"達成率  {rate:F1}%　ランク {rank}", 36,
-                new Vector2(0.5f, 0.59f), new Vector2(1200, 80));
-            if (result != null)
-            {
-                AddText(
-                    $"Perfect {result.PerfectCount}　Great {result.GreatCount}　Good {result.GoodCount}\nBad {result.BadCount}　Miss {result.MissCount}",
-                    30, new Vector2(0.5f, 0.46f), new Vector2(1400, 100));
-            }
-            AddText($"ウタ「{message}」", 30,
-                new Vector2(0.5f, 0.32f), new Vector2(1300, 90));
-            AddActionButton("ランキングへ", new Vector2(0.5f, 0.16f), Confirm);
+            CreateImage(
+                "Result Header Background", uiRoot,
+                new Vector2(0.04f, 0.88f), new Vector2(0.98f, 0.98f),
+                Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.82f));
+            AddText("リザルト", 52, new Vector2(0.5f, 0.93f), new Vector2(1000, 82));
+
+            var scorePanelImage = CreateImage(
+                "Result Score Panel", uiRoot,
+                new Vector2(0.04f, 0.15f), new Vector2(0.62f, 0.85f),
+                Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.82f));
+            RectTransform scorePanel = scorePanelImage.rectTransform;
+
+            var scoreLabel = CreateChildText(
+                "Result Score Label", scorePanel, "TOTAL SCORE", 28,
+                new Vector2(0.5f, 0.86f), new Vector2(900, 54));
+            scoreLabel.color = new Color(0.78f, 0.86f, 0.96f, 1f);
+            CreateChildText(
+                "Result Score Value", scorePanel, $"{result?.Score ?? 0:N0}", 78,
+                new Vector2(0.5f, 0.68f), new Vector2(980, 112));
+
+            var rankLine = CreateChildText(
+                "Result Rank Line", scorePanel, $"達成率  {rate:F1}%　　 ランク  {rank}", 38,
+                new Vector2(0.5f, 0.49f), new Vector2(980, 76));
+            rankLine.color = new Color(1f, 0.84f, 0.39f, 1f);
+
+            var rateTrack = CreateImage(
+                "Result Achievement Track", scorePanel,
+                new Vector2(0.12f, 0.36f), new Vector2(0.88f, 0.36f),
+                Vector2.zero, new Vector2(0f, 16f), new Color(0.48f, 0.58f, 0.72f, 0.65f));
+            CreateImage(
+                "Result Achievement Fill", rateTrack.transform,
+                Vector2.zero, new Vector2(Mathf.Clamp01(rate / 100f), 1f),
+                Vector2.zero, Vector2.zero, new Color(1f, 0.77f, 0.22f, 1f));
+
+            string judgmentSummary = result != null
+                ? $"Perfect  {result.PerfectCount}　 Great  {result.GreatCount}　 Good  {result.GoodCount}\nBad  {result.BadCount}　 Miss  {result.MissCount}"
+                : "判定結果はありません";
+            var judgments = CreateChildText(
+                "Result Judgment Summary", scorePanel, judgmentSummary, 31,
+                new Vector2(0.5f, 0.17f), new Vector2(1000, 128));
+            judgments.color = new Color(0.95f, 0.97f, 1f, 1f);
+
+            var messagePanelImage = CreateImage(
+                "Uta Result Message Panel", uiRoot,
+                new Vector2(0.65f, 0.61f), new Vector2(0.98f, 0.86f),
+                Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.84f));
+            RectTransform messagePanel = messagePanelImage.rectTransform;
+            var messageHeading = CreateChildText(
+                "Uta Result Message Heading", messagePanel, "ウタからひとこと", 28,
+                new Vector2(0.5f, 0.78f), new Vector2(580, 58));
+            messageHeading.color = new Color(1f, 0.84f, 0.39f, 1f);
+            CreateChildText(
+                "Uta Result Message", messagePanel, message, 30,
+                new Vector2(0.5f, 0.42f), new Vector2(590, 145));
+
+            AddActionButton("ランキングへ　›", new Vector2(0.33f, 0.095f), Confirm);
         }
 
         private void BuildRanking()
@@ -839,66 +888,123 @@ namespace Uta.GameFlow
             playerRank = CalculateDemoRank(rate);
             string savedName = PlayerPrefs.GetString("Uta.PlayerName", "あなた");
 
-            AddText("ランキング", 54, new Vector2(0.5f, 0.9f), new Vector2(1100, 100));
+            CreateImage(
+                "Ranking Header Background", uiRoot,
+                new Vector2(0.04f, 0.88f), new Vector2(0.98f, 0.98f),
+                Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.82f));
+            AddText("ランキング", 52, new Vector2(0.5f, 0.93f), new Vector2(1000, 82));
 
-            if (playerRank <= 10)
-            {
-                AddText("10位以内！名前を入力してください", 28,
-                    new Vector2(0.5f, 0.81f), new Vector2(1300, 60));
-                playerNameInput = CreateNameInput(savedName);
-            }
+            var listPanelImage = CreateImage(
+                "Leaderboard Panel", uiRoot,
+                new Vector2(0.04f, 0.15f), new Vector2(0.64f, 0.85f),
+                Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.82f));
+            RectTransform listPanel = listPanelImage.rectTransform;
+
+            var detailsPanelImage = CreateImage(
+                "Ranking Player Details Panel", uiRoot,
+                new Vector2(0.66f, 0.15f), new Vector2(0.98f, 0.85f),
+                Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.84f));
+            RectTransform detailsPanel = detailsPanelImage.rectTransform;
 
             var rows = new List<string>();
-            int demoIndex = 0;
-            for (int rank = 1; rank <= 10; rank++)
-            {
-                if (rank == playerRank)
-                {
-                    playerName = savedName;
-                    rows.Add($"{rank}位　{playerName}　{rate:F1}%");
-                }
-                else if (rank < playerRank)
-                {
-                    rows.Add($"{rank}位　{DemoNames[demoIndex]}　{DemoRates[demoIndex]:F1}%");
-                    demoIndex++;
-                }
-                else if (playerRank <= 10)
-                {
-                    int idx = rank - 2;
-                    rows.Add($"{rank}位　{DemoNames[Mathf.Clamp(idx, 0, 9)]}　{DemoRates[Mathf.Clamp(idx, 0, 9)]:F1}%");
-                }
-            }
-
+            var playerRows = new List<bool>();
             if (playerRank <= 10)
             {
-                rankingListText = AddText(string.Join("\n", rows), 27,
-                    new Vector2(0.5f, 0.49f), new Vector2(1100, 470));
+                int demoIndex = 0;
+                for (int rank = 1; rank <= 10; rank++)
+                {
+                    bool isPlayer = rank == playerRank;
+                    if (isPlayer)
+                    {
+                        playerName = savedName;
+                        rows.Add($"{rank,2}位　{playerName}　{rate:F1}%");
+                    }
+                    else
+                    {
+                        rows.Add($"{rank,2}位　{DemoNames[demoIndex]}　{DemoRates[demoIndex]:F1}%");
+                        demoIndex++;
+                    }
+                    playerRows.Add(isPlayer);
+                }
             }
             else
             {
-                var topRows = new List<string>();
                 for (int i = 0; i < 7; i++)
-                    topRows.Add($"{i + 1}位　{DemoNames[i]}　{DemoRates[i]:F1}%");
-                topRows.Add("…");
-                topRows.Add($"{playerRank}位　{savedName}　{rate:F1}%");
-                topRows.Add("…");
-                rankingListText = AddText(string.Join("\n", topRows), 27,
-                    new Vector2(0.5f, 0.49f), new Vector2(1100, 470));
+                {
+                    rows.Add($"{i + 1,2}位　{DemoNames[i]}　{DemoRates[i]:F1}%");
+                    playerRows.Add(false);
+                }
+                rows.Add("・・・");
+                playerRows.Add(false);
+                rows.Add($"{playerRank,2}位　{savedName}　{rate:F1}%");
+                playerRows.Add(true);
+                rows.Add("・・・");
+                playerRows.Add(false);
             }
 
-            AddActionButton("次へ", new Vector2(0.5f, 0.12f), Confirm);
+            float rowStep = 0.88f / rows.Count;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                float rowY = 0.94f - rowStep * (i + 0.5f);
+                if (playerRows[i])
+                {
+                    CreateImage(
+                        "Player Rank Highlight", listPanel,
+                        new Vector2(0.035f, rowY - rowStep * 0.44f),
+                        new Vector2(0.965f, rowY + rowStep * 0.44f),
+                        Vector2.zero, Vector2.zero, new Color(0.24f, 0.31f, 0.43f, 0.96f));
+                }
+            }
+
+            rankingListText = CreateChildText(
+                "Leaderboard Rows", listPanel, string.Join("\n", rows), 30,
+                new Vector2(0.5f, 0.5f), new Vector2(1100, 650));
+            rankingListText.alignment = TextAnchor.MiddleLeft;
+            rankingListText.color = new Color(0.97f, 0.98f, 1f, 1f);
+            rankingListText.lineSpacing = rows.Count == 10 ? 1.2f : 1.3f;
+
+            CreateChildText(
+                "Ranking Place Label", detailsPanel, "今回の順位", 29,
+                new Vector2(0.5f, 0.84f), new Vector2(520, 58));
+            var rankValue = CreateChildText(
+                "Ranking Place Value", detailsPanel, $"{playerRank}位", 64,
+                new Vector2(0.5f, 0.69f), new Vector2(520, 92));
+            rankValue.color = new Color(1f, 0.84f, 0.39f, 1f);
+
+            if (playerRank <= 10)
+            {
+                var prompt = CreateChildText(
+                    "Ranking Name Prompt", detailsPanel,
+                    "10位以内！名前を登録して\nランキングに残そう", 27,
+                    new Vector2(0.5f, 0.52f), new Vector2(540, 92));
+                prompt.color = new Color(0.9f, 0.94f, 1f, 1f);
+                CreateChildText(
+                    "Ranking Name Label", detailsPanel, "表示する名前", 23,
+                    new Vector2(0.5f, 0.39f), new Vector2(500, 48));
+                playerNameInput = CreateNameInput(savedName, new Vector2(0.82f, 0.31f));
+                AddActionButton("登録して次へ　›", new Vector2(0.82f, 0.205f), Confirm);
+            }
+            else
+            {
+                var encouragement = CreateChildText(
+                    "Ranking Encouragement", detailsPanel,
+                    "次はもっと上を目指そう！", 30,
+                    new Vector2(0.5f, 0.48f), new Vector2(540, 100));
+                encouragement.color = new Color(0.9f, 0.94f, 1f, 1f);
+                AddActionButton("次へ　›", new Vector2(0.82f, 0.205f), Confirm);
+            }
         }
 
-        private InputField CreateNameInput(string initialValue)
+        private InputField CreateNameInput(string initialValue, Vector2 anchor)
         {
             var root = CreateUiObject("Player Name Input", uiRoot);
             var rect = root.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.75f);
-            rect.anchoredPosition = new Vector2(0, 0);
-            rect.sizeDelta = new Vector2(520, 54);
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(480, 66);
 
             var image = root.AddComponent<Image>();
-            image.color = new Color(0.04f, 0.07f, 0.12f, 0.92f);
+            image.color = new Color(0.04f, 0.07f, 0.12f, 0.96f);
 
             var input = root.AddComponent<InputField>();
             var text = CreateText("Name Text", root.transform, "", 28, TextAnchor.MiddleLeft);
@@ -910,7 +1016,7 @@ namespace Uta.GameFlow
             Stretch(placeholder.rectTransform);
             placeholder.rectTransform.offsetMin = new Vector2(14, 4);
             placeholder.rectTransform.offsetMax = new Vector2(-14, -4);
-            placeholder.color = new Color(1, 1, 1, 0.45f);
+            placeholder.color = new Color(1, 1, 1, 0.6f);
 
             input.textComponent = text;
             input.placeholder = placeholder;
