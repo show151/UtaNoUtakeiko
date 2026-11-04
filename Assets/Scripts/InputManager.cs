@@ -19,7 +19,7 @@ public class InputManager : MonoBehaviour
 
     // Physical key/pedal state; a scoring event must never advance while held.
     public bool IsPhysicallyPressed => isTestMode
-        ? Keyboard.current != null && Keyboard.current.spaceKey.isPressed
+        ? pressedKeyboard != null && pressedKeyboard.added && pressedKeyboard.spaceKey.isPressed
         : isPressed;
 
     // 前回の入力可能状態
@@ -59,6 +59,10 @@ public class InputManager : MonoBehaviour
     // Press IDs make duplicate or repeated input events visible in Console.
     private int pressSequenceId;
     private int activePressId;
+    private Keyboard pressedKeyboard;
+    private double pressStartedRealtime;
+    private double lastKeyEventRealtime;
+    [SerializeField] private bool logKeyboardDiagnostics = true;
 
     // ボタンを離したとき、実際の押下時間を通知する
     public event Action<float> OnPressReleased;
@@ -72,6 +76,56 @@ public class InputManager : MonoBehaviour
     private void Awake()
     {
         lastInputAvailable = IsInputAvailable;
+    }
+
+    private static string KeyboardLabel(Keyboard keyboard)
+    {
+        if (keyboard == null)
+            return "null";
+        return $"{keyboard.deviceId}:{keyboard.displayName}({keyboard.layout})";
+    }
+
+    private void LogKeyEvent(string phase)
+    {
+        if (!logKeyboardDiagnostics)
+            return;
+
+        double realtime = Time.realtimeSinceStartupAsDouble;
+        double sinceDown = phase == "DOWN" ? 0.0 : realtime - pressStartedRealtime;
+        double sincePrevious = lastKeyEventRealtime > 0 ? realtime - lastKeyEventRealtime : 0.0;
+        lastKeyEventRealtime = realtime;
+        Debug.Log(
+            $"[InputDiag] {phase} id={activePressId} " +
+            $"keyboard={KeyboardLabel(pressedKeyboard)} " +
+            $"current={KeyboardLabel(Keyboard.current)} " +
+            $"focus={Application.isFocused} " +
+            $"heldRealtime={sinceDown:F4}s deltaEvent={sincePrevious:F4}s " +
+            $"unscaled={Time.unscaledTime:F4}s frame={Time.frameCount}");
+    }
+
+    private void CancelActivePress(string reason)
+    {
+        if (!isPressed)
+            return;
+        Debug.LogWarning(
+            $"[InputDiag] CANCEL id={activePressId} reason={reason} " +
+            $"keyboard={KeyboardLabel(pressedKeyboard)}");
+        isPressed = false;
+        isLongPress = false;
+        activePressId = 0;
+        pressedKeyboard = null;
+        OnPressCanceled?.Invoke();
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+            CancelActivePress("application lost focus");
+    }
+
+    private void OnDisable()
+    {
+        CancelActivePress("input manager disabled");
     }
 
     private void Update()
@@ -93,17 +147,25 @@ public class InputManager : MonoBehaviour
 
         if (isTestMode)
         {
-            // テストモードならSpaceキーを使用
-            if (Keyboard.current != null)
+            // Pin the original keyboard while a key cycle is active.
+            // Keyboard.current may change when multiple keyboards (including
+            // virtual devices) exist. Never read the release from another one.
+            Keyboard keyboard = isPressed ? pressedKeyboard : Keyboard.current;
+            if (keyboard != null && keyboard.added)
             {
-                pressedThisFrame = Keyboard.current.spaceKey.wasPressedThisFrame;
-                releasedThisFrame = Keyboard.current.spaceKey.wasReleasedThisFrame;
-                isHolding = Keyboard.current.spaceKey.isPressed;
+                pressedThisFrame = keyboard.spaceKey.wasPressedThisFrame;
+                releasedThisFrame = keyboard.spaceKey.wasReleasedThisFrame;
+                isHolding = keyboard.spaceKey.isPressed;
+
+                if (isPressed && Keyboard.current != keyboard && logKeyboardDiagnostics)
+                    Debug.LogWarning(
+                        $"[InputDiag] CURRENT_CHANGED pressed={KeyboardLabel(keyboard)} " +
+                        $"current={KeyboardLabel(Keyboard.current)} realtime={Time.realtimeSinceStartupAsDouble:F3}");
             }
-            else
+            else if (isPressed)
             {
-                isPressed = false;
-                isLongPress = false;
+                // Device removal is an input cancellation, never a scored release.
+                CancelActivePress("keyboard device unavailable");
             }
         }
         else if (isExternalDeviceConnected)
@@ -124,17 +186,20 @@ public class InputManager : MonoBehaviour
         // ボタンが押された瞬間
         if (pressedThisFrame && isHolding && !isPressed)
         {
-            if (Time.time - lastInputTime >= debounceTime)
+            if (Time.unscaledTime - lastInputTime >= debounceTime)
             {
                 isPressed = true;
                 isLongPress = false;
                 activePressId = ++pressSequenceId;
-                pressStartTime = Time.time;
+                pressedKeyboard = isTestMode ? Keyboard.current : null;
+                pressStartTime = Time.unscaledTime;
+                pressStartedRealtime = Time.realtimeSinceStartupAsDouble;
 
-                lastInputTime = Time.time;
+                lastInputTime = Time.unscaledTime;
 
                 // Only a fresh physical down edge may start an input.
                 Debug.Log($"[InputTrace] DOWN id={activePressId} frame={Time.frameCount}");
+                LogKeyEvent("DOWN");
                 OnPressStarted?.Invoke();
             }
         }
@@ -142,7 +207,7 @@ public class InputManager : MonoBehaviour
         // ボタンを押し続けている場合
         if (isPressed && !isLongPress && isHolding)
         {
-            if (Time.time - pressStartTime >= longPressThreshold)
+            if (Time.unscaledTime - pressStartTime >= longPressThreshold)
             {
                 isLongPress = true;
                 Debug.Log($"[InputTrace] HOLD id={activePressId} frame={Time.frameCount}");
@@ -157,8 +222,9 @@ public class InputManager : MonoBehaviour
             {
                 float heldSeconds = Mathf.Max(
                     0f,
-                    Time.time - pressStartTime
+                    Time.unscaledTime - pressStartTime
                 );
+                LogKeyEvent("UP");
 
                 bool wasLongPress = isLongPress;
                 int completedPressId = activePressId;
@@ -168,6 +234,7 @@ public class InputManager : MonoBehaviour
                 isPressed = false;
                 isLongPress = false;
                 activePressId = 0;
+                pressedKeyboard = null;
 
                 Debug.Log(
                     $"[InputTrace] UP id={completedPressId} " +
