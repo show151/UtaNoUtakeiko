@@ -10,6 +10,14 @@ public class NoteDisplay : MonoBehaviour
 
     [SerializeField] private Sprite noteSprite;
 
+    // A solid white square sprite is used for the HOLD shaft instead of
+    // stretching the rounded/irregular note sprite into a triangle.
+    private Sprite holdShaftSprite;
+    private readonly System.Collections.Generic.List<SpriteRenderer> holdCapRenderers
+        = new System.Collections.Generic.List<SpriteRenderer>();
+    private const float HoldBarLength = 1.1f; // in world units
+    private const float HoldBarThickness = 0.18f;
+
     // Gameplay input visuals: a connected-pitch unit is shown as a long bar.
     private readonly System.Collections.Generic.List<SpriteRenderer> holdBodyRenderers
         = new System.Collections.Generic.List<SpriteRenderer>();
@@ -41,6 +49,7 @@ public class NoteDisplay : MonoBehaviour
 
         noteRenderers.Clear();
         holdBodyRenderers.Clear();
+        holdCapRenderers.Clear();
         holdFlags.Clear();
 
         foreach (Transform child in transform)
@@ -75,6 +84,7 @@ public class NoteDisplay : MonoBehaviour
 
             noteRenderers.Add(renderer);
             holdBodyRenderers.Add(null);
+            holdCapRenderers.Add(null);
             holdFlags.Add(false);
         }
     }
@@ -103,16 +113,42 @@ public class NoteDisplay : MonoBehaviour
             SpriteRenderer head = noteRenderers[i];
             head.color = new Color32(255, 175, 66, 255);
 
-            // Reuse the configured note sprite; no additional art asset is required.
+            if (holdShaftSprite == null)
+            {
+                Texture2D texture = Texture2D.whiteTexture;
+                holdShaftSprite = Sprite.Create(
+                    texture, new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f), texture.width);
+            }
+
+            // The note itself is scaled by noteSize. Compensate so the
+            // shaft has a predictable world-space length and thickness.
+            float inverseHeadScale = 1f / Mathf.Max(noteSize, 0.01f);
+
             GameObject body = new GameObject("HoldBody");
             body.transform.SetParent(head.transform, false);
-            body.transform.localPosition = new Vector3(0.75f, 0f, 0f);
-            body.transform.localScale = new Vector3(1.55f, 0.38f, 1f);
+            body.transform.localPosition = new Vector3(
+                HoldBarLength * 0.5f * inverseHeadScale, 0f, 0f);
+            body.transform.localScale = new Vector3(
+                HoldBarLength * inverseHeadScale,
+                HoldBarThickness * inverseHeadScale, 1f);
+
             SpriteRenderer bodyRenderer = body.AddComponent<SpriteRenderer>();
-            bodyRenderer.sprite = noteSprite;
-            bodyRenderer.color = new Color32(255, 175, 66, 210);
+            bodyRenderer.sprite = holdShaftSprite;
+            bodyRenderer.color = new Color32(255, 175, 66, 255);
             bodyRenderer.sortingOrder = head.sortingOrder - 1;
             holdBodyRenderers[i] = bodyRenderer;
+
+            GameObject cap = new GameObject("HoldEndCap");
+            cap.transform.SetParent(head.transform, false);
+            cap.transform.localPosition = new Vector3(
+                HoldBarLength * inverseHeadScale, 0f, 0f);
+            cap.transform.localScale = new Vector3(0.7f, 0.7f, 1f);
+            SpriteRenderer capRenderer = cap.AddComponent<SpriteRenderer>();
+            capRenderer.sprite = noteSprite;
+            capRenderer.color = new Color32(255, 175, 66, 255);
+            capRenderer.sortingOrder = head.sortingOrder;
+            holdCapRenderers[i] = capRenderer;
         }
     }
 
@@ -128,6 +164,8 @@ public class NoteDisplay : MonoBehaviour
             fraction);
         if (holdBodyRenderers[index] != null)
             holdBodyRenderers[index].color = noteRenderers[index].color;
+        if (holdCapRenderers[index] != null)
+            holdCapRenderers[index].color = noteRenderers[index].color;
     }
 
     public void ShowInputResolution(int index, bool succeeded)
@@ -142,6 +180,8 @@ public class NoteDisplay : MonoBehaviour
         noteRenderers[index].color = color;
         if (holdBodyRenderers[index] != null)
             holdBodyRenderers[index].color = color;
+        if (holdCapRenderers[index] != null)
+            holdCapRenderers[index].color = color;
     }
 
     // #53: jump to the scheduled input unit without adding scroll animation time.
@@ -165,9 +205,17 @@ public class NoteDisplay : MonoBehaviour
             // child SpriteRenderers. Hide hold bodies explicitly.
             if (holdBodyRenderers[i] != null)
                 holdBodyRenderers[i].enabled = i >= noteIndex;
+            if (holdCapRenderers[i] != null)
+                holdCapRenderers[i].enabled = i >= noteIndex;
         }
     }
 
+
+    private void OnDestroy()
+    {
+        if (holdShaftSprite != null)
+            Destroy(holdShaftSprite);
+    }
 
     public IEnumerator ScrollToNote(int noteIndex)
     {
@@ -206,6 +254,13 @@ public class NoteDisplay : MonoBehaviour
                     bodyColor.a = 1f - t;
                     body.color = bodyColor;
                 }
+                if (holdCapRenderers[previousIndex] != null)
+                {
+                    var cap = holdCapRenderers[previousIndex];
+                    Color capColor = cap.color;
+                    capColor.a = 1f - t;
+                    cap.color = capColor;
+                }
             }
 
             yield return null;
@@ -222,6 +277,8 @@ public class NoteDisplay : MonoBehaviour
             noteRenderers[completedIndex].enabled = false;
             if (holdBodyRenderers[completedIndex] != null)
                 holdBodyRenderers[completedIndex].enabled = false;
+            if (holdCapRenderers[completedIndex] != null)
+                holdCapRenderers[completedIndex].enabled = false;
         }
     }
 }
