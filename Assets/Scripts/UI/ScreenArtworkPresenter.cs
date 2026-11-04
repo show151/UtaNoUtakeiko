@@ -33,6 +33,7 @@ namespace Uta.GameFlow
             { "かんたん", "ふつう", "むずかしい" };
         [SerializeField] private string[] songSymbols = { "☆" };
         [SerializeField] private float countdownSeconds = 5f;
+        [SerializeField, Min(0f)] private float finishDisplaySeconds = 2f;
 
         private Canvas screenCanvas;
         private Image backgroundImage;
@@ -49,6 +50,7 @@ namespace Uta.GameFlow
         private int playerRank = 11;
         private string playerName = "あなた";
         private bool countdownRunning;
+        private bool finishDisplayRunning;
 
         private static readonly string[] DemoNames =
             { "あおい", "ゆき", "ほし", "みなと", "そら", "りん", "はる", "つき", "うみ", "こと" };
@@ -208,6 +210,7 @@ namespace Uta.GameFlow
             bool isPlaying = state == GameSessionState.Playing;
             bool isPlayback = state == GameSessionState.Playback;
             bool isCountdown = state == GameSessionState.Countdown;
+            bool isFinish = state == GameSessionState.GameFinished;
             bool isResultOrLater =
                 state == GameSessionState.Result ||
                 state == GameSessionState.Ranking ||
@@ -234,14 +237,14 @@ namespace Uta.GameFlow
             backgroundImage.sprite = backdrop;
             if (isCountdown)
                 backgroundImage.color = new Color(0f, 0f, 0f, 0.62f);
-            else if (isPlayback || isResultOrLater || isFullScreenSelection)
+            else if (isFinish || isPlayback || isResultOrLater || isFullScreenSelection)
                 backgroundImage.color = new Color(0.035f, 0.08f, 0.14f, 1f);
             else
                 backgroundImage.color = Color.white;
 
             backgroundImage.gameObject.SetActive(
                 backdrop != null || isFullScreenSelection ||
-                isCountdown || isPlayback || isResultOrLater);
+                isCountdown || isFinish || isPlayback || isResultOrLater);
 
             Sprite character = CharacterFor(state);
             characterImage.sprite = character;
@@ -288,6 +291,12 @@ namespace Uta.GameFlow
                         180, new Vector2(0.5f, 0.5f), new Vector2(600, 300));
                     if (!countdownRunning)
                         StartCoroutine(CountdownToGameplay());
+                    break;
+
+                case GameSessionState.GameFinished:
+                    AddText("Finish！", 180, new Vector2(0.5f, 0.5f), new Vector2(1200, 320));
+                    if (!finishDisplayRunning)
+                        StartCoroutine(FinishDisplayToPlayback());
                     break;
 
                 case GameSessionState.Playback:
@@ -504,6 +513,17 @@ namespace Uta.GameFlow
                     sessionManager.RecoverToTitle();
                     break;
             }
+        }
+
+        private IEnumerator FinishDisplayToPlayback()
+        {
+            finishDisplayRunning = true;
+            yield return new WaitForSecondsRealtime(Mathf.Max(0f, finishDisplaySeconds));
+            finishDisplayRunning = false;
+
+            if (sessionManager != null &&
+                sessionManager.CurrentState == GameSessionState.GameFinished)
+                sessionManager.TryTransition(GameSessionState.Playback);
         }
 
         private IEnumerator CountdownToGameplay()
