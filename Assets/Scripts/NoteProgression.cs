@@ -423,6 +423,21 @@ public class NoteProgression : MonoBehaviour
         isAdvancing = false;
     }
 
+    // Ends the player input phase when the global session timer expires.
+    // All unresolved input units become timed-out Miss results before scoring.
+    public bool CompleteGameplayAsTimedOut()
+    {
+        if (!isGameplayInput || gameplayTrial == null)
+            return false;
+
+        gameplayTrial.ResolveRemainingAsTimedOut();
+        if (gameplayTrial.ResolvedCount != gameplayTrial.Count)
+            return false;
+
+        CompleteGameplayInput();
+        return LastGameplayResults != null;
+    }
+
     private void CompleteGameplayInput()
     {
         if (!isGameplayInput || gameplayTrial == null ||
