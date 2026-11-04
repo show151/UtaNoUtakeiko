@@ -141,7 +141,8 @@ namespace Uta.GameFlow
                     return next == GameSessionState.DifficultySelect;
 
                 case GameSessionState.DifficultySelect:
-                    return next == GameSessionState.SongSelect
+                    return next == GameSessionState.Countdown
+                        || next == GameSessionState.SongSelect
                         || next == GameSessionState.Title;
 
                 case GameSessionState.SongSelect:
