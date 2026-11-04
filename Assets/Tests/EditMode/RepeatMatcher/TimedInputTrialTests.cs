@@ -30,6 +30,52 @@ namespace UtaNoUtakeiko.Tests
             });
         }
 
+
+        [Test]
+        public void ProductionInput_DoesNotAdvanceOrExpireWithoutARelease()
+        {
+            TimedInputTrial trial = CreateTrial();
+
+            // Production gameplay never invokes Expire: elapsed wall-clock time
+            // alone must not create scores or advance to the next input.
+            Assert.AreEqual(0, trial.ResolvedCount);
+            Assert.IsFalse(trial.IsResolved(0));
+            Assert.IsFalse(trial.IsResolved(1));
+
+            Assert.IsTrue(trial.TryRecordPlayerRelease(
+                0, "Perfect", 0.5f, 0.71f, 0.05f));
+            Assert.IsTrue(trial.IsResolved(0));
+            Assert.IsFalse(trial.IsResolved(1));
+            Assert.AreEqual(1, trial.ResolvedCount);
+
+            Assert.IsFalse(trial.TryRecordPlayerRelease(
+                0, "Perfect", 0.5f, 0.71f, 0.05f));
+
+            Assert.IsTrue(trial.TryRecordPlayerRelease(
+                1, "Great", 0.4f, 0.13f, 0.05f));
+            Assert.AreEqual(2, trial.ResolvedCount);
+        }
+
+        [Test]
+        public void ProductionInput_ShortHoldFails_AndLongHoldSucceeds()
+        {
+            var shortTrial = CreateTrial();
+            var shortResults = new List<TimedInputTrialResult>();
+            shortTrial.OnResolved += shortResults.Add;
+            Assert.IsTrue(shortTrial.TryRecordPlayerRelease(
+                0, "Perfect", 0.5f, 0.3f, 0.05f));
+            Assert.AreEqual(false, shortResults[0].HoldSucceeded);
+            Assert.IsFalse(shortResults[0].TimedOut);
+
+            var longTrial = CreateTrial();
+            var longResults = new List<TimedInputTrialResult>();
+            longTrial.OnResolved += longResults.Add;
+            Assert.IsTrue(longTrial.TryRecordPlayerRelease(
+                0, "Perfect", 0.5f, 0.7f, 0.05f));
+            Assert.AreEqual(true, longResults[0].HoldSucceeded);
+            Assert.IsFalse(longResults[0].TimedOut);
+        }
+
         [Test]
         public void ReleaseAfterNextUnitStart_StillResolvesPressedHold()
         {
