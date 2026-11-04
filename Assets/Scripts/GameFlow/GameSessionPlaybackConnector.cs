@@ -16,6 +16,15 @@ namespace Uta.GameFlow
         private AudioSource audioSource;
         private AudioClip generatedClip;
         private Coroutine playbackCoroutine;
+        private double playbackStartDspTime = -1d;
+
+        public float CurrentPlaybackTimeSeconds => playbackStartDspTime < 0d
+            ? 0f
+            : Mathf.Max(0f, (float)(AudioSettings.dspTime - playbackStartDspTime));
+
+        public float CurrentPlaybackDurationSeconds => generatedClip != null
+            ? generatedClip.length
+            : 0f;
 
         private void Awake()
         {
@@ -126,6 +135,7 @@ namespace Uta.GameFlow
 
                 double startTime = AudioSettings.dspTime + 0.15;
                 endTime = startTime + generatedClip.length;
+                playbackStartDspTime = startTime;
 
                 audioSource.PlayScheduled(startTime);
 
@@ -178,6 +188,7 @@ namespace Uta.GameFlow
 
         private void StopPlayback()
         {
+            playbackStartDspTime = -1d;
             if (playbackCoroutine != null)
             {
                 StopCoroutine(playbackCoroutine);
