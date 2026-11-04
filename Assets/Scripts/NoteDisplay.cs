@@ -160,6 +160,11 @@ public class NoteDisplay : MonoBehaviour
 
             if (renderer != null)
                 renderer.enabled = i >= noteIndex;
+
+            // SpriteRenderer.enabled on the note does not propagate to
+            // child SpriteRenderers. Hide hold bodies explicitly.
+            if (holdBodyRenderers[i] != null)
+                holdBodyRenderers[i].enabled = i >= noteIndex;
         }
     }
 
@@ -192,6 +197,15 @@ public class NoteDisplay : MonoBehaviour
                 Color color = renderer.color;
                 color.a = 1f - t;
                 renderer.color = color;
+
+                // The hold bar uses its own child SpriteRenderer.
+                if (holdBodyRenderers[previousIndex] != null)
+                {
+                    var body = holdBodyRenderers[previousIndex];
+                    Color bodyColor = body.color;
+                    bodyColor.a = 1f - t;
+                    body.color = bodyColor;
+                }
             }
 
             yield return null;
@@ -206,6 +220,8 @@ public class NoteDisplay : MonoBehaviour
             completedIndex < noteRenderers.Count)
         {
             noteRenderers[completedIndex].enabled = false;
+            if (holdBodyRenderers[completedIndex] != null)
+                holdBodyRenderers[completedIndex].enabled = false;
         }
     }
 }
