@@ -115,6 +115,41 @@ namespace UtaNoUtakeiko.Gameplay
             return true;
         }
 
+        // Production gameplay is input-driven, not tied to each note's
+        // scheduled start/end. A player action advances one InputUnit.
+        public bool TryRecordPlayerRelease(
+            int index, string pitchJudgment, float capturedPosition,
+            float heldSeconds, float holdToleranceSeconds)
+        {
+            if (index < 0 || index >= units.Count || IsResolved(index) ||
+                string.IsNullOrWhiteSpace(pitchJudgment) ||
+                float.IsNaN(capturedPosition) ||
+                float.IsInfinity(capturedPosition) ||
+                capturedPosition < 0f || capturedPosition > 1f ||
+                float.IsNaN(heldSeconds) || float.IsInfinity(heldSeconds) ||
+                heldSeconds < 0f ||
+                float.IsNaN(holdToleranceSeconds) ||
+                float.IsInfinity(holdToleranceSeconds) ||
+                holdToleranceSeconds < 0f)
+                return false;
+
+            InputUnit unit = units[index];
+            bool? hold = unit.IsHold
+                ? heldSeconds + holdToleranceSeconds >= unit.DurationSeconds
+                : (bool?)null;
+
+            Resolve(index, new TimedInputTrialResult
+            {
+                UnitId = unit.UnitId,
+                PitchJudgment = pitchJudgment,
+                CapturedPosition = capturedPosition,
+                HeldSeconds = heldSeconds,
+                HoldSucceeded = hold,
+                TimedOut = false
+            });
+            return true;
+        }
+
         public void Expire(float elapsedSeconds)
         {
             for (int i = 0; i < units.Count; i++)
