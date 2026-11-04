@@ -263,6 +263,9 @@ public class NoteProgression : MonoBehaviour
         if (!isGameplayInput || gameplayTrial == null)
             return;
 
+        if (isAdvancing || pendingPressIndex >= 0)
+            return;
+
         int active = currentNoteIndex;
         pendingPressIndex = active >= 0 &&
                             active < gameplayTrial.Count &&
@@ -312,6 +315,22 @@ public class NoteProgression : MonoBehaviour
             (Time.time - timedPressStartedAt) / pendingUnitDuration);
         noteDisplay.ShowHoldProgress(pendingPressIndex, fraction);
         judgmentUI.ShowTimedHoldProgress(fraction);
+    }
+
+    // Input is disabled while the current note (including its HOLD body)
+    // slides away. No subsequent unit can be consumed by the same press.
+    private IEnumerator AdvanceGameplayAfterRelease(int nextIndex)
+    {
+        yield return noteDisplay.ScrollToNote(nextIndex);
+
+        if (!isGameplayInput || currentGameplayUnits == null)
+            yield break;
+
+        currentNoteIndex = nextIndex;
+        judgmentUI.ClearJudgment();
+        judgmentSystem.ResetJudgment(notePositions[nextIndex]);
+        judgmentUI.ShowTimedInputPrompt(currentGameplayUnits[nextIndex].IsHold);
+        isAdvancing = false;
     }
 
     private void CompleteGameplayInput()
@@ -418,43 +437,40 @@ public class NoteProgression : MonoBehaviour
     {
         if (isGameplayInput && gameplayTrial != null)
         {
+            // Never resolve more than one unit from the same physical release.
+            // Lock advancement before notifying results or moving any sprites.
+            if (isAdvancing)
+                return;
+
             int sourceIndex = pendingPressIndex;
             pendingPressIndex = -1;
             pendingIsHold = false;
+            pendingUnitDuration = 0f;
+            if (sourceIndex < 0 || sourceIndex != currentNoteIndex)
+                return;
 
-            if (sourceIndex >= 0)
+            isAdvancing = true;
+            bool accepted = gameplayTrial.TryRecordPlayerRelease(
+                sourceIndex, result, position, heldSeconds,
+                holdToleranceSeconds);
+
+            if (!accepted)
             {
-                bool accepted = gameplayTrial.TryRecordPlayerRelease(
-                    sourceIndex, result, position, heldSeconds,
-                    holdToleranceSeconds);
-                if (accepted)
-                {
-                    int next = sourceIndex + 1;
-                    if (next < notePositions.Length)
-                    {
-                        currentNoteIndex = next;
-                        noteDisplay.SeekToNote(next);
-                        judgmentSystem.ResetJudgment(notePositions[next]);
-                        judgmentUI.ShowTimedInputPrompt(
-                            currentGameplayUnits[next].IsHold);
-                    }
-                    else
-                    {
-                        CompleteGameplayInput();
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning(
-                        $"[Gameplay] Invalid/duplicate release: {sourceIndex}");
-                    judgmentSystem.ResetJudgment(
-                        notePositions[currentNoteIndex]);
-                }
-            }
-            else if (isGameplayInput)
-            {
+                Debug.LogWarning(
+                    $"[Gameplay] Invalid/duplicate release: {sourceIndex}");
+                isAdvancing = false;
                 judgmentSystem.ResetJudgment(notePositions[currentNoteIndex]);
+                return;
             }
+
+            int next = sourceIndex + 1;
+            if (next >= notePositions.Length)
+            {
+                CompleteGameplayInput();
+                return;
+            }
+
+            StartCoroutine(AdvanceGameplayAfterRelease(next));
             return;
         }
 
