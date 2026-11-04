@@ -13,10 +13,10 @@ public class NoteProgression : MonoBehaviour
     // Separate preview completion event; preview must never finalize a scored session.
     public event Action OnTimedPreviewCompleted;
 
-    // Isolated interactive test: results are never forwarded to the old score path.
-    public event Action OnTimedTrialCompleted;
-    public event Action<TimedInputTrialResult> OnTimedTrialResolved;
-    public IReadOnlyList<TimedInputTrialResult> LastTimedTrialResults { get; private set; }
+    // Production gameplay input results for grouped TAP/HOLD scoring and vocals.
+    public event Action OnGameplayCompleted;
+    public event Action<TimedInputTrialResult> OnGameplayInputResolved;
+    public IReadOnlyList<TimedInputTrialResult> LastGameplayResults { get; private set; }
 
     // NoteId、判定名、実際の入力位置
     public event Action<string, string, float> OnNoteJudged;
@@ -43,15 +43,15 @@ public class NoteProgression : MonoBehaviour
     private bool isPlaying;
     private bool isAdvancing;
     private bool isTimedPreview;
-    private bool isTimedTrial;
-    private TimedInputTrial timedTrial;
+    private bool isGameplayInput;
+    private TimedInputTrial gameplayTrial;
     private readonly List<TimedInputTrialResult> completedTrialResults = new List<TimedInputTrialResult>();
-    private float trialStartedAt;
+    private float gameplayStartedAt;
     private int pendingPressIndex = -1;
     private float holdToleranceSeconds = 0.05f;
     private float timedPressStartedAt;
     private float pendingUnitDuration;
-    private List<InputUnit> currentTimedUnits;
+    private List<InputUnit> currentGameplayUnits;
     private bool pendingIsHold;
 
     private void OnEnable()
@@ -59,7 +59,7 @@ public class NoteProgression : MonoBehaviour
         if (judgmentSystem != null)
         {
             judgmentSystem.OnJudged += HandleJudgment;
-            judgmentSystem.OnPressPositionCaptured += HandleTimedPressStarted;
+            judgmentSystem.OnPressPositionCaptured += HandleGameplayPressStarted;
             judgmentSystem.OnJudgedWithPosition += HandleJudgmentWithPosition;
             judgmentSystem.OnJudgedWithPositionAndDuration
                 += HandleJudgmentWithDuration;
@@ -71,7 +71,7 @@ public class NoteProgression : MonoBehaviour
         if (judgmentSystem != null)
         {
             judgmentSystem.OnJudged -= HandleJudgment;
-            judgmentSystem.OnPressPositionCaptured -= HandleTimedPressStarted;
+            judgmentSystem.OnPressPositionCaptured -= HandleGameplayPressStarted;
             judgmentSystem.OnJudgedWithPosition -= HandleJudgmentWithPosition;
             judgmentSystem.OnJudgedWithPositionAndDuration
                 -= HandleJudgmentWithDuration;
@@ -203,10 +203,9 @@ public class NoteProgression : MonoBehaviour
         OnTimedPreviewCompleted?.Invoke();
     }
 
-    // Actual button input trial. Time always advances; missed units are auto-resolved.
-    // Kept independent from the legacy JudgmentSession and vocal scoring until #53
-    // is fully integrated.
-    public bool StartTimedInputTrial(
+    // Production gameplay: the player must press/release Space or an input device.
+    // BPM timeline advances independently; unplayed units auto-resolve as Miss.
+    public bool StartGameplayInput(
         List<InputUnit> units,
         float[] positions,
         float holdTolerance = 0.05f)
@@ -217,7 +216,7 @@ public class NoteProgression : MonoBehaviour
             judgmentUI == null || float.IsNaN(holdTolerance) ||
             float.IsInfinity(holdTolerance) || holdTolerance < 0f)
         {
-            Debug.LogError("時間制入力テストの設定が不正です。");
+            Debug.LogError("本番ゲームプレイの設定が不正です。");
             return false;
         }
 
@@ -235,11 +234,11 @@ public class NoteProgression : MonoBehaviour
         StopPlayback();
 
         completedTrialResults.Clear();
-        LastTimedTrialResults = null;
-        currentTimedUnits = new List<InputUnit>(units);
-        timedTrial = newTrial;
+        LastGameplayResults = null;
+        currentGameplayUnits = new List<InputUnit>(units);
+        gameplayTrial = newTrial;
         holdToleranceSeconds = holdTolerance;
-        timedTrial.OnResolved += HandleTrialResolved;
+        gameplayTrial.OnResolved += HandleGameplayResolved;
         notePositions = (float[])positions.Clone();
         noteIds = new string[units.Count];
         for (int i = 0; i < units.Count; i++)
@@ -248,7 +247,7 @@ public class NoteProgression : MonoBehaviour
         currentNoteIndex = 0;
         pendingPressIndex = -1;
         isPlaying = true;
-        isTimedTrial = true;
+        isGameplayInput = true;
         noteDisplay.InitializeInputUnits(notePositions, units);
         noteDisplay.SeekToNote(0);
         judgmentUI.SetTimedInputFeedback(true);
@@ -256,37 +255,37 @@ public class NoteProgression : MonoBehaviour
         judgmentSystem.enabled = true;
         judgmentSystem.ResetJudgment(notePositions[0]);
 
-        trialStartedAt = Time.time;
-        StartCoroutine(RunTimedInputTrial(
+        gameplayStartedAt = Time.time;
+        StartCoroutine(RunGameplayInput(
             new List<InputUnit>(units),
             units[units.Count - 1].EndSeconds));
         return true;
     }
 
-    private void HandleTimedPressStarted(float capturedPosition)
+    private void HandleGameplayPressStarted(float capturedPosition)
     {
-        if (!isTimedTrial || timedTrial == null)
+        if (!isGameplayInput || gameplayTrial == null)
             return;
 
-        float elapsed = Time.time - trialStartedAt;
-        int active = timedTrial.ActiveIndexAt(elapsed);
-        pendingPressIndex = active >= 0 && !timedTrial.IsResolved(active)
+        float elapsed = Time.time - gameplayStartedAt;
+        int active = gameplayTrial.ActiveIndexAt(elapsed);
+        pendingPressIndex = active >= 0 && !gameplayTrial.IsResolved(active)
             ? active : -1;
         timedPressStartedAt = Time.time;
         pendingIsHold = pendingPressIndex >= 0 &&
-            currentTimedUnits != null && currentTimedUnits[pendingPressIndex].IsHold;
-        pendingUnitDuration = pendingPressIndex >= 0 && currentTimedUnits != null
-            ? currentTimedUnits[pendingPressIndex].DurationSeconds : 0f;
+            currentGameplayUnits != null && currentGameplayUnits[pendingPressIndex].IsHold;
+        pendingUnitDuration = pendingPressIndex >= 0 && currentGameplayUnits != null
+            ? currentGameplayUnits[pendingPressIndex].DurationSeconds : 0f;
     }
 
-    private void HandleTrialResolved(TimedInputTrialResult result)
+    private void HandleGameplayResolved(TimedInputTrialResult result)
     {
         completedTrialResults.Add(result);
-        if (currentTimedUnits != null)
+        if (currentGameplayUnits != null)
         {
-            for (int i = 0; i < currentTimedUnits.Count; i++)
+            for (int i = 0; i < currentGameplayUnits.Count; i++)
             {
-                if (currentTimedUnits[i].UnitId != result.UnitId)
+                if (currentGameplayUnits[i].UnitId != result.UnitId)
                     continue;
                 bool succeeded = !result.TimedOut &&
                     result.PitchJudgment != "Miss" && result.HoldSucceeded != false;
@@ -301,24 +300,24 @@ public class NoteProgression : MonoBehaviour
             $"[Issue #53] Input result {result.UnitId}: " +
             $"{result.PitchJudgment}, hold={result.HoldSucceeded}, " +
             $"timeout={result.TimedOut}");
-        OnTimedTrialResolved?.Invoke(result);
+        OnGameplayInputResolved?.Invoke(result);
     }
 
-    private IEnumerator RunTimedInputTrial(
+    private IEnumerator RunGameplayInput(
         List<InputUnit> units, float totalSeconds)
     {
         int index = 0;
         Debug.Log(
-            $"[Issue #53] Timed input trial started: " +
+            $"[Gameplay] Input started: " +
             $"{units.Count} units / {totalSeconds:F2}s");
 
-        while (isTimedTrial)
+        while (isGameplayInput)
         {
-            float elapsed = Time.time - trialStartedAt;
-            timedTrial.Expire(elapsed);
+            float elapsed = Time.time - gameplayStartedAt;
+            gameplayTrial.Expire(elapsed);
 
             if (pendingPressIndex >= 0 && pendingIsHold &&
-                !timedTrial.IsResolved(pendingPressIndex) &&
+                !gameplayTrial.IsResolved(pendingPressIndex) &&
                 pendingUnitDuration > 0f)
             {
                 float fraction = Mathf.Clamp01(
@@ -347,20 +346,20 @@ public class NoteProgression : MonoBehaviour
             yield return null;
         }
 
-        if (!isTimedTrial)
+        if (!isGameplayInput)
             yield break;
 
-        timedTrial.Expire(totalSeconds +
+        gameplayTrial.Expire(totalSeconds +
                           TimedInputTrial.ReleaseGraceSeconds);
-        int resolved = timedTrial.ResolvedCount;
+        int resolved = gameplayTrial.ResolvedCount;
         Debug.Log(
-            $"[Issue #53] Timed input trial finished: " +
-            $"{resolved}/{timedTrial.Count} resolved / " +
+            $"[Gameplay] Input finished: " +
+            $"{resolved}/{gameplayTrial.Count} resolved / " +
             $"{totalSeconds:F2}s + release grace");
 
-        LastTimedTrialResults = completedTrialResults.AsReadOnly();
+        LastGameplayResults = completedTrialResults.AsReadOnly();
         StopPlayback();
-        OnTimedTrialCompleted?.Invoke();
+        OnGameplayCompleted?.Invoke();
     }
 
     public void StopPlayback()
@@ -368,17 +367,17 @@ public class NoteProgression : MonoBehaviour
         isPlaying = false;
         isAdvancing = false;
         isTimedPreview = false;
-        isTimedTrial = false;
+        isGameplayInput = false;
         pendingPressIndex = -1;
         pendingIsHold = false;
         pendingUnitDuration = 0f;
-        currentTimedUnits = null;
+        currentGameplayUnits = null;
         if (judgmentUI != null)
             judgmentUI.SetTimedInputFeedback(false);
-        if (timedTrial != null)
+        if (gameplayTrial != null)
         {
-            timedTrial.OnResolved -= HandleTrialResolved;
-            timedTrial = null;
+            gameplayTrial.OnResolved -= HandleGameplayResolved;
+            gameplayTrial = null;
         }
         StopAllCoroutines();
 
@@ -388,7 +387,7 @@ public class NoteProgression : MonoBehaviour
 
     private void HandleJudgment(string result)
     {
-        if (!isPlaying || isAdvancing || isTimedPreview || isTimedTrial)
+        if (!isPlaying || isAdvancing || isTimedPreview || isGameplayInput)
             return;
 
         isAdvancing = true;
@@ -426,7 +425,7 @@ public class NoteProgression : MonoBehaviour
     {
         if (!isPlaying ||
             isTimedPreview ||
-            isTimedTrial ||
+            isGameplayInput ||
             isAdvancing ||
             noteIds == null ||
             currentNoteIndex < 0 ||
@@ -450,21 +449,21 @@ public class NoteProgression : MonoBehaviour
         float position,
         float heldSeconds)
     {
-        if (isTimedTrial && timedTrial != null)
+        if (isGameplayInput && gameplayTrial != null)
         {
             int sourceIndex = pendingPressIndex;
             pendingPressIndex = -1;
             pendingIsHold = false;
             if (sourceIndex >= 0)
             {
-                bool accepted = timedTrial.TryRecordRelease(
-                    sourceIndex, Time.time - trialStartedAt,
+                bool accepted = gameplayTrial.TryRecordRelease(
+                    sourceIndex, Time.time - gameplayStartedAt,
                     result, position, heldSeconds, holdToleranceSeconds);
                 if (!accepted)
                     Debug.Log($"[Issue #53] Late/duplicate release ignored: {sourceIndex}");
             }
 
-            if (isTimedTrial && currentNoteIndex < notePositions.Length)
+            if (isGameplayInput && currentNoteIndex < notePositions.Length)
                 judgmentSystem.ResetJudgment(notePositions[currentNoteIndex]);
             return;
         }
