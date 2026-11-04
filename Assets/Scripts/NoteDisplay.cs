@@ -181,7 +181,7 @@ public class NoteDisplay : MonoBehaviour
 
             transform.position = Vector3.Lerp(from, to, t);
 
-            // ����ς݂̉�����X�N���[���ɍ��킹�ăt�F�[�h�A�E�g
+            // Fade out the previous note while scrolling.
             int previousIndex = noteIndex - 1;
 
             if (previousIndex >= 0 &&
@@ -199,7 +199,7 @@ public class NoteDisplay : MonoBehaviour
 
         transform.position = to;
 
-        // �X�N���[���������ɔ���ς݂̉������\���ɂ���
+        // Hide the previous note after the scroll finishes.
         int completedIndex = noteIndex - 1;
 
         if (completedIndex >= 0 &&
