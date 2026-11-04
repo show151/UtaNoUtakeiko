@@ -1887,7 +1887,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Uta.Runtime::Uta.GameFlow.ScreenArtworkPresenter
   sessionManager: {fileID: 860801488}
   playConnector: {fileID: 860801492}
-  japaneseFont: {fileID: 0}
   titleArtwork: {fileID: 21300000, guid: 9f55bd3c504e4e36824a56e901712c11, type: 3}
   normalCharacter: {fileID: 21300000, guid: 6c7c348483244bc498418ce4214987c1, type: 3}
   singingGoodCharacter: {fileID: 21300000, guid: a02f6c5796ac45d0944999094505e329, type: 3}
