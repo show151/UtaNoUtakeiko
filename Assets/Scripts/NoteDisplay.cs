@@ -184,38 +184,31 @@ public class NoteDisplay : MonoBehaviour
         }
     }
 
-    // Reuse the source texture and split its geometry at the middle.
-    // The start extends left of the bar, the end extends right of it.
+    // Crop the source texture into two sprites at the midpoint. Using source
+    // rects keeps each cap on its own half without unsupported mesh overrides.
     private void EnsureHoldEndSprites()
     {
         if (noteSprite == null || (holdStartSprite != null && holdEndSprite != null))
             return;
 
         Rect rect = noteSprite.rect;
-        Vector2 pivot = noteSprite.pivot;
         float ppu = noteSprite.pixelsPerUnit;
-        Vector2 normalizedPivot = new Vector2(pivot.x / rect.width, pivot.y / rect.height);
-        float left = -pivot.x / ppu;
-        float middle = (rect.width * 0.5f - pivot.x) / ppu;
-        float right = (rect.width - pivot.x) / ppu;
-        float bottom = -pivot.y / ppu;
-        float top = (rect.height - pivot.y) / ppu;
-        ushort[] triangles = { 0, 1, 2, 2, 3, 0 };
+        float splitX = rect.width * 0.5f;
+        float normalizedPivotY = noteSprite.pivot.y / rect.height;
 
-        holdStartSprite = Sprite.Create(noteSprite.texture, rect, normalizedPivot,
-            ppu, 0, SpriteMeshType.FullRect);
-        holdStartSprite.OverrideGeometry(new[]
-        {
-            new Vector2(left, bottom), new Vector2(left, top),
-            new Vector2(middle, top), new Vector2(middle, bottom)
-        }, triangles);
-        holdEndSprite = Sprite.Create(noteSprite.texture, rect, normalizedPivot,
-            ppu, 0, SpriteMeshType.FullRect);
-        holdEndSprite.OverrideGeometry(new[]
-        {
-            new Vector2(middle, bottom), new Vector2(middle, top),
-            new Vector2(right, top), new Vector2(right, bottom)
-        }, triangles);
+        holdStartSprite = Sprite.Create(
+            noteSprite.texture,
+            new Rect(rect.x, rect.y, splitX, rect.height),
+            new Vector2(1f, normalizedPivotY),
+            ppu);
+        holdStartSprite.name = noteSprite.name + "_HoldStart";
+
+        holdEndSprite = Sprite.Create(
+            noteSprite.texture,
+            new Rect(rect.x + splitX, rect.y, rect.width - splitX, rect.height),
+            new Vector2(0f, normalizedPivotY),
+            ppu);
+        holdEndSprite.name = noteSprite.name + "_HoldEnd";
     }
 
     public void ShowHoldProgress(int index, float progress)
