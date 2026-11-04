@@ -355,6 +355,7 @@ GameObject:
   - component: {fileID: 860801492}
   - component: {fileID: 860801493}
   - component: {fileID: 860801494}
+  - component: {fileID: 860801495}
   m_Layer: 0
   m_Name: GameSessionManager
   m_TagString: Untagged
@@ -1872,6 +1873,26 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &860801495
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860801487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2a1f851e42b4b3b9a563e347ec8c301, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Uta.Runtime::Uta.GameFlow.ScreenArtworkPresenter
+  sessionManager: {fileID: 860801488}
+  playConnector: {fileID: 860801492}
+  titleArtwork: {fileID: 21300000, guid: 9f55bd3c504e4e36824a56e901712c11, type: 3}
+  normalCharacter: {fileID: 21300000, guid: 6c7c348483244bc498418ce4214987c1, type: 3}
+  singingGoodCharacter: {fileID: 21300000, guid: a02f6c5796ac45d0944999094505e329, type: 3}
+  singingBadCharacter: {fileID: 21300000, guid: d233fc7862c34a1d9356e6b94c48770a, type: 3}
+  playWallpaper: {fileID: 21300000, guid: b3545778b7a7401bb4ce48804590e1b9, type: 3}
+  goodResultThresholdPercent: 70
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

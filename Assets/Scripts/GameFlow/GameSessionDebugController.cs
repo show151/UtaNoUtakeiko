@@ -1,9 +1,12 @@
-
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Uta.GameFlow
 {
+    /// <summary>
+    /// Keyboard-only recovery and test shortcuts. Screen navigation is owned by
+    /// ScreenArtworkPresenter so Enter cannot skip a selection screen.
+    /// </summary>
     public class GameSessionDebugController : MonoBehaviour
     {
         [SerializeField]
@@ -17,85 +20,27 @@ namespace Uta.GameFlow
             if (sessionManager == null || Keyboard.current == null)
                 return;
 
-            // Enter: 次の状態へ進む
-            if (Keyboard.current.enterKey.wasPressedThisFrame)
+            // Keep the existing convenient test shortcut for the countdown.
+            if (Keyboard.current.enterKey.wasPressedThisFrame &&
+                sessionManager.CurrentState == GameSessionState.Countdown)
             {
-                Advance();
+                sessionManager.TryTransition(GameSessionState.Playing);
             }
 
-            // Escape: エラー経由でタイトルへ戻る
             if (Keyboard.current.escapeKey.wasPressedThisFrame)
             {
                 sessionManager.TryTransition(GameSessionState.Error);
                 sessionManager.TryTransition(GameSessionState.Title);
             }
 
-            // R: 現在の状態への重複遷移を試す
             if (Keyboard.current.rKey.wasPressedThisFrame)
-            {
                 sessionManager.TryTransition(sessionManager.CurrentState);
-            }
 
-            // T: RecoverToTitle() を直接テスト
             if (Keyboard.current.tKey.wasPressedThisFrame)
-            {
                 sessionManager.RecoverToTitle();
-            }
 
-            // Y: テスト用セッションデータを検証
-            if (Keyboard.current.yKey.wasPressedThisFrame)
-            {
-                if (testSessionAdapter != null)
-                {
-                    testSessionAdapter.StartTestSession();
-                }
-            }
-        }
-
-        private void Advance()
-        {
-            GameSessionState nextState;
-
-            switch (sessionManager.CurrentState)
-            {
-                case GameSessionState.Title:
-                    nextState = GameSessionState.DifficultySelect;
-                    break;
-
-                case GameSessionState.DifficultySelect:
-                    nextState = GameSessionState.SongSelect;
-                    break;
-
-                case GameSessionState.SongSelect:
-                    nextState = GameSessionState.Countdown;
-                    break;
-
-                case GameSessionState.Countdown:
-                    nextState = GameSessionState.Playing;
-                    break;
-
-                case GameSessionState.Result:
-                    nextState = GameSessionState.Ranking;
-                    break;
-
-                case GameSessionState.Ranking:
-                    nextState = GameSessionState.Announcement;
-                    break;
-
-                case GameSessionState.Announcement:
-                    nextState = GameSessionState.Title;
-                    break;
-
-                // Playing・PlaybackではEnterで進めない
-                default:
-                    Debug.Log(
-
-                        $"Manual advance disabled: {sessionManager.CurrentState}"
-                    );
-                    return;
-            }
-
-            sessionManager.TryTransition(nextState);
+            if (Keyboard.current.yKey.wasPressedThisFrame && testSessionAdapter != null)
+                testSessionAdapter.StartTestSession();
         }
     }
 }

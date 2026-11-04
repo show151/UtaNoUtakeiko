@@ -311,7 +311,7 @@ namespace Uta.GameFlow
                     $"入力区間={CurrentScoreResult.UnitResults.Count}, " +
                     $"歌唱音符={CurrentVocalScoreResult.UnitResults.Count}");
 
-                if (!sessionManager.TryTransition(GameSessionState.Playback))
+                if (!sessionManager.TryTransition(GameSessionState.GameFinished))
                     sessionManager.RecoverToTitle();
             }
             catch (Exception ex)
@@ -336,7 +336,7 @@ namespace Uta.GameFlow
                 noteProgression.CompleteGameplayAsTimedOut())
             {
                 Debug.LogWarning(
-                    "全体制限時間を超えたため、未判定入力をMissとして確定し歌唱へ移ります。");
+                    "全体制限時間を超えたため、未判定入力をMissとして確定しFinish演出へ移ります。");
                 return;
             }
 
