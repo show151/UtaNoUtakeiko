@@ -40,6 +40,9 @@ public class InputManager : MonoBehaviour
     // チャタリング対策の入力間隔（秒）
     [SerializeField] private float debounceTime = 0.05f;
 
+    // Reject unrealistically short key pulses (observed ~0.007-0.011s).
+    [SerializeField, Min(0f)] private float minimumPressSeconds = 0.03f;
+
     // 最後に入力を認識した時刻
     private float lastInputTime = -1f;
 
@@ -59,6 +62,9 @@ public class InputManager : MonoBehaviour
 
     // ボタンを離したとき、実際の押下時間を通知する
     public event Action<float> OnPressReleased;
+
+    // Report rejected key pulses so gameplay can unfreeze its moving bar.
+    public event Action OnPressCanceled;
 
     // ボタンを押し始めた瞬間
     public event Action OnPressStarted;
@@ -167,10 +173,20 @@ public class InputManager : MonoBehaviour
                     $"[InputTrace] UP id={completedPressId} " +
                     $"held={heldSeconds:F3}s long={wasLongPress} frame={Time.frameCount}");
 
-                if (!wasLongPress)
-                    OnShortPress?.Invoke();
+                if (heldSeconds < minimumPressSeconds)
+                {
+                    Debug.LogWarning(
+                        $"[InputTrace] REJECT id={completedPressId} " +
+                        $"pulse={heldSeconds:F3}s minimum={minimumPressSeconds:F3}s");
+                    OnPressCanceled?.Invoke();
+                }
+                else
+                {
+                    if (!wasLongPress)
+                        OnShortPress?.Invoke();
 
-                OnPressReleased?.Invoke(heldSeconds);
+                    OnPressReleased?.Invoke(heldSeconds);
+                }
             }
 
             isPressed = false;
