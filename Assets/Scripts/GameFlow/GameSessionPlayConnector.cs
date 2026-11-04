@@ -326,13 +326,22 @@ namespace Uta.GameFlow
 
         private void HandleSessionTimedOut()
         {
-            // This is the global emergency timeout, not each input unit's
-            // scheduled auto-Miss. An abnormal timeout returns to the title.
             if (sessionManager == null ||
                 sessionManager.CurrentState != GameSessionState.Playing)
                 return;
 
-            Debug.LogWarning("全体制限時間を超えたため、タイトルに戻ります。");
+            // Finalize unresolved units as timed-out Misses, then use the same
+            // scoring and Playback transition as normal gameplay completion.
+            if (noteProgression != null &&
+                noteProgression.CompleteGameplayAsTimedOut())
+            {
+                Debug.LogWarning(
+                    "全体制限時間を超えたため、未判定入力をMissとして確定し歌唱へ移ります。");
+                return;
+            }
+
+            Debug.LogError(
+                "制限時間切れ時にゲームプレイを確定できませんでした。タイトルに戻ります。");
             sessionManager.RecoverToTitle();
         }
     }
