@@ -27,6 +27,8 @@ namespace Uta.GameFlow
 
         private Canvas screenCanvas;
         private Image backgroundImage;
+        private Image contrastShade;
+        private GameObject informationPanel;
         private Image characterImage;
         private TMP_Text stateLabel;
         private TMP_Text heading;
@@ -90,11 +92,11 @@ namespace Uta.GameFlow
                 "Background", canvasObject.transform,
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
                 new Color(0.055f, 0.075f, 0.16f, 1f));
-            var shade = CreateImage(
+            contrastShade = CreateImage(
                 "Artwork Contrast Shade", canvasObject.transform,
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
                 new Color(0.02f, 0.035f, 0.09f, 0.28f));
-            shade.raycastTarget = false;
+            contrastShade.raycastTarget = false;
 
             var panel = CreateImage(
                 "Information Panel", canvasObject.transform,
@@ -102,31 +104,32 @@ namespace Uta.GameFlow
                 new Vector2(100f, 0f), new Vector2(880f, 410f),
                 new Color(0.035f, 0.055f, 0.13f, 0.88f));
             panel.rectTransform.pivot = new Vector2(0f, 0.5f);
+            informationPanel = panel.gameObject;
 
             stateLabel = CreateText(
                 "Current Screen", canvasObject.transform,
-                new Vector2(100f, 0.5f), new Vector2(100f, 0.5f),
-                new Vector2(0f, 150f), new Vector2(760f, 48f),
+                new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(100f, 150f), new Vector2(760f, 48f),
                 26f, new Color(0.55f, 0.88f, 1f, 1f),
                 TextAlignmentOptions.Left);
 
             heading = CreateText(
                 "Screen Heading", canvasObject.transform,
-                new Vector2(100f, 0.5f), new Vector2(100f, 0.5f),
-                new Vector2(0f, 54f), new Vector2(780f, 112f),
+                new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(100f, 54f), new Vector2(780f, 112f),
                 58f, Color.white, TextAlignmentOptions.Left);
 
             description = CreateText(
                 "Screen Description", canvasObject.transform,
-                new Vector2(100f, 0.5f), new Vector2(100f, 0.5f),
-                new Vector2(0f, -44f), new Vector2(780f, 80f),
+                new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(100f, -44f), new Vector2(780f, 80f),
                 30f, new Color(0.88f, 0.92f, 1f, 1f),
                 TextAlignmentOptions.Left);
 
             prompt = CreateText(
                 "Action Prompt", canvasObject.transform,
-                new Vector2(100f, 0.5f), new Vector2(100f, 0.5f),
-                new Vector2(0f, -145f), new Vector2(780f, 56f),
+                new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(100f, -145f), new Vector2(780f, 56f),
                 28f, new Color(1f, 0.82f, 0.32f, 1f),
                 TextAlignmentOptions.Left);
 
@@ -193,7 +196,7 @@ namespace Uta.GameFlow
             text.fontSize = fontSize;
             text.color = color;
             text.alignment = alignment;
-            text.textWrappingMode = TextWrappingModes.Normal;
+            text.enableWordWrapping = true;
             text.raycastTarget = false;
             return text;
         }
@@ -207,9 +210,18 @@ namespace Uta.GameFlow
                               state == GameSessionState.Playback;
             Sprite backdrop = isGameplay ? playWallpaper : titleArtwork;
             backgroundImage.sprite = backdrop;
+            bool activeInput = state == GameSessionState.Playing;
             backgroundImage.color = backdrop != null
-                ? Color.white
-                : StateFallbackColor(state);
+                ? new Color(1f, 1f, 1f, activeInput ? 0.3f : 1f)
+                : WithAlpha(StateFallbackColor(state), activeInput ? 0.18f : 1f);
+            contrastShade.color = new Color(0.02f, 0.035f, 0.09f,
+                activeInput ? 0.08f : 0.28f);
+
+            informationPanel.SetActive(!activeInput);
+            stateLabel.gameObject.SetActive(!activeInput);
+            heading.gameObject.SetActive(!activeInput);
+            description.gameObject.SetActive(!activeInput);
+            prompt.gameObject.SetActive(!activeInput);
 
             stateLabel.text = StateName(state);
             heading.text = Heading(state);
@@ -246,6 +258,12 @@ namespace Uta.GameFlow
                 default:
                     return null;
             }
+        }
+
+        private static Color WithAlpha(Color color, float alpha)
+        {
+            color.a = alpha;
+            return color;
         }
 
         private static Color StateFallbackColor(GameSessionState state)
@@ -318,7 +336,6 @@ namespace Uta.GameFlow
         {
             switch (state)
             {
-                case GameSessionState.Playing:
                 case GameSessionState.Playback:
                     return "";
                 case GameSessionState.Error:
