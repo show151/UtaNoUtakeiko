@@ -765,6 +765,14 @@ namespace Uta.GameFlow
                 rect.anchoredPosition = new Vector2(36f, 42f);
                 rect.sizeDelta = new Vector2(720f, 930f);
             }
+            else if (state == GameSessionState.DifficultySelect ||
+                     state == GameSessionState.SongSelect)
+            {
+                rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
+                rect.pivot = new Vector2(1f, 0f);
+                rect.anchoredPosition = new Vector2(-35f, 230f);
+                rect.sizeDelta = new Vector2(590f, 770f);
+            }
             else
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
@@ -776,16 +784,23 @@ namespace Uta.GameFlow
 
         private void BuildCarousel(string title, string value, string selectLabel, string confirmLabel)
         {
-            AddText(title, 56, new Vector2(0.5f, 0.75f), new Vector2(1400, 110));
+            // Keep the entire choice flow in the left column.
+            AddText(title, 56, new Vector2(0.27f, 0.78f), new Vector2(900, 110));
+            AddText("‹", 70, new Vector2(0.07f, 0.53f), new Vector2(110, 150));
+            selectionValue = AddText(value, 74, new Vector2(0.27f, 0.53f), new Vector2(660, 180));
+            AddText("›", 70, new Vector2(0.47f, 0.53f), new Vector2(110, 150));
+            AddActionButton(selectLabel, new Vector2(0.18f, 0.25f), SelectNext);
+            AddActionButton(confirmLabel, new Vector2(0.37f, 0.25f), Confirm);
+
+            // Reserve the right column for Uta and her dialogue.
+            CreateImage(
+                "Uta Dialogue Background", uiRoot,
+                new Vector2(0.61f, 0.045f), new Vector2(0.98f, 0.22f),
+                Vector2.zero, Vector2.zero, new Color(0.02f, 0.08f, 0.15f, 0.76f));
             var characterLine = AddText(
-                "どれにする？いっしょに選ぼう！", 34,
-                new Vector2(0.5f, 0.34f), new Vector2(1100, 72));
-            characterLine.color = new Color(0.04f, 0.16f, 0.28f, 1f);
-            AddText("‹", 70, new Vector2(0.22f, 0.5f), new Vector2(120, 150));
-            selectionValue = AddText(value, 74, new Vector2(0.5f, 0.5f), new Vector2(900, 180));
-            AddText("›", 70, new Vector2(0.78f, 0.5f), new Vector2(120, 150));
-            AddActionButton(selectLabel, new Vector2(0.36f, 0.2f), SelectNext);
-            AddActionButton(confirmLabel, new Vector2(0.64f, 0.2f), Confirm);
+                "どれにする？いっしょに選ぼう！", 32,
+                new Vector2(0.795f, 0.132f), new Vector2(690, 110));
+            characterLine.color = Color.white;
         }
 
         private void BuildResult()
