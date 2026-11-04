@@ -15,7 +15,7 @@ namespace Uta.GameFlow
         private bool isTransitioning;
         private bool recoveryRequested;
 
-        // §ŒÀŠÔØ‚ê‚ğƒQ[ƒ€ˆ—‚Ö’Ê’m‚·‚é
+        // åˆ¶é™æ™‚é–“åˆ‡ã‚Œã‚’ã‚²ãƒ¼ãƒ å‡¦ç†ã¸é€šçŸ¥ã™ã‚‹
         public event Action OnSessionTimedOut;
 
         public void NotifySessionTimedOut()
@@ -27,7 +27,7 @@ namespace Uta.GameFlow
 
             OnSessionTimedOut?.Invoke();
 
-            // ’Ê’mæ‚ª‚È‚­APlaying‚©‚çi‚ß‚È‚©‚Á‚½ê‡‚ÌˆÀ‘S‘Îô
+            // é€šçŸ¥å…ˆãŒãªãã€Playingã‹ã‚‰é€²ã‚ãªã‹ã£ãŸå ´åˆã®å®‰å…¨å¯¾ç­–
             if (CurrentState == GameSessionState.Playing)
             {
                 Debug.LogError(
@@ -153,6 +153,9 @@ namespace Uta.GameFlow
                         || next == GameSessionState.Title;
 
                 case GameSessionState.Playing:
+                    return next == GameSessionState.GameFinished;
+
+                case GameSessionState.GameFinished:
                     return next == GameSessionState.Playback;
 
                 case GameSessionState.Playback:
