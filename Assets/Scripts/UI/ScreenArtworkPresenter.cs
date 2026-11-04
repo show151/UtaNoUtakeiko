@@ -52,6 +52,7 @@ namespace Uta.GameFlow
         private Text rankingListText;
         private Text gameplayTimerText;
         private Text playbackLyricText;
+        private Text playbackPitchText;
         private RectTransform playbackScorePanel;
         private readonly List<PlaybackNoteVisual> playbackNoteVisuals = new List<PlaybackNoteVisual>();
 
@@ -267,13 +268,13 @@ namespace Uta.GameFlow
             // the gameplay wallpaper rendered by the world-space SpriteRenderer.
             Sprite backdrop = state == GameSessionState.Title
                 ? titleArtwork
-                : (isFullScreenSelection || isResultOrLater)
+                : (isFullScreenSelection || isPlayback || isResultOrLater)
                     ? playWallpaper
                     : null;
             backgroundImage.sprite = backdrop;
             if (isCountdown)
                 backgroundImage.color = new Color(0f, 0f, 0f, 0.62f);
-            else if (isFinish || isPlayback)
+            else if (isFinish)
                 backgroundImage.color = new Color(0.035f, 0.08f, 0.14f, 1f);
             else
                 backgroundImage.color = Color.white;
@@ -302,6 +303,7 @@ namespace Uta.GameFlow
             rankingListText = null;
             gameplayTimerText = null;
             playbackLyricText = null;
+            playbackPitchText = null;
             playbackScorePanel = null;
             playbackNoteVisuals.Clear();
 
@@ -443,6 +445,18 @@ namespace Uta.GameFlow
                 "Player Pitch Legend", playbackScorePanel, "● 入力音程", 24,
                 new Vector2(0.7f, 0.68f), new Vector2(300, 52));
             inputLegend.color = new Color(1f, 0.78f, 0.2f, 1f);
+
+            playbackPitchText = CreateChildText(
+                "Playback Pitch Values", playbackScorePanel, "", 24,
+                new Vector2(0.5f, 0.56f), new Vector2(820, 48));
+            playbackPitchText.color = new Color(1f, 0.96f, 0.84f, 1f);
+
+            var lowerLedger = CreateImage(
+                "Lower C Ledger Line", playbackScorePanel,
+                new Vector2(0.32f, 0.42f), new Vector2(0.68f, 0.42f),
+                new Vector2(0f, -40f), new Vector2(0f, 2f),
+                new Color(0.75f, 0.84f, 0.92f, 0.78f));
+            lowerLedger.raycastTarget = false;
 
             for (int i = 0; i < 5; i++)
             {
@@ -616,10 +630,12 @@ namespace Uta.GameFlow
                 if (!visible)
                     continue;
 
-                float pitchOffset = visual.IsPlayerPitch ? 12f : -12f;
-                float y = 120f + (visual.PitchStep - 4) * 20f;
+                float y = PitchStepToStaffOffset(
+                    visual.IsPlayerPitch && visual.Note != null
+                        ? visual.Note.TargetPitchStep
+                        : visual.PitchStep);
                 visual.Text.rectTransform.anchoredPosition =
-                    new Vector2(x - centerX + pitchOffset, y);
+                    new Vector2(x - centerX, y);
                 bool current = now >= visual.StartSeconds && now < visual.EndSeconds;
                 if (visual.IsPlayerPitch)
                     visual.Text.gameObject.SetActive(visible && current);
@@ -629,6 +645,32 @@ namespace Uta.GameFlow
                         ? new Color(1f, 0.82f, 0.26f, 1f)
                         : new Color(0.86f, 0.62f, 0.16f, 1f))
                     : new Color(0.92f, 0.96f, 1f, 1f);
+            }
+
+            Note activeTargetNote = null;
+            int? activeInputPitchStep = null;
+            for (int i = 0; i < playbackNoteVisuals.Count; i++)
+            {
+                var visual = playbackNoteVisuals[i];
+                if (now < visual.StartSeconds || now >= visual.EndSeconds)
+                    continue;
+
+                if (visual.IsPlayerPitch)
+                    activeInputPitchStep = visual.PitchStep;
+                else if (visual.Note != null && !visual.Note.IsRest)
+                    activeTargetNote = visual.Note;
+            }
+
+            if (playbackPitchText != null)
+            {
+                string targetPitch = activeTargetNote != null
+                    ? PitchStepLabel(activeTargetNote.TargetPitchStep)
+                    : "—";
+                string inputPitch = activeInputPitchStep.HasValue
+                    ? PitchStepLabel(activeInputPitchStep.Value)
+                    : "—";
+                playbackPitchText.text =
+                    $"目標音程: {targetPitch}　入力音程: {inputPitch}";
             }
 
             if (string.IsNullOrEmpty(activeLyric))
@@ -644,6 +686,42 @@ namespace Uta.GameFlow
             var measure = measureLabel != null ? measureLabel.GetComponent<Text>() : null;
             if (measure != null)
                 measure.text = $"第 {activeMeasure} 小節";
+        }
+
+        private static float PitchStepToStaffOffset(int semitoneStep)
+        {
+            int octave = Mathf.FloorToInt(semitoneStep / 12f);
+            int pitchClass = semitoneStep - octave * 12;
+            int diatonicStep;
+            switch (pitchClass)
+            {
+                case 0:
+                case 1: diatonicStep = 0; break;
+                case 2:
+                case 3: diatonicStep = 1; break;
+                case 4: diatonicStep = 2; break;
+                case 5:
+                case 6: diatonicStep = 3; break;
+                case 7:
+                case 8: diatonicStep = 4; break;
+                case 9:
+                case 10: diatonicStep = 5; break;
+                default: diatonicStep = 6; break;
+            }
+
+            // Pitch steps are semitones from C4. Convert to diatonic staff
+            // positions with E4 on the bottom line; accidentals stay on that
+            // note position and remain readable in the pitch value above.
+            return (octave * 7 + diatonicStep - 2) * 20f;
+        }
+
+        private static string PitchStepLabel(int semitoneStep)
+        {
+            string[] pitchNames =
+                { "C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B" };
+            int octave = Mathf.FloorToInt(semitoneStep / 12f) + 4;
+            int pitchClass = semitoneStep - Mathf.FloorToInt(semitoneStep / 12f) * 12;
+            return $"{pitchNames[pitchClass]}{octave}";
         }
 
         private static string FallbackLyricForMeasure(string songId, int measure)
@@ -697,6 +775,8 @@ namespace Uta.GameFlow
         private void BuildCarousel(string title, string value, string selectLabel, string confirmLabel)
         {
             AddText(title, 56, new Vector2(0.5f, 0.75f), new Vector2(1400, 110));
+            AddText("どれにする？いっしょに選ぼう！", 30,
+                new Vector2(0.5f, 0.34f), new Vector2(1100, 64));
             AddText("‹", 70, new Vector2(0.22f, 0.5f), new Vector2(120, 150));
             selectionValue = AddText(value, 74, new Vector2(0.5f, 0.5f), new Vector2(900, 180));
             AddText("›", 70, new Vector2(0.78f, 0.5f), new Vector2(120, 150));
@@ -1051,6 +1131,8 @@ namespace Uta.GameFlow
                     return rate >= goodResultThresholdPercent
                         ? singingGoodCharacter
                         : singingBadCharacter;
+                case GameSessionState.DifficultySelect:
+                case GameSessionState.SongSelect:
                 case GameSessionState.Result:
                     return normalCharacter;
                 default:
