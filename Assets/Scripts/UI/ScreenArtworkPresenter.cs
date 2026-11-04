@@ -770,7 +770,7 @@ namespace Uta.GameFlow
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
                 rect.pivot = new Vector2(1f, 0f);
-                rect.anchoredPosition = new Vector2(-35f, 230f);
+                rect.anchoredPosition = new Vector2(-50f, 220f);
                 rect.sizeDelta = new Vector2(590f, 770f);
             }
             else
