@@ -17,6 +17,11 @@ public class InputManager : MonoBehaviour
     // 入力可能かどうか
     public bool IsInputAvailable => isTestMode || isExternalDeviceConnected;
 
+    // Physical key/pedal state; a scoring event must never advance while held.
+    public bool IsPhysicallyPressed => isTestMode
+        ? Keyboard.current != null && Keyboard.current.spaceKey.isPressed
+        : isPressed;
+
     // 前回の入力可能状態
     private bool lastInputAvailable;
 
@@ -133,7 +138,7 @@ public class InputManager : MonoBehaviour
         }
 
         // ボタンを離した瞬間
-        if (releasedThisFrame)
+        if (releasedThisFrame && !isHolding)
         {
             if (isPressed)
             {
