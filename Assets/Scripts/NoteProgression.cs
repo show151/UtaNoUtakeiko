@@ -38,6 +38,8 @@ public class NoteProgression : MonoBehaviour
     };
 
     [SerializeField] private float delayAfterJudgment = 1f;
+    [SerializeField, Min(0f)] private float holdSuccessDisplaySeconds = 0.6f;
+    [SerializeField, Min(0f)] private float holdScrollDuration = 0.8f;
 
     private int currentNoteIndex;
     private bool isPlaying;
@@ -358,10 +360,17 @@ public class NoteProgression : MonoBehaviour
         StartCoroutine(AdvanceGameplay(completedIndex + 1, scrollBeforeRelease: true));
     }
 
-    // Successful HOLDs scroll immediately; input remains locked until both
-    // scrolling and the physical release have completed.
+    // Successful HOLDs pause briefly to show the result, then scroll even
+    // while held. Input remains locked until scrolling and release finish.
     private IEnumerator AdvanceGameplay(int nextIndex, bool scrollBeforeRelease)
     {
+        if (scrollBeforeRelease && holdSuccessDisplaySeconds > 0f)
+        {
+            yield return new WaitForSecondsRealtime(holdSuccessDisplaySeconds);
+            if (!isGameplayInput)
+                yield break;
+        }
+
         if (!scrollBeforeRelease)
         {
             while (isGameplayInput && judgmentSystem.IsInputHeld)
@@ -382,8 +391,12 @@ public class NoteProgression : MonoBehaviour
 
         if (nextIndex < notePositions.Length)
         {
+            bool previousWasHold = currentGameplayUnits != null && nextIndex > 0 &&
+                currentGameplayUnits[nextIndex - 1].IsHold;
             Debug.Log($"[Gameplay] Slide to input {nextIndex + 1}/{notePositions.Length}");
-            yield return noteDisplay.ScrollToNote(nextIndex);
+            yield return previousWasHold
+                ? noteDisplay.ScrollToNote(nextIndex, Mathf.Max(0f, holdScrollDuration))
+                : noteDisplay.ScrollToNote(nextIndex);
         }
 
         if (!isGameplayInput || currentGameplayUnits == null)

@@ -163,11 +163,15 @@ namespace UtaNoUtakeiko.Tests
                 });
                 SetPrivate(progression, "isGameplayInput", true);
                 SetPrivate(progression, "isAdvancing", true);
+                SetPrivate(progression, "holdScrollDuration", 0f);
 
                 var method = typeof(NoteProgression).GetMethod(
                     "AdvanceGameplay", BindingFlags.Instance | BindingFlags.NonPublic);
                 var advance = (IEnumerator)method.Invoke(progression, new object[] { 1, true });
 
+                Assert.IsTrue(advance.MoveNext(), "Hold success remains visible briefly.");
+                Assert.IsInstanceOf<WaitForSecondsRealtime>(advance.Current);
+                Assert.IsTrue((bool)GetPrivate(progression, "isAdvancing"));
                 Assert.IsTrue(advance.MoveNext(), "Scroll starts before release.");
                 var slide = advance.Current as IEnumerator;
                 Assert.IsNotNull(slide);

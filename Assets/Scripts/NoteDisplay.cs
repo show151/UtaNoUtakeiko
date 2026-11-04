@@ -330,19 +330,20 @@ public class NoteDisplay : MonoBehaviour
             Destroy(holdEndSprite);
     }
 
-    public IEnumerator ScrollToNote(int noteIndex)
+    public IEnumerator ScrollToNote(int noteIndex, float durationOverride = -1f)
     {
+        float duration = durationOverride >= 0f ? durationOverride : scrollDuration;
         Vector3 from = transform.position;
         Vector3 to = initialPosition +
             Vector3.left * (noteRoots[noteIndex].localPosition.x - startX);
 
         float elapsed = 0f;
 
-        while (elapsed < scrollDuration)
+        while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
 
-            float t = Mathf.Clamp01(elapsed / scrollDuration);
+            float t = Mathf.Clamp01(elapsed / duration);
             t = t * t * (3f - 2f * t);
 
             transform.position = Vector3.Lerp(from, to, t);
