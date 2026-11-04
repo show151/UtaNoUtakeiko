@@ -60,6 +60,8 @@ namespace Uta.GameFlow
             public Note Note;
             public float StartSeconds;
             public float EndSeconds;
+            public int PitchStep;
+            public bool IsPlayerPitch;
             public Text Text;
         }
         private int difficultyIndex;
@@ -321,7 +323,7 @@ namespace Uta.GameFlow
                 case GameSessionState.Playing:
                     gameplayTimerText = AddText(
                         "残り時間 00:00", 48,
-                        new Vector2(0.5f, 0.94f), new Vector2(620, 90));
+                        new Vector2(0.86f, 0.94f), new Vector2(420, 90));
                     break;
 
                 case GameSessionState.Countdown:
@@ -413,7 +415,7 @@ namespace Uta.GameFlow
         {
             var panelImage = CreateImage(
                 "Playback Score Panel", uiRoot,
-                new Vector2(0.48f, 0.13f), new Vector2(0.98f, 0.9f),
+                new Vector2(0.40f, 0.13f), new Vector2(0.90f, 0.9f),
                 Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.78f));
             playbackScorePanel = panelImage.rectTransform;
 
@@ -426,6 +428,15 @@ namespace Uta.GameFlow
                 "Playback Measure", playbackScorePanel, "", 24,
                 new Vector2(0.5f, 0.78f), new Vector2(700, 50));
             measureText.color = new Color(0.75f, 0.82f, 0.9f, 1f);
+
+            var targetLegend = CreateChildText(
+                "Target Pitch Legend", playbackScorePanel, "● 目標音程", 24,
+                new Vector2(0.3f, 0.68f), new Vector2(300, 52));
+            targetLegend.color = new Color(0.92f, 0.96f, 1f, 1f);
+            var inputLegend = CreateChildText(
+                "Player Pitch Legend", playbackScorePanel, "● 入力音程", 24,
+                new Vector2(0.7f, 0.68f), new Vector2(300, 52));
+            inputLegend.color = new Color(0.28f, 0.9f, 1f, 1f);
 
             for (int i = 0; i < 5; i++)
             {
@@ -451,6 +462,17 @@ namespace Uta.GameFlow
                 chart.TimeSignatureNumerator * 4.0 /
                 Mathf.Max(1, chart.TimeSignatureDenominator);
             float secondsPerBeat = 60f / Mathf.Max(1, chart.Bpm);
+
+            var capturedPitchByNoteId = new Dictionary<string, UnitResult>();
+            var vocalScore = playConnector.CurrentVocalScoreResult;
+            if (vocalScore != null && vocalScore.UnitResults != null)
+            {
+                foreach (var result in vocalScore.UnitResults)
+                {
+                    if (result != null && !string.IsNullOrWhiteSpace(result.UnitId))
+                        capturedPitchByNoteId[result.UnitId] = result;
+                }
+            }
 
             foreach (var section in plan.Sections)
             {
@@ -485,25 +507,46 @@ namespace Uta.GameFlow
                     elapsedBeats += note.DurationBeats;
                     float endSeconds = startSeconds + note.DurationBeats * secondsPerBeat;
 
-                    var noteText = CreateChildText(
-                        note.IsRest ? "Playback Rest" : "Playback Note",
-                        playbackScorePanel,
-                        note.IsRest ? "𝄽" : "●",
-                        note.IsRest ? 30 : 42,
-                        new Vector2(0.5f, 0.42f),
-                        new Vector2(80, 80));
-                    playbackNoteVisuals.Add(new PlaybackNoteVisual
+                    AddPlaybackNoteVisual(
+                        note, startSeconds, endSeconds,
+                        note.IsRest ? 4 : note.TargetPitchStep, false,
+                        note.IsRest ? "𝄽" : "●", note.IsRest ? 30 : 42,
+                        "Playback Note");
+
+                    if (!note.IsRest && capturedPitchByNoteId.TryGetValue(
+                        note.NoteId, out var captured) &&
+                        captured.InputState == InputState.Completed &&
+                        captured.CapturedPitchStep.HasValue)
                     {
-                        Note = note,
-                        StartSeconds = startSeconds,
-                        EndSeconds = endSeconds,
-                        Text = noteText
-                    });
+                        AddPlaybackNoteVisual(
+                            note, startSeconds, endSeconds,
+                            captured.CapturedPitchStep.Value, true, "●", 42,
+                            "Player Input Pitch");
+                    }
                 }
             }
 
             playbackNoteVisuals.Sort(
                 (a, b) => a.StartSeconds.CompareTo(b.StartSeconds));
+        }
+
+        private void AddPlaybackNoteVisual(
+            Note note, float startSeconds, float endSeconds,
+            int pitchStep, bool isPlayerPitch, string symbol, int fontSize,
+            string objectName)
+        {
+            var noteText = CreateChildText(
+                objectName, playbackScorePanel, symbol, fontSize,
+                new Vector2(0.5f, 0.42f), new Vector2(80, 80));
+            playbackNoteVisuals.Add(new PlaybackNoteVisual
+            {
+                Note = note,
+                StartSeconds = startSeconds,
+                EndSeconds = endSeconds,
+                PitchStep = pitchStep,
+                IsPlayerPitch = isPlayerPitch,
+                Text = noteText
+            });
         }
 
         private void UpdatePlaybackScore()
@@ -556,12 +599,18 @@ namespace Uta.GameFlow
                 if (!visible)
                     continue;
 
-                float y = 120f + (visual.Note.TargetPitchStep - 4) * 20f;
-                visual.Text.rectTransform.anchoredPosition = new Vector2(x - centerX, y);
+                float pitchOffset = visual.IsPlayerPitch ? 12f : -12f;
+                float y = 120f + (visual.PitchStep - 4) * 20f;
+                visual.Text.rectTransform.anchoredPosition =
+                    new Vector2(x - centerX + pitchOffset, y);
                 bool current = now >= visual.StartSeconds && now < visual.EndSeconds;
                 visual.Text.color = current
-                    ? new Color(1f, 0.82f, 0.26f, 1f)
-                    : new Color(0.92f, 0.96f, 1f, 1f);
+                    ? (visual.IsPlayerPitch
+                        ? new Color(0.28f, 0.9f, 1f, 1f)
+                        : new Color(1f, 0.82f, 0.26f, 1f))
+                    : (visual.IsPlayerPitch
+                        ? new Color(0.28f, 0.9f, 1f, 1f)
+                        : new Color(0.92f, 0.96f, 1f, 1f));
             }
 
             if (string.IsNullOrEmpty(activeLyric))
