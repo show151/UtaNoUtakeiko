@@ -150,6 +150,31 @@ namespace UtaNoUtakeiko.Gameplay
             return true;
         }
 
+        // Complete a HOLD exactly once when its required duration elapses.
+        // The caller still gates advancement until the physical release.
+        public bool TryRecordHoldSuccess(
+            int index, string pitchJudgment, float capturedPosition, float heldSeconds)
+        {
+            if (index < 0 || index >= units.Count || IsResolved(index) ||
+                !units[index].IsHold || string.IsNullOrWhiteSpace(pitchJudgment) ||
+                float.IsNaN(capturedPosition) || float.IsInfinity(capturedPosition) ||
+                capturedPosition < 0f || capturedPosition > 1f ||
+                float.IsNaN(heldSeconds) || float.IsInfinity(heldSeconds) ||
+                heldSeconds < 0f || heldSeconds + 0.0001f < units[index].RequiredHoldSeconds)
+                return false;
+
+            Resolve(index, new TimedInputTrialResult
+            {
+                UnitId = units[index].UnitId,
+                PitchJudgment = pitchJudgment,
+                CapturedPosition = capturedPosition,
+                HeldSeconds = heldSeconds,
+                HoldSucceeded = true,
+                TimedOut = false
+            });
+            return true;
+        }
+
         public void Expire(float elapsedSeconds)
         {
             for (int i = 0; i < units.Count; i++)
