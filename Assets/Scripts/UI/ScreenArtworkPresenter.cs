@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UtaNoUtakeiko.Gameplay;
+using UtaNoUtakeiko.Data;
 
 namespace Uta.GameFlow
 {
@@ -16,6 +17,8 @@ namespace Uta.GameFlow
     {
         [SerializeField] private GameSessionManager sessionManager;
         [SerializeField] private GameSessionPlayConnector playConnector;
+        [SerializeField] private GameSessionTimeout sessionTimeout;
+        [SerializeField] private GameSessionPlaybackConnector playbackConnector;
 
         [Header("Artwork (Sprite / 2D and UI)")]
         [SerializeField] private Sprite titleArtwork;
@@ -45,6 +48,18 @@ namespace Uta.GameFlow
         private Text countdownText;
         private InputField playerNameInput;
         private Text rankingListText;
+        private Text gameplayTimerText;
+        private Text playbackLyricText;
+        private RectTransform playbackScorePanel;
+        private readonly List<PlaybackNoteVisual> playbackNoteVisuals = new List<PlaybackNoteVisual>();
+
+        private sealed class PlaybackNoteVisual
+        {
+            public Note Note;
+            public float StartSeconds;
+            public float EndSeconds;
+            public Text Text;
+        }
         private int difficultyIndex;
         private int songIndex;
         private int playerRank = 11;
@@ -94,6 +109,10 @@ namespace Uta.GameFlow
                 sessionManager = GetComponent<GameSessionManager>();
             if (playConnector == null)
                 playConnector = GetComponent<GameSessionPlayConnector>();
+            if (sessionTimeout == null)
+                sessionTimeout = GetComponent<GameSessionTimeout>();
+            if (playbackConnector == null)
+                playbackConnector = GetComponent<GameSessionPlaybackConnector>();
 
             BuildScreen();
             ApplyState(sessionManager != null
@@ -103,10 +122,16 @@ namespace Uta.GameFlow
 
         private void Update()
         {
-            if (sessionManager == null || Keyboard.current == null)
+            if (sessionManager == null)
                 return;
 
             GameSessionState state = sessionManager.CurrentState;
+            UpdateGameplayTimer(state);
+            if (state == GameSessionState.Playback)
+                UpdatePlaybackScore();
+
+            if (Keyboard.current == null)
+                return;
             if (state == GameSessionState.DifficultySelect ||
                 state == GameSessionState.SongSelect)
             {
@@ -229,7 +254,7 @@ namespace Uta.GameFlow
             }
 
             // Keep the input and judgment scene unobstructed.
-            screenCanvas.gameObject.SetActive(!isPlaying);
+            screenCanvas.gameObject.SetActive(true);
 
             // The title art belongs only to the title. Selection and post-play
             // states use a plain full-screen background; countdown dims gameplay.
@@ -249,6 +274,7 @@ namespace Uta.GameFlow
             Sprite character = CharacterFor(state);
             characterImage.sprite = character;
             characterImage.gameObject.SetActive(character != null);
+            SetCharacterLayout(state);
 
             RenderState(state);
         }
@@ -263,6 +289,10 @@ namespace Uta.GameFlow
             countdownText = null;
             playerNameInput = null;
             rankingListText = null;
+            gameplayTimerText = null;
+            playbackLyricText = null;
+            playbackScorePanel = null;
+            playbackNoteVisuals.Clear();
 
             switch (state)
             {
@@ -285,6 +315,12 @@ namespace Uta.GameFlow
                         "選択", "決定");
                     break;
 
+                case GameSessionState.Playing:
+                    gameplayTimerText = AddText(
+                        "残り時間 00:00", 48,
+                        new Vector2(0.5f, 0.94f), new Vector2(620, 90));
+                    break;
+
                 case GameSessionState.Countdown:
                     countdownText = AddText(
                         Mathf.Max(1, Mathf.CeilToInt(countdownSeconds)).ToString(),
@@ -300,7 +336,7 @@ namespace Uta.GameFlow
                     break;
 
                 case GameSessionState.Playback:
-                    // Vocal playback runs automatically; character artwork is shown.
+                    BuildPlaybackScore();
                     break;
 
                 case GameSessionState.Result:
@@ -320,6 +356,212 @@ namespace Uta.GameFlow
                     AddText("エラー", 64, new Vector2(0.5f, 0.6f), new Vector2(900, 120));
                     AddActionButton("タイトルへ", new Vector2(0.5f, 0.2f), Confirm);
                     break;
+            }
+        }
+
+        private void UpdateGameplayTimer(GameSessionState state)
+        {
+            if (state != GameSessionState.Playing || gameplayTimerText == null || sessionTimeout == null)
+                return;
+
+            int seconds = Mathf.CeilToInt(Mathf.Max(0f, sessionTimeout.RemainingTime));
+            gameplayTimerText.text = $"残り時間 {seconds / 60:00}:{seconds % 60:00}";
+        }
+
+        private void BuildPlaybackScore()
+        {
+            var panelImage = CreateImage(
+                "Playback Score Panel", uiRoot,
+                new Vector2(0.48f, 0.13f), new Vector2(0.98f, 0.9f),
+                Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.78f));
+            playbackScorePanel = panelImage.rectTransform;
+
+            var title = CreateChildText(
+                "Playback Score Title", playbackScorePanel, "♪ うたっているよ",
+                38, new Vector2(0.5f, 0.88f), new Vector2(820, 70));
+            title.color = new Color(0.7f, 0.9f, 1f, 1f);
+
+            var measureText = CreateChildText(
+                "Playback Measure", playbackScorePanel, "", 24,
+                new Vector2(0.5f, 0.78f), new Vector2(700, 50));
+            measureText.color = new Color(0.75f, 0.82f, 0.9f, 1f);
+
+            for (int i = 0; i < 5; i++)
+            {
+                var line = CreateImage(
+                    "Staff Line " + (i + 1), playbackScorePanel,
+                    new Vector2(0.08f, 0.42f), new Vector2(0.94f, 0.42f),
+                    new Vector2(0f, i * 40f), new Vector2(0f, 2f),
+                    new Color(0.75f, 0.84f, 0.92f, 0.78f));
+                line.raycastTarget = false;
+            }
+
+            playbackLyricText = CreateChildText(
+                "Current Lyric", playbackScorePanel, "", 42,
+                new Vector2(0.5f, 0.18f), new Vector2(820, 100));
+            playbackLyricText.color = Color.white;
+
+            var chart = playConnector != null ? playConnector.CurrentSongChart : null;
+            var plan = playConnector != null ? playConnector.CurrentPlaybackPlan : null;
+            if (chart == null || plan == null || plan.Sections == null)
+                return;
+
+            double beatsPerMeasure =
+                chart.TimeSignatureNumerator * 4.0 /
+                Mathf.Max(1, chart.TimeSignatureDenominator);
+            float secondsPerBeat = 60f / Mathf.Max(1, chart.Bpm);
+
+            foreach (var section in plan.Sections)
+            {
+                if (section == null || section.Notes == null)
+                    continue;
+
+                var orderedNotes = new List<Note>(section.Notes);
+                orderedNotes.Sort((a, b) =>
+                {
+                    int measureOrder = a.MeasureNumber.CompareTo(b.MeasureNumber);
+                    return measureOrder != 0
+                        ? measureOrder
+                        : a.NoteIndexInMeasure.CompareTo(b.NoteIndexInMeasure);
+                });
+
+                int currentMeasure = -1;
+                double elapsedBeats = 0d;
+                foreach (var note in orderedNotes)
+                {
+                    if (note == null)
+                        continue;
+
+                    if (note.MeasureNumber != currentMeasure)
+                    {
+                        currentMeasure = note.MeasureNumber;
+                        elapsedBeats = 0d;
+                    }
+
+                    float startSeconds = (float)(
+                        ((note.MeasureNumber - 1) * beatsPerMeasure + elapsedBeats)
+                        * secondsPerBeat);
+                    elapsedBeats += note.DurationBeats;
+                    float endSeconds = startSeconds + note.DurationBeats * secondsPerBeat;
+
+                    var noteText = CreateChildText(
+                        note.IsRest ? "Playback Rest" : "Playback Note",
+                        playbackScorePanel,
+                        note.IsRest ? "𝄽" : "●",
+                        note.IsRest ? 30 : 42,
+                        new Vector2(0.5f, 0.42f),
+                        new Vector2(80, 80));
+                    playbackNoteVisuals.Add(new PlaybackNoteVisual
+                    {
+                        Note = note,
+                        StartSeconds = startSeconds,
+                        EndSeconds = endSeconds,
+                        Text = noteText
+                    });
+                }
+            }
+
+            playbackNoteVisuals.Sort(
+                (a, b) => a.StartSeconds.CompareTo(b.StartSeconds));
+        }
+
+        private void UpdatePlaybackScore()
+        {
+            if (playbackScorePanel == null || playbackConnector == null)
+                return;
+
+            float now = playbackConnector.CurrentPlaybackTimeSeconds;
+            float panelWidth = playbackScorePanel.rect.width;
+            float centerX = panelWidth * 0.5f;
+            const float pixelsPerSecond = 86f;
+            int activeMeasure = 1;
+            string activeLyric = "";
+
+            var chart = playConnector != null ? playConnector.CurrentSongChart : null;
+            if (chart != null && chart.Bpm > 0 &&
+                chart.TimeSignatureNumerator > 0 &&
+                chart.TimeSignatureDenominator > 0)
+            {
+                float secondsPerMeasure =
+                    60f / chart.Bpm *
+                    chart.TimeSignatureNumerator * 4f /
+                    chart.TimeSignatureDenominator;
+                activeMeasure = Mathf.FloorToInt(now / secondsPerMeasure) + 1;
+                if (chart.LyricLines != null)
+                {
+                    foreach (var line in chart.LyricLines)
+                    {
+                        if (line != null &&
+                            activeMeasure >= line.StartMeasure &&
+                            activeMeasure <= line.EndMeasure)
+                        {
+                            activeLyric = line.Text;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < playbackNoteVisuals.Count; i++)
+            {
+                var visual = playbackNoteVisuals[i];
+                float x = centerX + (visual.StartSeconds - now) * pixelsPerSecond;
+                bool visible = x >= 20f && x <= panelWidth - 20f;
+                visual.Text.gameObject.SetActive(visible);
+                if (!visible)
+                    continue;
+
+                float y = 120f + (visual.Note.TargetPitchStep - 4) * 20f;
+                visual.Text.rectTransform.anchoredPosition = new Vector2(x - centerX, y);
+                bool current = now >= visual.StartSeconds && now < visual.EndSeconds;
+                visual.Text.color = current
+                    ? new Color(1f, 0.82f, 0.26f, 1f)
+                    : new Color(0.92f, 0.96f, 1f, 1f);
+            }
+
+            if (playbackLyricText != null)
+                playbackLyricText.text = string.IsNullOrEmpty(activeLyric)
+                    ? "（歌詞データなし）"
+                    : activeLyric;
+
+            var measureLabel = playbackScorePanel.Find("Playback Measure");
+            var measure = measureLabel != null ? measureLabel.GetComponent<Text>() : null;
+            if (measure != null)
+                measure.text = $"第 {activeMeasure} 小節";
+        }
+
+        private Text CreateChildText(
+            string objectName, Transform parent, string value, int fontSize,
+            Vector2 anchor, Vector2 size)
+        {
+            var text = CreateText(
+                objectName, parent, value, fontSize, TextAnchor.MiddleCenter);
+            var rect = text.rectTransform;
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = size;
+            text.color = Color.white;
+            text.fontStyle = FontStyle.Bold;
+            text.raycastTarget = false;
+            return text;
+        }
+
+        private void SetCharacterLayout(GameSessionState state)
+        {
+            var rect = characterImage.rectTransform;
+            if (state == GameSessionState.Playback)
+            {
+                rect.anchorMin = rect.anchorMax = new Vector2(0f, 0f);
+                rect.pivot = new Vector2(0f, 0f);
+                rect.anchoredPosition = new Vector2(36f, 42f);
+                rect.sizeDelta = new Vector2(720f, 930f);
+            }
+            else
+            {
+                rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
+                rect.pivot = new Vector2(1f, 0f);
+                rect.anchoredPosition = new Vector2(-55f, 42f);
+                rect.sizeDelta = new Vector2(620f, 900f);
             }
         }
 
