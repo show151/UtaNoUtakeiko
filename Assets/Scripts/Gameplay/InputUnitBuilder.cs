@@ -92,6 +92,7 @@ namespace UtaNoUtakeiko.Gameplay
                         previous.SourceNoteIds.Add(note.NoteId);
                         previous.EndSeconds = end;
                         previous.IsHold = true;
+                        previous.HoldDurationSeconds = previous.SourceNoteIds.Count;
                     }
                     else
                     {
@@ -102,6 +103,7 @@ namespace UtaNoUtakeiko.Gameplay
                             StartSeconds = start,
                             EndSeconds = end,
                             IsHold = false,
+                            HoldDurationSeconds = 1f,
                             SourceNoteIds = new List<string> { note.NoteId }
                         });
                     }
