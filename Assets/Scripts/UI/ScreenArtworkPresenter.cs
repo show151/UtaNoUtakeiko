@@ -43,6 +43,7 @@ namespace Uta.GameFlow
         private Text selectionValue;
         private Text statusText;
         private InputField playerNameInput;
+        private Text rankingListText;
         private int difficultyIndex;
         private int songIndex;
         private int playerRank = 11;
@@ -240,6 +241,7 @@ namespace Uta.GameFlow
             selectionValue = null;
             statusText = null;
             playerNameInput = null;
+            rankingListText = null;
 
             switch (state)
             {
@@ -371,7 +373,7 @@ namespace Uta.GameFlow
 
             if (playerRank <= 10)
             {
-                AddText(string.Join("\n", rows), 27,
+                rankingListText = AddText(string.Join("\n", rows), 27,
                     new Vector2(0.5f, 0.49f), new Vector2(1100, 470));
             }
             else
@@ -382,7 +384,7 @@ namespace Uta.GameFlow
                 topRows.Add("…");
                 topRows.Add($"{playerRank}位　{savedName}　{rate:F1}%");
                 topRows.Add("…");
-                AddText(string.Join("\n", topRows), 27,
+                rankingListText = AddText(string.Join("\n", topRows), 27,
                     new Vector2(0.5f, 0.49f), new Vector2(1100, 470));
             }
 
@@ -419,9 +421,10 @@ namespace Uta.GameFlow
             input.lineType = InputField.LineType.SingleLine;
             input.onValueChanged.AddListener(value =>
             {
+                string previousName = playerName;
                 playerName = string.IsNullOrWhiteSpace(value) ? "あなた" : value.Trim();
-                if (screenTitle != null)
-                    screenTitle.text = "ランキング";
+                if (rankingListText != null)
+                    rankingListText.text = rankingListText.text.Replace(previousName, playerName);
             });
             return input;
         }
