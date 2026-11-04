@@ -526,15 +526,32 @@ namespace Uta.GameFlow
                     : new Color(0.92f, 0.96f, 1f, 1f);
             }
 
+            if (string.IsNullOrEmpty(activeLyric))
+                activeLyric = FallbackLyricForMeasure(
+                    chart != null ? chart.SongId : null, activeMeasure);
+
             if (playbackLyricText != null)
                 playbackLyricText.text = string.IsNullOrEmpty(activeLyric)
-                    ? "（歌詞データなし）"
+                    ? ""
                     : activeLyric;
 
             var measureLabel = playbackScorePanel.Find("Playback Measure");
             var measure = measureLabel != null ? measureLabel.GetComponent<Text>() : null;
             if (measure != null)
                 measure.text = $"第 {activeMeasure} 小節";
+        }
+
+        private static string FallbackLyricForMeasure(string songId, int measure)
+        {
+            // Keep the prototype readable with older serialized chart assets.
+            if (songId != "TWINKLE_TWINKLE")
+                return "";
+
+            if (measure >= 5 && measure <= 8)
+                return "まばたきしては みんなをみてる";
+            return measure >= 1 && measure <= 12
+                ? "きらきらひかる おそらのほしよ"
+                : "";
         }
 
         private Text CreateChildText(
