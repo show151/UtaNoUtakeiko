@@ -49,6 +49,10 @@ public class NoteProgression : MonoBehaviour
     private float trialStartedAt;
     private int pendingPressIndex = -1;
     private float holdToleranceSeconds = 0.05f;
+    private float timedPressStartedAt;
+    private float pendingUnitDuration;
+    private List<InputUnit> currentTimedUnits;
+    private bool pendingIsHold;
 
     private void OnEnable()
     {
@@ -232,6 +236,7 @@ public class NoteProgression : MonoBehaviour
 
         completedTrialResults.Clear();
         LastTimedTrialResults = null;
+        currentTimedUnits = new List<InputUnit>(units);
         timedTrial = newTrial;
         holdToleranceSeconds = holdTolerance;
         timedTrial.OnResolved += HandleTrialResolved;
@@ -244,9 +249,10 @@ public class NoteProgression : MonoBehaviour
         pendingPressIndex = -1;
         isPlaying = true;
         isTimedTrial = true;
-        noteDisplay.Initialize(notePositions);
+        noteDisplay.InitializeInputUnits(notePositions, units);
         noteDisplay.SeekToNote(0);
-        judgmentUI.ClearJudgment();
+        judgmentUI.SetTimedInputFeedback(true);
+        judgmentUI.ShowTimedInputPrompt(units[0].IsHold);
         judgmentSystem.enabled = true;
         judgmentSystem.ResetJudgment(notePositions[0]);
 
@@ -266,11 +272,31 @@ public class NoteProgression : MonoBehaviour
         int active = timedTrial.ActiveIndexAt(elapsed);
         pendingPressIndex = active >= 0 && !timedTrial.IsResolved(active)
             ? active : -1;
+        timedPressStartedAt = Time.time;
+        pendingIsHold = pendingPressIndex >= 0 &&
+            currentTimedUnits != null && currentTimedUnits[pendingPressIndex].IsHold;
+        pendingUnitDuration = pendingPressIndex >= 0 && currentTimedUnits != null
+            ? currentTimedUnits[pendingPressIndex].DurationSeconds : 0f;
     }
 
     private void HandleTrialResolved(TimedInputTrialResult result)
     {
         completedTrialResults.Add(result);
+        if (currentTimedUnits != null)
+        {
+            for (int i = 0; i < currentTimedUnits.Count; i++)
+            {
+                if (currentTimedUnits[i].UnitId != result.UnitId)
+                    continue;
+                bool succeeded = !result.TimedOut &&
+                    result.PitchJudgment != "Miss" && result.HoldSucceeded != false;
+                noteDisplay.ShowInputResolution(i, succeeded);
+                if (i == currentNoteIndex)
+                    judgmentUI.ShowTimedInputResult(
+                        result.PitchJudgment, result.HoldSucceeded, result.TimedOut);
+                break;
+            }
+        }
         Debug.Log(
             $"[Issue #53] Input result {result.UnitId}: " +
             $"{result.PitchJudgment}, hold={result.HoldSucceeded}, " +
@@ -291,6 +317,17 @@ public class NoteProgression : MonoBehaviour
             float elapsed = Time.time - trialStartedAt;
             timedTrial.Expire(elapsed);
 
+            if (pendingPressIndex >= 0 && pendingIsHold &&
+                !timedTrial.IsResolved(pendingPressIndex) &&
+                pendingUnitDuration > 0f)
+            {
+                float fraction = Mathf.Clamp01(
+                    (Time.time - timedPressStartedAt) / pendingUnitDuration);
+                noteDisplay.ShowHoldProgress(pendingPressIndex, fraction);
+                if (pendingPressIndex == currentNoteIndex)
+                    judgmentUI.ShowTimedHoldProgress(fraction);
+            }
+
             while (index + 1 < units.Count &&
                    elapsed >= units[index + 1].StartSeconds)
             {
@@ -298,6 +335,7 @@ public class NoteProgression : MonoBehaviour
                 currentNoteIndex = index;
                 noteDisplay.SeekToNote(index);
                 judgmentUI.ClearJudgment();
+                judgmentUI.ShowTimedInputPrompt(units[index].IsHold);
                 if (!judgmentSystem.HasCapturedPress)
                     judgmentSystem.ResetJudgment(notePositions[index]);
             }
@@ -332,6 +370,11 @@ public class NoteProgression : MonoBehaviour
         isTimedPreview = false;
         isTimedTrial = false;
         pendingPressIndex = -1;
+        pendingIsHold = false;
+        pendingUnitDuration = 0f;
+        currentTimedUnits = null;
+        if (judgmentUI != null)
+            judgmentUI.SetTimedInputFeedback(false);
         if (timedTrial != null)
         {
             timedTrial.OnResolved -= HandleTrialResolved;
@@ -411,6 +454,7 @@ public class NoteProgression : MonoBehaviour
         {
             int sourceIndex = pendingPressIndex;
             pendingPressIndex = -1;
+            pendingIsHold = false;
             if (sourceIndex >= 0)
             {
                 bool accepted = timedTrial.TryRecordRelease(
