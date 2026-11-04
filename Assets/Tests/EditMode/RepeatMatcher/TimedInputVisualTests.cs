@@ -41,6 +41,13 @@ namespace UtaNoUtakeiko.Tests
                 Assert.IsNotNull(go.transform.Find("Note_1/HoldBody"));
                 Assert.IsNull(go.transform.Find("Note_2/HoldBody"));
 
+                // Skipping past a HOLD must hide BOTH its note and child bar.
+                display.SeekToNote(1);
+                Assert.IsFalse(go.transform.Find("Note_1")
+                    .GetComponent<SpriteRenderer>().enabled);
+                Assert.IsFalse(go.transform.Find("Note_1/HoldBody")
+                    .GetComponent<SpriteRenderer>().enabled);
+
                 display.ShowHoldProgress(0, 1f);
                 Color completedColor = go.transform.Find("Note_1")
                     .GetComponent<SpriteRenderer>().color;
