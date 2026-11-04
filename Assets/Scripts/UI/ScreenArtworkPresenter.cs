@@ -632,10 +632,7 @@ namespace Uta.GameFlow
 
                 float y = visual.Note != null && visual.Note.IsRest
                     ? 80f
-                    : PitchStepToStaffOffset(
-                        visual.IsPlayerPitch && visual.Note != null
-                            ? visual.Note.TargetPitchStep
-                            : visual.PitchStep);
+                    : PitchStepToStaffOffset(visual.PitchStep);
                 visual.Text.rectTransform.anchoredPosition =
                     new Vector2(x - centerX, y);
                 bool current = now >= visual.StartSeconds && now < visual.EndSeconds;
