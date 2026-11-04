@@ -88,6 +88,7 @@ namespace UtaNoUtakeiko.Tests
             Assert.AreEqual(1, units.Count);
             Assert.IsTrue(units[0].IsHold);
             Assert.AreEqual(2, units[0].SourceNoteIds.Count);
+            Assert.AreEqual(2f, units[0].RequiredHoldSeconds, 0.001f);
         }
     }
 }
