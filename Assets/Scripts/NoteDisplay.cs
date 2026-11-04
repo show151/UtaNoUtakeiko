@@ -10,6 +10,12 @@ public class NoteDisplay : MonoBehaviour
 
     [SerializeField] private Sprite noteSprite;
 
+    // Gameplay input visuals: a connected-pitch unit is shown as a long bar.
+    private readonly System.Collections.Generic.List<SpriteRenderer> holdBodyRenderers
+        = new System.Collections.Generic.List<SpriteRenderer>();
+    private readonly System.Collections.Generic.List<bool> holdFlags
+        = new System.Collections.Generic.List<bool>();
+
     [Header("Layout")]
     [SerializeField] private float startX = -2.5f;
     [SerializeField] private float noteSpacing = 1.5f;
@@ -34,6 +40,8 @@ public class NoteDisplay : MonoBehaviour
         transform.position = initialPosition;
 
         noteRenderers.Clear();
+        holdBodyRenderers.Clear();
+        holdFlags.Clear();
 
         foreach (Transform child in transform)
         {
@@ -66,9 +74,75 @@ public class NoteDisplay : MonoBehaviour
             renderer.sortingOrder = 2;
 
             noteRenderers.Add(renderer);
+            holdBodyRenderers.Add(null);
+            holdFlags.Add(false);
         }
     }
 
+
+
+    // Render a continuous same-pitch input as a connected bar. Original
+    // per-note data and the 70% timeline are intentionally not changed.
+    public void InitializeInputUnits(
+        float[] positions,
+        System.Collections.Generic.IReadOnlyList<UtaNoUtakeiko.Data.InputUnit> units)
+    {
+        if (positions == null || units == null || positions.Length != units.Count)
+        {
+            Debug.LogError("入力区間の表示データが不正です。");
+            return;
+        }
+
+        Initialize(positions);
+        for (int i = 0; i < units.Count; i++)
+        {
+            if (!units[i].IsHold)
+                continue;
+
+            holdFlags[i] = true;
+            SpriteRenderer head = noteRenderers[i];
+            head.color = new Color32(255, 175, 66, 255);
+
+            // Reuse the configured note sprite; no additional art asset is required.
+            GameObject body = new GameObject("HoldBody");
+            body.transform.SetParent(head.transform, false);
+            body.transform.localPosition = new Vector3(0.75f, 0f, 0f);
+            body.transform.localScale = new Vector3(1.55f, 0.38f, 1f);
+            SpriteRenderer bodyRenderer = body.AddComponent<SpriteRenderer>();
+            bodyRenderer.sprite = noteSprite;
+            bodyRenderer.color = new Color32(255, 175, 66, 210);
+            bodyRenderer.sortingOrder = head.sortingOrder - 1;
+            holdBodyRenderers[i] = bodyRenderer;
+        }
+    }
+
+    public void ShowHoldProgress(int index, float progress)
+    {
+        if (index < 0 || index >= noteRenderers.Count || !holdFlags[index])
+            return;
+
+        float fraction = Mathf.Clamp01(progress);
+        noteRenderers[index].color = Color.Lerp(
+            new Color32(255, 175, 66, 255),
+            new Color32(91, 235, 168, 255),
+            fraction);
+        if (holdBodyRenderers[index] != null)
+            holdBodyRenderers[index].color = noteRenderers[index].color;
+    }
+
+    public void ShowInputResolution(int index, bool succeeded)
+    {
+        if (index < 0 || index >= noteRenderers.Count)
+            return;
+
+        Color color = succeeded
+            ? new Color32(91, 235, 168, 255)
+            : new Color32(165, 165, 175, 255);
+
+        noteRenderers[index].color = color;
+        if (holdBodyRenderers[index] != null)
+            holdBodyRenderers[index].color = color;
+    }
 
     // #53: jump to the scheduled input unit without adding scroll animation time.
     // Legacy ScrollToNote remains unchanged for the current gameplay route.
