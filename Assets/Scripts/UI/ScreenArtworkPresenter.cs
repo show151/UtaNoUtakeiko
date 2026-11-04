@@ -43,7 +43,11 @@ namespace Uta.GameFlow
             if (sessionManager != null)
                 sessionManager.OnStateChanged += HandleStateChanged;
             if (screenCanvas != null)
+            {
                 screenCanvas.gameObject.SetActive(true);
+                if (sessionManager != null)
+                    ApplyState(sessionManager.CurrentState);
+            }
         }
 
         private void OnDisable()
@@ -256,7 +260,6 @@ namespace Uta.GameFlow
                 case GameSessionState.DifficultySelect:
                 case GameSessionState.SongSelect:
                 case GameSessionState.Countdown:
-                case GameSessionState.Playing:
                 case GameSessionState.Result:
                 case GameSessionState.Ranking:
                 case GameSessionState.Announcement:
