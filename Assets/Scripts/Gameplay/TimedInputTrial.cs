@@ -176,6 +176,17 @@ namespace UtaNoUtakeiko.Gameplay
             return true;
         }
 
+        // A whole-session timeout ends the input phase immediately. Preserve
+        // resolved player results and mark every remaining unit as a timeout Miss.
+        public void ResolveRemainingAsTimedOut()
+        {
+            for (int i = 0; i < units.Count; i++)
+            {
+                if (!IsResolved(i))
+                    ResolveMiss(i);
+            }
+        }
+
         public void Expire(float elapsedSeconds)
         {
             for (int i = 0; i < units.Count; i++)
