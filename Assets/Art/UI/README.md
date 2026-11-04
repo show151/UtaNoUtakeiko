@@ -11,9 +11,12 @@ The five supplied PNGs are imported as sprites and assigned in
 | Singing Bad Character | `character_singing_bad.png` | `ウタの立ち絵3.png` |
 | Play Wallpaper | `play_wallpaper.png` | `背景イラスト.png` |
 
-The title image and play wallpaper use the 1920 × 1080 reference canvas.
-Character sprites preserve their aspect ratio and transparency. Singing artwork
-switches at the configurable achievement-rate threshold on the presenter.
+Title, difficulty select, and song select currently share the title artwork.
+The play wallpaper uses a world-space SpriteRenderer behind the existing game
+layers during play and playback. The presenter adds no UI text; the existing
+gameplay UI remains in place. The result screen shows the normal character, and
+the singing screen selects its good or bad artwork using the configurable
+achievement-rate threshold.
 
-The repository does not include a Japanese-capable TMP font yet. Assign one to
-the presenter's **Japanese Font** field before relying on the Japanese UI text.
+The title and wallpaper are 3840 × 2160 and fill a 1920 × 1080 reference view.
+Character PNGs retain transparency and aspect ratio.
