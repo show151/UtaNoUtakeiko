@@ -32,7 +32,7 @@ namespace Uta.GameFlow
         [SerializeField] private string[] difficultyLabels =
             { "かんたん", "ふつう", "むずかしい" };
         [SerializeField] private string[] songSymbols = { "☆" };
-        [SerializeField] private float countdownSeconds = 3f;
+        [SerializeField] private float countdownSeconds = 5f;
 
         private Canvas screenCanvas;
         private Image backgroundImage;
@@ -41,6 +41,7 @@ namespace Uta.GameFlow
         private Camera gameplayCamera;
         private RectTransform uiRoot;
         private Text selectionValue;
+        private Text countdownText;
         private InputField playerNameInput;
         private Text rankingListText;
         private int difficultyIndex;
@@ -206,7 +207,15 @@ namespace Uta.GameFlow
 
             bool isPlaying = state == GameSessionState.Playing;
             bool isPlayback = state == GameSessionState.Playback;
-            bool useWorldWallpaper = isPlaying || isPlayback;
+            bool isCountdown = state == GameSessionState.Countdown;
+            bool isResultOrLater =
+                state == GameSessionState.Result ||
+                state == GameSessionState.Ranking ||
+                state == GameSessionState.Announcement;
+            bool isFullScreenSelection =
+                state == GameSessionState.DifficultySelect ||
+                state == GameSessionState.SongSelect;
+            bool useWorldWallpaper = isPlaying || isCountdown;
 
             if (wallpaperRenderer != null)
             {
@@ -219,17 +228,20 @@ namespace Uta.GameFlow
             // Keep the input and judgment scene unobstructed.
             screenCanvas.gameObject.SetActive(!isPlaying);
 
-            bool isFullScreenSelection =
-                state == GameSessionState.DifficultySelect ||
-                state == GameSessionState.SongSelect;
-            Sprite backdrop = useWorldWallpaper || isFullScreenSelection
-                ? null
-                : titleArtwork;
+            // The title art belongs only to the title. Selection and post-play
+            // states use a plain full-screen background; countdown dims gameplay.
+            Sprite backdrop = state == GameSessionState.Title ? titleArtwork : null;
             backgroundImage.sprite = backdrop;
-            backgroundImage.color = isFullScreenSelection
-                ? new Color(0.035f, 0.08f, 0.14f, 1f)
-                : Color.white;
-            backgroundImage.gameObject.SetActive(backdrop != null || isFullScreenSelection);
+            if (isCountdown)
+                backgroundImage.color = new Color(0f, 0f, 0f, 0.62f);
+            else if (isPlayback || isResultOrLater || isFullScreenSelection)
+                backgroundImage.color = new Color(0.035f, 0.08f, 0.14f, 1f);
+            else
+                backgroundImage.color = Color.white;
+
+            backgroundImage.gameObject.SetActive(
+                backdrop != null || isFullScreenSelection ||
+                isCountdown || isPlayback || isResultOrLater);
 
             Sprite character = CharacterFor(state);
             characterImage.sprite = character;
@@ -245,6 +257,7 @@ namespace Uta.GameFlow
 
             ClearChildren(uiRoot);
             selectionValue = null;
+            countdownText = null;
             playerNameInput = null;
             rankingListText = null;
 
@@ -270,8 +283,9 @@ namespace Uta.GameFlow
                     break;
 
                 case GameSessionState.Countdown:
-                    AddText("準備", 64, new Vector2(0.5f, 0.62f), new Vector2(900, 120));
-                    AddText("まもなくスタート", 34, new Vector2(0.5f, 0.48f), new Vector2(1000, 80));
+                    countdownText = AddText(
+                        Mathf.Max(1, Mathf.CeilToInt(countdownSeconds)).ToString(),
+                        180, new Vector2(0.5f, 0.5f), new Vector2(600, 300));
                     if (!countdownRunning)
                         StartCoroutine(CountdownToGameplay());
                     break;
@@ -495,7 +509,19 @@ namespace Uta.GameFlow
         private IEnumerator CountdownToGameplay()
         {
             countdownRunning = true;
-            yield return new WaitForSeconds(Mathf.Max(0f, countdownSeconds));
+            int remaining = Mathf.Max(1, Mathf.CeilToInt(countdownSeconds));
+
+            while (remaining > 0 &&
+                   sessionManager != null &&
+                   sessionManager.CurrentState == GameSessionState.Countdown)
+            {
+                if (countdownText != null)
+                    countdownText.text = remaining.ToString();
+
+                yield return new WaitForSecondsRealtime(1f);
+                remaining--;
+            }
+
             countdownRunning = false;
             if (sessionManager != null &&
                 sessionManager.CurrentState == GameSessionState.Countdown)
