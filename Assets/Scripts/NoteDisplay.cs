@@ -168,6 +168,19 @@ public class NoteDisplay : MonoBehaviour
             holdCapRenderers[index].color = noteRenderers[index].color;
     }
 
+    public void ResetInputProgress(int index)
+    {
+        if (index < 0 || index >= noteRenderers.Count || !holdFlags[index])
+            return;
+
+        Color original = new Color32(255, 175, 66, 255);
+        noteRenderers[index].color = original;
+        if (holdBodyRenderers[index] != null)
+            holdBodyRenderers[index].color = original;
+        if (holdCapRenderers[index] != null)
+            holdCapRenderers[index].color = original;
+    }
+
     public void ShowInputResolution(int index, bool succeeded)
     {
         if (index < 0 || index >= noteRenderers.Count)
