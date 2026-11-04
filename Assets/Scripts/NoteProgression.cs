@@ -59,6 +59,7 @@ public class NoteProgression : MonoBehaviour
         {
             judgmentSystem.OnJudged += HandleJudgment;
             judgmentSystem.OnPressPositionCaptured += HandleGameplayPressStarted;
+            judgmentSystem.OnPressCaptureCanceled += HandleGameplayPressCanceled;
             judgmentSystem.OnJudgedWithPosition += HandleJudgmentWithPosition;
             judgmentSystem.OnJudgedWithPositionAndDuration
                 += HandleJudgmentWithDuration;
@@ -71,6 +72,7 @@ public class NoteProgression : MonoBehaviour
         {
             judgmentSystem.OnJudged -= HandleJudgment;
             judgmentSystem.OnPressPositionCaptured -= HandleGameplayPressStarted;
+            judgmentSystem.OnPressCaptureCanceled -= HandleGameplayPressCanceled;
             judgmentSystem.OnJudgedWithPosition -= HandleJudgmentWithPosition;
             judgmentSystem.OnJudgedWithPositionAndDuration
                 -= HandleJudgmentWithDuration;
@@ -278,6 +280,19 @@ public class NoteProgression : MonoBehaviour
             ? currentGameplayUnits[pendingPressIndex].DurationSeconds : 0f;
         Debug.Log($"[InputTrace] CAPTURE unit={pendingPressIndex + 1}/" +
                   $"{gameplayTrial.Count} frame={Time.frameCount}");
+    }
+
+    private void HandleGameplayPressCanceled()
+    {
+        if (!isGameplayInput || isAdvancing)
+            return;
+
+        Debug.Log($"[InputTrace] CANCEL unit={currentNoteIndex + 1}/{notePositions.Length}");
+        pendingPressIndex = -1;
+        pendingIsHold = false;
+        pendingUnitDuration = 0f;
+        judgmentUI.ShowTimedInputPrompt(currentGameplayUnits[currentNoteIndex].IsHold);
+        noteDisplay.ResetInputProgress(currentNoteIndex);
     }
 
     private void HandleGameplayResolved(TimedInputTrialResult result)
