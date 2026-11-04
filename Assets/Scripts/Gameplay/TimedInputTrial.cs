@@ -135,7 +135,8 @@ namespace UtaNoUtakeiko.Gameplay
 
             InputUnit unit = units[index];
             bool? hold = unit.IsHold
-                ? heldSeconds + holdToleranceSeconds >= unit.DurationSeconds
+                ? heldSeconds + holdToleranceSeconds >=
+                    (unit.RequiredHoldSeconds > 0f ? unit.RequiredHoldSeconds : unit.DurationSeconds)
                 : (bool?)null;
 
             Resolve(index, new TimedInputTrialResult
