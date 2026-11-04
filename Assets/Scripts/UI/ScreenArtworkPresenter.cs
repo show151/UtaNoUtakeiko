@@ -108,11 +108,14 @@ namespace Uta.GameFlow
             if (sessionManager == null)
                 sessionManager = GetComponent<GameSessionManager>();
             if (playConnector == null)
-                playConnector = GetComponent<GameSessionPlayConnector>();
+                playConnector = GetComponent<GameSessionPlayConnector>()
+                    ?? FindFirstObjectByType<GameSessionPlayConnector>();
             if (sessionTimeout == null)
-                sessionTimeout = GetComponent<GameSessionTimeout>();
+                sessionTimeout = GetComponent<GameSessionTimeout>()
+                    ?? FindFirstObjectByType<GameSessionTimeout>();
             if (playbackConnector == null)
-                playbackConnector = GetComponent<GameSessionPlaybackConnector>();
+                playbackConnector = GetComponent<GameSessionPlaybackConnector>()
+                    ?? FindFirstObjectByType<GameSessionPlaybackConnector>();
 
             BuildScreen();
             ApplyState(sessionManager != null
@@ -467,10 +470,14 @@ namespace Uta.GameFlow
 
         private void UpdatePlaybackScore()
         {
-            if (playbackScorePanel == null || playbackConnector == null)
+            if (playbackScorePanel == null)
                 return;
 
-            float now = playbackConnector.CurrentPlaybackTimeSeconds;
+            if (playbackConnector == null)
+                playbackConnector = FindFirstObjectByType<GameSessionPlaybackConnector>();
+            float now = playbackConnector != null
+                ? playbackConnector.CurrentPlaybackTimeSeconds
+                : 0f;
             float panelWidth = playbackScorePanel.rect.width;
             float centerX = panelWidth * 0.5f;
             const float pixelsPerSecond = 86f;
