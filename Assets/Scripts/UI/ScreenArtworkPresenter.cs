@@ -261,13 +261,19 @@ namespace Uta.GameFlow
             // Keep the input and judgment scene unobstructed.
             screenCanvas.gameObject.SetActive(true);
 
-            // The title art belongs only to the title. Selection and post-play
-            // states use a plain full-screen background; countdown dims gameplay.
-            Sprite backdrop = state == GameSessionState.Title ? titleArtwork : null;
+            // Show title art only on the title screen. Selection and
+            // post-play screens use the same wallpaper as gameplay, at its
+            // original colors. The countdown keeps its translucent dimmer over
+            // the gameplay wallpaper rendered by the world-space SpriteRenderer.
+            Sprite backdrop = state == GameSessionState.Title
+                ? titleArtwork
+                : (isFullScreenSelection || isResultOrLater)
+                    ? playWallpaper
+                    : null;
             backgroundImage.sprite = backdrop;
             if (isCountdown)
                 backgroundImage.color = new Color(0f, 0f, 0f, 0.62f);
-            else if (isFinish || isPlayback || isResultOrLater || isFullScreenSelection)
+            else if (isFinish || isPlayback)
                 backgroundImage.color = new Color(0.035f, 0.08f, 0.14f, 1f);
             else
                 backgroundImage.color = Color.white;
