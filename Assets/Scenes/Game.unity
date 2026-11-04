@@ -1888,11 +1888,11 @@ MonoBehaviour:
   sessionManager: {fileID: 860801488}
   playConnector: {fileID: 860801492}
   japaneseFont: {fileID: 0}
-  titleArtwork: {fileID: 0}
-  normalCharacter: {fileID: 0}
-  singingGoodCharacter: {fileID: 0}
-  singingBadCharacter: {fileID: 0}
-  playWallpaper: {fileID: 0}
+  titleArtwork: {fileID: 21300000, guid: 9f55bd3c504e4e36824a56e901712c11, type: 3}
+  normalCharacter: {fileID: 21300000, guid: 6c7c348483244bc498418ce4214987c1, type: 3}
+  singingGoodCharacter: {fileID: 21300000, guid: a02f6c5796ac45d0944999094505e329, type: 3}
+  singingBadCharacter: {fileID: 21300000, guid: d233fc7862c34a1d9356e6b94c48770a, type: 3}
+  playWallpaper: {fileID: 21300000, guid: b3545778b7a7401bb4ce48804590e1b9, type: 3}
   goodResultThresholdPercent: 70
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
