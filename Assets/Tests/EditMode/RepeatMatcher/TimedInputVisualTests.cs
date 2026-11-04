@@ -74,6 +74,9 @@ namespace UtaNoUtakeiko.Tests
                 Assert.IsFalse(fillRenderer.enabled);
                 display.ShowHoldProgress(0, 0.5f);
                 var headRenderer = go.transform.Find("Note_1/NoteHead").GetComponent<SpriteRenderer>();
+                Assert.Greater(shaftRenderer.sortingOrder, headRenderer.sortingOrder);
+                Assert.Greater(shaftRenderer.sortingOrder, cap.GetComponent<SpriteRenderer>().sortingOrder);
+                Assert.Greater(fillRenderer.sortingOrder, shaftRenderer.sortingOrder);
                 Assert.Greater(headRenderer.color.g, 0.9f, "The first circle lights while held.");
                 Assert.Less(cap.GetComponent<SpriteRenderer>().color.g, 0.9f, "The far circle waits for the fill.");
                 Assert.IsTrue(fillRenderer.enabled);

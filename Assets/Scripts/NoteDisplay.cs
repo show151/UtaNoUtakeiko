@@ -154,7 +154,7 @@ public class NoteDisplay : MonoBehaviour
             SpriteRenderer bodyRenderer = body.AddComponent<SpriteRenderer>();
             bodyRenderer.sprite = holdShaftSprite;
             bodyRenderer.color = new Color32(255, 175, 66, 255);
-            bodyRenderer.sortingOrder = head.sortingOrder - 1;
+            bodyRenderer.sortingOrder = head.sortingOrder + 1;
             holdBodyRenderers[i] = bodyRenderer;
 
             // A bright overlay grows from the head to the end of the HOLD bar.
@@ -166,12 +166,11 @@ public class NoteDisplay : MonoBehaviour
             SpriteRenderer progressRenderer = progress.AddComponent<SpriteRenderer>();
             progressRenderer.sprite = holdShaftSprite;
             progressRenderer.color = new Color32(255, 255, 150, 255);
-            progressRenderer.sortingOrder = head.sortingOrder;
+            progressRenderer.sortingOrder = bodyRenderer.sortingOrder + 1;
             progressRenderer.enabled = false;
             holdProgressRenderers[i] = progressRenderer;
 
-            // Draw the note head and cap above the lit portion.
-            head.sortingOrder = progressRenderer.sortingOrder + 1;
+            // The two end caps stay behind the bar and its progress fill.
             GameObject cap = new GameObject("HoldEndCap");
             cap.transform.SetParent(head.transform, false);
             cap.transform.localPosition = new Vector3(
