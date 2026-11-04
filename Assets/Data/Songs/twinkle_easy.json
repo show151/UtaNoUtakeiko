@@ -453,5 +453,27 @@
       "TargetStartMeasure": 9,
       "TargetEndMeasure": 12
     }
+  ],
+  "LyricLines": [
+    {
+      "StartMeasure": 1,
+      "EndMeasure": 4,
+      "Text": "きらきらひかる おそらのほしよ"
+    },
+    {
+      "StartMeasure": 5,
+      "EndMeasure": 6,
+      "Text": "まばたきしては みんなをみてる"
+    },
+    {
+      "StartMeasure": 7,
+      "EndMeasure": 8,
+      "Text": "まばたきしては みんなをみてる"
+    },
+    {
+      "StartMeasure": 9,
+      "EndMeasure": 12,
+      "Text": "きらきらひかる おそらのほしよ"
+    }
   ]
 }
