@@ -615,6 +615,9 @@ namespace Uta.GameFlow
                 visual.Text.rectTransform.anchoredPosition =
                     new Vector2(x - centerX + pitchOffset, y);
                 bool current = now >= visual.StartSeconds && now < visual.EndSeconds;
+                if (visual.IsPlayerPitch)
+                    visual.Text.gameObject.SetActive(visible && current);
+
                 visual.Text.color = visual.IsPlayerPitch
                     ? (current
                         ? new Color(1f, 0.82f, 0.26f, 1f)
