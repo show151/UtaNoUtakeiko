@@ -275,7 +275,7 @@ namespace UtaNoUtakeiko.Tests
         }
 
         [Test]
-        public void TwinkleEasy_PitchesAndHolds_MatchSheet()
+        public void TwinkleEasy_PitchesAndOriginalMetadata_MatchSheet()
         {
             string path = Path.Combine(
                 Application.dataPath,
@@ -322,7 +322,9 @@ namespace UtaNoUtakeiko.Tests
                 );
             }
 
-            // 長押しは1.5拍または2拍の音符
+            // Legacy chart IsHold metadata is preserved for vocal compatibility.
+            // Actual gameplay HOLD is derived only from consecutive equal pitches
+            // by InputUnitBuilder and covered in InputUnitBuilderTests.
             var holds = notes.Where(n => n.IsHold).ToList();
 
             Assert.AreEqual(6, holds.Count);
@@ -338,7 +340,7 @@ namespace UtaNoUtakeiko.Tests
                 Assert.AreEqual(
                     note.DurationBeats > 1f,
                     note.IsHold,
-                    $"長押し設定が不正: {note.NoteId}"
+                    $"元譜面のIsHoldメタデータが不正: {note.NoteId}"
                 );
 
                 if (note.IsHold)
