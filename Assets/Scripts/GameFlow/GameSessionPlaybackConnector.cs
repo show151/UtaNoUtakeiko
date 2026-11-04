@@ -17,6 +17,12 @@ namespace Uta.GameFlow
         private AudioClip generatedClip;
         private Coroutine playbackCoroutine;
         private double playbackStartDspTime = -1d;
+        private const double SingingCountdownSeconds = 3d;
+
+        public bool IsPreparingPlayback => playbackStartDspTime < 0d;
+        public int SingingCountdownRemaining => playbackStartDspTime < 0d
+            ? 0
+            : Mathf.CeilToInt(Mathf.Max(0f, (float)(playbackStartDspTime - AudioSettings.dspTime)));
 
         public float CurrentPlaybackTimeSeconds => playbackStartDspTime < 0d
             ? 0f
@@ -133,7 +139,7 @@ namespace Uta.GameFlow
 
                 audioSource.clip = generatedClip;
 
-                double startTime = AudioSettings.dspTime + 0.15;
+                double startTime = AudioSettings.dspTime + SingingCountdownSeconds;
                 endTime = startTime + generatedClip.length;
                 playbackStartDspTime = startTime;
 
