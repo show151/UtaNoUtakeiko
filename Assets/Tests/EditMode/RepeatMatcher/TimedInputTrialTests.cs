@@ -57,6 +57,32 @@ namespace UtaNoUtakeiko.Tests
         }
 
         [Test]
+        public void ProductionHold_CompletesAtRequiredDuration_ExactlyOnce()
+        {
+            var unit = new InputUnit
+            {
+                UnitId = "THREE-NOTE-HOLD",
+                IsHold = true,
+                StartSeconds = 0f,
+                EndSeconds = 1f,
+                HoldDurationSeconds = 3f,
+                SourceNoteIds = new List<string> { "A", "B", "C" }
+            };
+            var trial = new TimedInputTrial(new List<InputUnit> { unit });
+            var results = new List<TimedInputTrialResult>();
+            trial.OnResolved += results.Add;
+
+            Assert.IsFalse(trial.TryRecordHoldSuccess(0, "Perfect", 0.5f, 2.99f));
+            Assert.IsTrue(trial.TryRecordHoldSuccess(0, "Great", 0.5f, 3f));
+            Assert.IsFalse(trial.TryRecordHoldSuccess(0, "Perfect", 0.5f, 4f));
+            Assert.AreEqual(1, trial.ResolvedCount);
+            Assert.AreEqual(1, results.Count);
+            Assert.AreEqual("Great", results[0].PitchJudgment);
+            Assert.AreEqual(true, results[0].HoldSucceeded);
+            Assert.AreEqual(3f, results[0].HeldSeconds, 0.001f);
+        }
+
+        [Test]
         public void ProductionInput_ShortHoldFails_AndLongHoldSucceeds()
         {
             var shortTrial = CreateTrial();
