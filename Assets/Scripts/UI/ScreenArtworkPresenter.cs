@@ -52,6 +52,7 @@ namespace Uta.GameFlow
         private Text rankingListText;
         private Text gameplayTimerText;
         private Text playbackLyricText;
+        private Text playbackTitleText;
         private Text playbackPitchText;
         private RectTransform playbackScorePanel;
         private readonly List<PlaybackNoteVisual> playbackNoteVisuals = new List<PlaybackNoteVisual>();
@@ -134,7 +135,16 @@ namespace Uta.GameFlow
             GameSessionState state = sessionManager.CurrentState;
             UpdateGameplayTimer(state);
             if (state == GameSessionState.Playback)
+            {
                 UpdatePlaybackScore();
+                if (playbackTitleText != null && playbackConnector != null)
+                {
+                    int remaining = playbackConnector.SingingCountdownRemaining;
+                    playbackTitleText.text = playbackConnector.IsPreparingPlayback
+                        ? "歌う準備をしているよ"
+                        : remaining > 0 ? $"ウタが歌うまであと {remaining} 秒" : "♪ うたっているよ";
+                }
+            }
 
             if (Keyboard.current == null)
                 return;
@@ -303,6 +313,7 @@ namespace Uta.GameFlow
             rankingListText = null;
             gameplayTimerText = null;
             playbackLyricText = null;
+            playbackTitleText = null;
             playbackPitchText = null;
             playbackScorePanel = null;
             playbackNoteVisuals.Clear();
@@ -427,10 +438,10 @@ namespace Uta.GameFlow
                 Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.78f));
             playbackScorePanel = panelImage.rectTransform;
 
-            var title = CreateChildText(
-                "Playback Score Title", playbackScorePanel, "♪ うたっているよ",
+            playbackTitleText = CreateChildText(
+                "Playback Score Title", playbackScorePanel, "歌う準備をしているよ",
                 38, new Vector2(0.5f, 0.88f), new Vector2(820, 70));
-            title.color = new Color(0.7f, 0.9f, 1f, 1f);
+            playbackTitleText.color = new Color(0.7f, 0.9f, 1f, 1f);
 
             var measureText = CreateChildText(
                 "Playback Measure", playbackScorePanel, "", 24,
@@ -1062,7 +1073,7 @@ namespace Uta.GameFlow
                     sessionManager.TryTransition(GameSessionState.DifficultySelect);
                     break;
                 case GameSessionState.DifficultySelect:
-                    sessionManager.TryTransition(GameSessionState.SongSelect);
+                    sessionManager.TryTransition(GameSessionState.Countdown);
                     break;
                 case GameSessionState.SongSelect:
                     sessionManager.TryTransition(GameSessionState.Countdown);
