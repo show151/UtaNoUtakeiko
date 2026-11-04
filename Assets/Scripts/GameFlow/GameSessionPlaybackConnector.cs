@@ -64,7 +64,7 @@ namespace Uta.GameFlow
 
         private IEnumerator PlaybackRoutine()
         {
-            // ó‘Ô‘JˆÚˆ—‚ªI‚í‚Á‚Ä‚©‚ç‰Ì¥‚ğ¶¬‚·‚é
+            // çŠ¶æ…‹é·ç§»å‡¦ç†ãŒçµ‚ã‚ã£ã¦ã‹ã‚‰æ­Œå”±ã‚’ç”Ÿæˆã™ã‚‹
             yield return null;
 
             if (!IsPlayback())
@@ -80,7 +80,7 @@ namespace Uta.GameFlow
             {
 
                 Debug.LogError(
-                    "‰Ì¥Ä¶ƒf[ƒ^Šm”F:\n" +
+                    "æ­Œå”±å†ç”Ÿãƒ‡ãƒ¼ã‚¿ç¢ºèª:\n" +
                     $"PlayConnector: {playConnector != null}\n" +
                     $"SongChart: {playConnector != null && playConnector.CurrentSongChart != null}\n" +
                     $"PlaybackPlan: {playConnector != null && playConnector.CurrentPlaybackPlan != null}\n" +
@@ -103,7 +103,8 @@ namespace Uta.GameFlow
                     generatedClip = VocalPlaybackComposer.Compose(
                         playConnector.CurrentSongChart,
                         playConnector.CurrentPlaybackPlan,
-                        playConnector.CurrentScoreResult
+                        playConnector.CurrentVocalScoreResult
+                            ?? playConnector.CurrentScoreResult
                     );
                 }
                 finally
@@ -111,14 +112,14 @@ namespace Uta.GameFlow
                     stopwatch.Stop();
 
                     Debug.Log(
-                        $"[‰Ì¥ƒpƒtƒH[ƒ}ƒ“ƒX] ¶¬ŠÔ: " +
+                        $"[æ­Œå”±ãƒ‘ãƒ•ã‚©ãƒ¼ãƒãƒ³ã‚¹] ç”Ÿæˆæ™‚é–“: " +
                         $"{stopwatch.Elapsed.TotalMilliseconds:F2} ms"
                     );
                 }
 
                 if (generatedClip == null)
                     throw new InvalidOperationException(
-                        "‰Ì¥‰¹º‚ğ¶¬‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B"
+                        "æ­Œå”±éŸ³å£°ã‚’ç”Ÿæˆã§ãã¾ã›ã‚“ã§ã—ãŸã€‚"
                     );
 
                 audioSource.clip = generatedClip;
@@ -131,7 +132,7 @@ namespace Uta.GameFlow
                 playbackStarted = true;
 
                 Debug.Log(
-                    $"‰Ì¥Ä¶ŠJn: {generatedClip.length:F2}•b"
+                    $"æ­Œå”±å†ç”Ÿé–‹å§‹: {generatedClip.length:F2}ç§’"
                 );
             }
             catch (Exception ex)
@@ -139,7 +140,7 @@ namespace Uta.GameFlow
                 Debug.LogException(ex);
             }
 
-            // —áŠO”­¶‚Íƒ^ƒCƒgƒ‹‚Ö•œ‹A
+            // ä¾‹å¤–ç™ºç”Ÿæ™‚ã¯ã‚¿ã‚¤ãƒˆãƒ«ã¸å¾©å¸°
             if (!playbackStarted)
             {
                 playbackCoroutine = null;
@@ -147,7 +148,7 @@ namespace Uta.GameFlow
                 yield break;
             }
 
-            // try-catch‚ÌŠO‘¤‚ÅÄ¶I—¹‚ğ‘Ò‚Â
+            // try-catchã®å¤–å´ã§å†ç”Ÿçµ‚äº†ã‚’å¾…ã¤
             while (IsPlayback() &&
                    AudioSettings.dspTime < endTime)
             {
@@ -158,7 +159,7 @@ namespace Uta.GameFlow
 
             if (IsPlayback())
             {
-                Debug.Log("‰Ì¥Ä¶Š®—¹");
+                Debug.Log("æ­Œå”±å†ç”Ÿå®Œäº†");
 
                 if (!sessionManager.TryTransition(
                     GameSessionState.Result))
