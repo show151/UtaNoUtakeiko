@@ -9,6 +9,7 @@ public class JudgmentSystem : MonoBehaviour
     // Used only by the Issue #53 timed input trial to pin the press to its unit.
     public event Action<float> OnPressPositionCaptured;
     public bool HasCapturedPress => hasCapturedPress;
+    public bool IsInputHeld => inputManager != null && inputManager.IsPhysicallyPressed;
 
     public event Action<string, float> OnJudgedWithPosition;
 
@@ -62,6 +63,13 @@ public class JudgmentSystem : MonoBehaviour
 
     private void HandlePressReleased(float heldSeconds)
     {
+        // Reject premature/incorrect release notifications while the key is down.
+        if (IsInputHeld)
+        {
+            Debug.LogWarning("[Gameplay] Ignored release while input is physically held.");
+            return;
+        }
+
         if (hasJudged || !hasCapturedPress)
             return;
 
