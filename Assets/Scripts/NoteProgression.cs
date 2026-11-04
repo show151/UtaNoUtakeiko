@@ -276,8 +276,8 @@ public class NoteProgression : MonoBehaviour
         timedPressStartedAt = Time.unscaledTime;
         pendingIsHold = pendingPressIndex >= 0 &&
             currentGameplayUnits != null && currentGameplayUnits[pendingPressIndex].IsHold;
-        pendingUnitDuration = pendingPressIndex >= 0 && currentGameplayUnits != null
-            ? currentGameplayUnits[pendingPressIndex].DurationSeconds : 0f;
+        pendingUnitDuration = pendingPressIndex >= 0 && currentGameplayUnits != null && pendingIsHold
+            ? currentGameplayUnits[pendingPressIndex].RequiredHoldSeconds : 0f;
         Debug.Log($"[InputTrace] CAPTURE unit={pendingPressIndex + 1}/" +
                   $"{gameplayTrial.Count} frame={Time.frameCount}");
     }
@@ -501,6 +501,7 @@ public class NoteProgression : MonoBehaviour
             }
 
             int sourceIndex = pendingPressIndex;
+            bool wasHold = pendingIsHold;
             pendingPressIndex = -1;
             pendingIsHold = false;
             pendingUnitDuration = 0f;
@@ -512,7 +513,7 @@ public class NoteProgression : MonoBehaviour
                       $"{gameplayTrial.Count} held={heldSeconds:F3}s frame={Time.frameCount}");
             bool accepted = gameplayTrial.TryRecordPlayerRelease(
                 sourceIndex, result, position, heldSeconds,
-                pendingIsHold ? 0f : holdToleranceSeconds);
+                wasHold ? 0f : holdToleranceSeconds);
 
             if (!accepted)
             {
