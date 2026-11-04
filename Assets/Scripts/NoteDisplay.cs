@@ -15,8 +15,8 @@ public class NoteDisplay : MonoBehaviour
     private Sprite holdShaftSprite;
     private readonly System.Collections.Generic.List<SpriteRenderer> holdCapRenderers
         = new System.Collections.Generic.List<SpriteRenderer>();
-    private const float HoldBarLength = 1.1f; // in world units
-    private const float HoldBarThickness = 0.18f;
+    private const float HoldBarLength = 3f;
+    private const float HoldBarThickness = 1f;
 
     // Gameplay input visuals: a connected-pitch unit is shown as a long bar.
     private readonly System.Collections.Generic.List<SpriteRenderer> holdBodyRenderers
@@ -31,7 +31,7 @@ public class NoteDisplay : MonoBehaviour
     [SerializeField] private float noteSpacing = 1.5f;
     [SerializeField] private float minY = -3f;
     [SerializeField] private float maxY = 3f;
-    [SerializeField] private float noteSize = 0.35f;
+    [SerializeField] private float noteSize = 1f;
 
     [Header("Scroll")]
     [SerializeField] private float scrollDuration = 0.4f;
@@ -108,13 +108,19 @@ public class NoteDisplay : MonoBehaviour
         }
 
         Initialize(positions);
+        float nextX = startX;
         for (int i = 0; i < units.Count; i++)
         {
+            SpriteRenderer head = noteRenderers[i];
+            Vector3 position = head.transform.localPosition;
+            position.x = nextX;
+            head.transform.localPosition = position;
+            // Keep the following note beyond the HOLD's end cap.
+            nextX += noteSpacing + (units[i].IsHold ? HoldBarLength * noteSize : 0f);
             if (!units[i].IsHold)
                 continue;
 
             holdFlags[i] = true;
-            SpriteRenderer head = noteRenderers[i];
             head.color = new Color32(255, 175, 66, 255);
 
             if (holdShaftSprite == null)
@@ -125,17 +131,12 @@ public class NoteDisplay : MonoBehaviour
                     new Vector2(0.5f, 0.5f), texture.width);
             }
 
-            // The note itself is scaled by noteSize. Compensate so the
-            // shaft has a predictable world-space length and thickness.
-            float inverseHeadScale = 1f / Mathf.Max(noteSize, 0.01f);
-
             GameObject body = new GameObject("HoldBody");
             body.transform.SetParent(head.transform, false);
             body.transform.localPosition = new Vector3(
-                HoldBarLength * 0.5f * inverseHeadScale, 0f, 0f);
+                HoldBarLength * 0.5f, 0f, 0f);
             body.transform.localScale = new Vector3(
-                HoldBarLength * inverseHeadScale,
-                HoldBarThickness * inverseHeadScale, 1f);
+                HoldBarLength, HoldBarThickness, 1f);
 
             SpriteRenderer bodyRenderer = body.AddComponent<SpriteRenderer>();
             bodyRenderer.sprite = holdShaftSprite;
@@ -148,7 +149,7 @@ public class NoteDisplay : MonoBehaviour
             progress.transform.SetParent(head.transform, false);
             progress.transform.localPosition = Vector3.zero;
             progress.transform.localScale = new Vector3(0f,
-                HoldBarThickness * inverseHeadScale, 1f);
+                HoldBarThickness, 1f);
             SpriteRenderer progressRenderer = progress.AddComponent<SpriteRenderer>();
             progressRenderer.sprite = holdShaftSprite;
             progressRenderer.color = new Color32(255, 255, 150, 255);
@@ -161,8 +162,8 @@ public class NoteDisplay : MonoBehaviour
             GameObject cap = new GameObject("HoldEndCap");
             cap.transform.SetParent(head.transform, false);
             cap.transform.localPosition = new Vector3(
-                HoldBarLength * inverseHeadScale, 0f, 0f);
-            cap.transform.localScale = new Vector3(0.7f, 0.7f, 1f);
+                HoldBarLength, 0f, 0f);
+            cap.transform.localScale = Vector3.one;
             SpriteRenderer capRenderer = cap.AddComponent<SpriteRenderer>();
             capRenderer.sprite = noteSprite;
             capRenderer.color = new Color32(255, 175, 66, 255);
@@ -180,18 +181,20 @@ public class NoteDisplay : MonoBehaviour
         SpriteRenderer fill = holdProgressRenderers[index];
         if (fill == null)
             return;
-        float inverseHeadScale = 1f / Mathf.Max(noteSize, 0.01f);
-        float length = HoldBarLength * fraction * inverseHeadScale;
+        float length = HoldBarLength * fraction;
         fill.transform.localPosition = new Vector3(length * 0.5f, 0f, 0f);
         fill.transform.localScale = new Vector3(length,
-            HoldBarThickness * inverseHeadScale, 1f);
+            HoldBarThickness, 1f);
         fill.enabled = fraction > 0f && noteRenderers[index].enabled;
-        if (fraction >= 1f)
-        {
-            noteRenderers[index].color = new Color32(91, 235, 168, 255);
-            if (holdCapRenderers[index] != null)
-                holdCapRenderers[index].color = noteRenderers[index].color;
-        }
+        // The first circle lights at press; the far circle lights when the
+        // left-to-right fill reaches the end of the bar.
+        noteRenderers[index].color = fraction >= 1f
+            ? new Color32(91, 235, 168, 255)
+            : new Color32(255, 255, 150, 255);
+        if (holdCapRenderers[index] != null)
+            holdCapRenderers[index].color = fraction >= 1f
+                ? new Color32(91, 235, 168, 255)
+                : new Color32(255, 175, 66, 255);
     }
 
     public void ResetInputProgress(int index)
@@ -251,7 +254,7 @@ public class NoteDisplay : MonoBehaviour
             return;
 
         transform.position = initialPosition +
-            Vector3.left * (noteIndex * noteSpacing);
+            Vector3.left * (noteRenderers[noteIndex].transform.localPosition.x - startX);
 
         for (int i = 0; i < noteRenderers.Count; i++)
         {
@@ -283,7 +286,7 @@ public class NoteDisplay : MonoBehaviour
     {
         Vector3 from = transform.position;
         Vector3 to = initialPosition +
-            Vector3.left * (noteIndex * noteSpacing);
+            Vector3.left * (noteRenderers[noteIndex].transform.localPosition.x - startX);
 
         float elapsed = 0f;
 
