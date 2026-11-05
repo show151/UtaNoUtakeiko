@@ -10,6 +10,32 @@ namespace UtaNoUtakeiko.Tests
     public class TimedInputVisualTests
     {
         [Test]
+        public void Judgment_StaysWithTheNoteAndHidesAfterAdvancing()
+        {
+            var go = new GameObject("NoteJudgment_Test");
+            try
+            {
+                var display = go.AddComponent<NoteDisplay>();
+                display.Initialize(new[] { 0.2f, 0.8f });
+                display.ShowNoteJudgment(0, "Great", false, false);
+                var label = go.transform.Find("Note_1/NoteJudgment");
+                Assert.IsNotNull(label);
+                var text = label.GetComponent("TextMeshPro");
+                Assert.IsNotNull(text);
+                string content = (string)text.GetType().GetProperty("text").GetValue(text);
+                StringAssert.Contains("<color=#72EEFF>Great</color>", content);
+                StringAssert.Contains("HOLD <color=#FF90A1>Miss</color>", content);
+                Assert.Greater(label.position.y, go.transform.Find("Note_1").position.y);
+                display.SeekToNote(1);
+                Assert.IsFalse(label.gameObject.activeSelf);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
         public void InitializeInputUnits_RendersHoldBarOnlyForGroupedHold()
         {
             var go = new GameObject("NoteDisplay_Test");

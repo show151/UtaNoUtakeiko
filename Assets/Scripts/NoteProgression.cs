@@ -38,6 +38,7 @@ public class NoteProgression : MonoBehaviour
     };
 
     [SerializeField] private float delayAfterJudgment = 1f;
+    [SerializeField, Min(0f)] private float tapJudgmentDisplaySeconds = 0.5f;
     [SerializeField, Min(0f)] private float holdSuccessDisplaySeconds = 0.6f;
     [SerializeField, Min(0f)] private float holdScrollDuration = 0.8f;
 
@@ -281,8 +282,11 @@ public class NoteProgression : MonoBehaviour
         pendingUnitDuration = pendingPressIndex >= 0 && currentGameplayUnits != null && pendingIsHold
             ? currentGameplayUnits[pendingPressIndex].RequiredHoldSeconds : 0f;
         if (pendingPressIndex >= 0)
-            judgmentUI.ShowTimedCapturedPitch(
-                judgmentSystem.CapturedPitchJudgment, pendingIsHold);
+        {
+            judgmentUI.ClearJudgment();
+            noteDisplay.ShowNoteJudgment(pendingPressIndex,
+                judgmentSystem.CapturedPitchJudgment, null, false, pendingIsHold);
+        }
         Debug.Log($"[InputTrace] CAPTURE unit={pendingPressIndex + 1}/" +
                   $"{gameplayTrial.Count} frame={Time.frameCount}");
     }
@@ -293,6 +297,7 @@ public class NoteProgression : MonoBehaviour
             return;
 
         Debug.Log($"[InputTrace] CANCEL unit={currentNoteIndex + 1}/{notePositions.Length}");
+        noteDisplay.HideNoteJudgment(pendingPressIndex);
         pendingPressIndex = -1;
         pendingIsHold = false;
         pendingUnitDuration = 0f;
@@ -316,8 +321,11 @@ public class NoteProgression : MonoBehaviour
                         : result.PitchJudgment != "Miss");
                 noteDisplay.ShowInputResolution(i, succeeded);
                 if (i == currentNoteIndex)
-                    judgmentUI.ShowTimedInputResult(
-                        result.PitchJudgment, result.HoldSucceeded, result.TimedOut);
+                {
+                    judgmentUI.ClearJudgment();
+                    noteDisplay.ShowNoteJudgment(
+                        i, result.PitchJudgment, result.HoldSucceeded, result.TimedOut);
+                }
                 break;
             }
         }
@@ -384,6 +392,12 @@ public class NoteProgression : MonoBehaviour
                 currentGameplayUnits[nextIndex - 1].IsHold)
             {
                 yield return new WaitForSecondsRealtime(0.75f);
+                if (!isGameplayInput)
+                    yield break;
+            }
+            else if (tapJudgmentDisplaySeconds > 0f)
+            {
+                yield return new WaitForSecondsRealtime(tapJudgmentDisplaySeconds);
                 if (!isGameplayInput)
                     yield break;
             }
@@ -481,6 +495,7 @@ public class NoteProgression : MonoBehaviour
         if (!isPlaying || isAdvancing || isTimedPreview || isGameplayInput)
             return;
 
+        noteDisplay.ShowNoteJudgment(currentNoteIndex, result, null, false);
         isAdvancing = true;
         StartCoroutine(AdvanceAfterDelay());
     }

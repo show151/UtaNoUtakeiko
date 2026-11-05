@@ -47,6 +47,14 @@ namespace Uta.Tests
         }
 
         [Test]
+        public void DifficultySelection_ProceedsDirectlyToCountdown()
+        {
+            Assert.IsTrue(manager.TryTransition(GameSessionState.DifficultySelect));
+            Assert.IsTrue(manager.TryTransition(GameSessionState.Countdown));
+            Assert.AreEqual(GameSessionState.Countdown, manager.CurrentState);
+        }
+
+        [Test]
         public void InvalidTransition_IsRejected()
         {
             bool result = manager.TryTransition(
