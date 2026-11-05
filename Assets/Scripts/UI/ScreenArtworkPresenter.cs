@@ -77,6 +77,14 @@ namespace Uta.GameFlow
             { 99f, 97f, 95f, 93f, 91f, 89f, 87f, 84f, 80f, 75f };
 
         private Font uiFont;
+        [SerializeField, Min(0f)] private float warningTimeSeconds = 10f;
+        [SerializeField, Range(0f, 1f)] private float bgmVolume = 0.5f;
+        [SerializeField, Range(0f, 1f)] private float effectVolume = 0.7f;
+        private AudioSource bgmSource, effectSource;
+        private AudioClip openingBgm, playBgm, warningBgm, endingBgm;
+        private AudioClip countdownSound, startSound, selectSound, decisionSound, finishSound;
+        private bool warningPlaying;
+        private int lastSingingCountdown = -1;
 
         private void OnEnable()
         {
@@ -88,6 +96,7 @@ namespace Uta.GameFlow
 
             if (screenCanvas != null)
             {
+                ApplyAudioState(sessionManager != null ? sessionManager.CurrentState : GameSessionState.Title);
                 screenCanvas.gameObject.SetActive(true);
                 ApplyState(sessionManager != null
                     ? sessionManager.CurrentState
@@ -97,6 +106,9 @@ namespace Uta.GameFlow
 
         private void OnDisable()
         {
+            lastSingingCountdown = -1;
+            if (bgmSource != null) bgmSource.Stop();
+            if (effectSource != null) effectSource.Stop();
             if (sessionManager != null)
                 sessionManager.OnStateChanged -= HandleStateChanged;
 
@@ -118,6 +130,7 @@ namespace Uta.GameFlow
                 playbackConnector = GetComponent<GameSessionPlaybackConnector>()
                     ?? FindFirstObjectByType<GameSessionPlaybackConnector>();
 
+            InitializeAudio();
             BuildScreen();
             ApplyState(sessionManager != null
                 ? sessionManager.CurrentState
@@ -131,15 +144,29 @@ namespace Uta.GameFlow
 
             GameSessionState state = sessionManager.CurrentState;
             UpdateGameplayTimer(state);
+            if (state == GameSessionState.Playing && !warningPlaying &&
+                sessionManager.RemainingTime is float timeRemaining &&
+                timeRemaining > 0f && timeRemaining <= warningTimeSeconds)
+            {
+                warningPlaying = true;
+                SetBgm(warningBgm);
+            }
             if (state == GameSessionState.Playback)
             {
                 UpdatePlaybackScore();
-                if (playbackTitleText != null && playbackConnector != null)
+                if (playbackConnector != null)
                 {
                     int remaining = playbackConnector.SingingCountdownRemaining;
-                    playbackTitleText.text = playbackConnector.IsPreparingPlayback
-                        ? "歌う準備をしているよ"
-                        : remaining > 0 ? $"ウタが歌うまであと {remaining} 秒" : "♪ うたっているよ";
+                    if (!playbackConnector.IsPreparingPlayback && remaining > 0 &&
+                        remaining != lastSingingCountdown)
+                    {
+                        PlayEffect(countdownSound);
+                        lastSingingCountdown = remaining;
+                    }
+                    if (playbackTitleText != null)
+                        playbackTitleText.text = playbackConnector.IsPreparingPlayback
+                            ? "歌う準備をしているよ"
+                            : remaining > 0 ? $"ウタが歌うまであと {remaining} 秒" : "♪ うたっているよ";
                 }
             }
 
@@ -173,7 +200,69 @@ namespace Uta.GameFlow
 
         private void HandleStateChanged(GameSessionState previous, GameSessionState next)
         {
+            lastSingingCountdown = -1;
+            ApplyAudioState(next);
             ApplyState(next);
+        }
+
+        private void InitializeAudio()
+        {
+            bgmSource = gameObject.AddComponent<AudioSource>();
+            bgmSource.playOnAwake = false;
+            bgmSource.loop = true;
+            bgmSource.spatialBlend = 0f;
+            bgmSource.volume = bgmVolume;
+            effectSource = gameObject.AddComponent<AudioSource>();
+            effectSource.playOnAwake = false;
+            effectSource.spatialBlend = 0f;
+            openingBgm = Resources.Load<AudioClip>("GameAudio/opening");
+            playBgm = Resources.Load<AudioClip>("GameAudio/play");
+            warningBgm = Resources.Load<AudioClip>("GameAudio/play_clymax");
+            endingBgm = Resources.Load<AudioClip>("GameAudio/ending");
+            countdownSound = Resources.Load<AudioClip>("GameAudio/countdown");
+            startSound = Resources.Load<AudioClip>("GameAudio/start");
+            selectSound = Resources.Load<AudioClip>("GameAudio/select");
+            decisionSound = Resources.Load<AudioClip>("GameAudio/decision");
+            finishSound = Resources.Load<AudioClip>("GameAudio/finish");
+            ApplyAudioState(sessionManager != null ? sessionManager.CurrentState : GameSessionState.Title);
+        }
+
+        private void ApplyAudioState(GameSessionState state)
+        {
+            if (bgmSource == null) return;
+            switch (state)
+            {
+                case GameSessionState.Title:
+                case GameSessionState.DifficultySelect:
+                case GameSessionState.SongSelect:
+                    SetBgm(openingBgm); break;
+                case GameSessionState.Playing:
+                    warningPlaying = false;
+                    SetBgm(playBgm);
+                    PlayEffect(startSound); break;
+                case GameSessionState.GameFinished:
+                    SetBgm(null);
+                    PlayEffect(finishSound); break;
+                case GameSessionState.Result:
+                case GameSessionState.Ranking:
+                case GameSessionState.Announcement:
+                    SetBgm(endingBgm); break;
+                default:
+                    SetBgm(null); break;
+            }
+        }
+
+        private void SetBgm(AudioClip clip)
+        {
+            if (bgmSource.clip == clip && (clip == null || bgmSource.isPlaying)) return;
+            bgmSource.Stop();
+            bgmSource.clip = clip;
+            if (clip != null) bgmSource.Play();
+        }
+
+        private void PlayEffect(AudioClip clip)
+        {
+            if (effectSource != null && clip != null) effectSource.PlayOneShot(clip, effectVolume);
         }
 
         private void BuildScreen()
@@ -1000,6 +1089,7 @@ namespace Uta.GameFlow
 
         private void SelectNext()
         {
+            PlayEffect(selectSound);
             if (sessionManager == null)
                 return;
 
@@ -1023,6 +1113,8 @@ namespace Uta.GameFlow
         {
             if (sessionManager == null)
                 return;
+
+            PlayEffect(decisionSound);
 
             switch (sessionManager.CurrentState)
             {
@@ -1059,7 +1151,10 @@ namespace Uta.GameFlow
         private IEnumerator FinishDisplayToPlayback()
         {
             finishDisplayRunning = true;
-            yield return new WaitForSecondsRealtime(Mathf.Max(0f, finishDisplaySeconds));
+            float duration = Mathf.Max(0f, finishDisplaySeconds);
+            if (finishSound != null)
+                duration = Mathf.Max(duration, finishSound.length);
+            yield return new WaitForSecondsRealtime(duration);
             finishDisplayRunning = false;
 
             if (sessionManager != null &&
@@ -1078,6 +1173,8 @@ namespace Uta.GameFlow
             {
                 if (countdownText != null)
                     countdownText.text = remaining.ToString();
+
+                PlayEffect(countdownSound);
 
                 yield return new WaitForSecondsRealtime(1f);
                 remaining--;
