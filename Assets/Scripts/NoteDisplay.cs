@@ -306,8 +306,13 @@ public class NoteDisplay : MonoBehaviour
             label.rectTransform.sizeDelta = new Vector2(3.2f, 1.4f);
             label.fontSize = 3.2f;
             label.alignment = TextAlignmentOptions.Center;
-            label.outlineColor = new Color32(0, 0, 0, 255);
-            label.outlineWidth = 0.25f;
+            // TMP creates an instance material for outlines. Only create it
+            // during play; editor tests do not need the visual effect.
+            if (Application.isPlaying)
+            {
+                label.outlineColor = new Color32(0, 0, 0, 255);
+                label.outlineWidth = 0.25f;
+            }
             label.GetComponent<MeshRenderer>().sortingOrder = 20;
             judgmentLabels[index] = label;
         }
