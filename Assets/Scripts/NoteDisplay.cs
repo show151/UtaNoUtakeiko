@@ -1,6 +1,7 @@
 
 using System.Collections;
 using UnityEngine;
+using TMPro;
 
 public class NoteDisplay : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class NoteDisplay : MonoBehaviour
         = new System.Collections.Generic.List<SpriteRenderer>();
     private readonly System.Collections.Generic.List<Transform> noteRoots
         = new System.Collections.Generic.List<Transform>();
+    private readonly System.Collections.Generic.List<TextMeshPro> judgmentLabels
+        = new System.Collections.Generic.List<TextMeshPro>();
 
     [SerializeField] private Sprite noteSprite;
 
@@ -55,6 +58,7 @@ public class NoteDisplay : MonoBehaviour
 
         noteRenderers.Clear();
         noteRoots.Clear();
+        judgmentLabels.Clear();
         holdBodyRenderers.Clear();
         holdCapRenderers.Clear();
         holdProgressRenderers.Clear();
@@ -97,6 +101,7 @@ public class NoteDisplay : MonoBehaviour
 
             noteRenderers.Add(renderer);
             noteRoots.Add(note.transform);
+            judgmentLabels.Add(null);
             holdBodyRenderers.Add(null);
             holdCapRenderers.Add(null);
             holdProgressRenderers.Add(null);
@@ -283,6 +288,57 @@ public class NoteDisplay : MonoBehaviour
             holdCapRenderers[index].color = color;
     }
 
+    public void ShowNoteJudgment(int index, string pitch, bool? holdSucceeded, bool timedOut,
+        bool holdPending = false)
+    {
+        if (index < 0 || index >= noteRoots.Count || noteRoots[index] == null)
+            return;
+
+        var label = judgmentLabels[index];
+        if (label == null)
+        {
+            var labelObject = new GameObject("NoteJudgment", typeof(RectTransform));
+            labelObject.transform.SetParent(noteRoots[index], false);
+            float inverseScale = 1f / Mathf.Max(0.01f, noteSize);
+            labelObject.transform.localScale = new Vector3(inverseScale, inverseScale, 1f);
+            labelObject.transform.localPosition = new Vector3(0f, 0.65f * inverseScale, -0.1f);
+            label = labelObject.AddComponent<TextMeshPro>();
+            label.rectTransform.sizeDelta = new Vector2(3.2f, 1.4f);
+            label.fontSize = 3.2f;
+            label.alignment = TextAlignmentOptions.Center;
+            label.outlineColor = new Color32(0, 0, 0, 255);
+            label.outlineWidth = 0.25f;
+            label.GetComponent<MeshRenderer>().sortingOrder = 20;
+            judgmentLabels[index] = label;
+        }
+
+        string pitchResult = timedOut ? "Miss" : pitch;
+        label.text = ColorJudgment(pitchResult);
+        if (holdSucceeded.HasValue)
+            label.text += "\nHOLD " + ColorJudgment(holdSucceeded.Value ? "Perfect" : "Miss");
+        else if (holdPending)
+            label.text += "\n<color=#FFFFFF>HOLD ...</color>";
+        label.gameObject.SetActive(true);
+    }
+
+    public void HideNoteJudgment(int index)
+    {
+        if (index >= 0 && index < judgmentLabels.Count && judgmentLabels[index] != null)
+            judgmentLabels[index].gameObject.SetActive(false);
+    }
+
+    private static string ColorJudgment(string result)
+    {
+        switch (result)
+        {
+            case "Perfect": return "<color=#FFE35C>Perfect</color>";
+            case "Great": return "<color=#72EEFF>Great</color>";
+            case "Good": return "<color=#91F69A>Good</color>";
+            case "Bad": return "<color=#FFB65C>Bad</color>";
+            default: return "<color=#FF90A1>Miss</color>";
+        }
+    }
+
     // #53: jump to the scheduled input unit without adding scroll animation time.
     // Legacy ScrollToNote remains unchanged for the current gameplay route.
     public void SeekToNote(int noteIndex)
@@ -309,6 +365,8 @@ public class NoteDisplay : MonoBehaviour
             if (holdProgressRenderers[i] != null)
                 holdProgressRenderers[i].enabled = i >= noteIndex &&
                     holdProgressRenderers[i].transform.localScale.x > 0f;
+            if (judgmentLabels[i] != null && i < noteIndex)
+                judgmentLabels[i].gameObject.SetActive(false);
         }
     }
 
@@ -395,6 +453,8 @@ public class NoteDisplay : MonoBehaviour
                 holdCapRenderers[completedIndex].enabled = false;
             if (holdProgressRenderers[completedIndex] != null)
                 holdProgressRenderers[completedIndex].enabled = false;
+            if (judgmentLabels[completedIndex] != null)
+                judgmentLabels[completedIndex].gameObject.SetActive(false);
         }
     }
 }

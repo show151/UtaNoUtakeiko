@@ -38,31 +38,7 @@ public class JudgmentUI : MonoBehaviour
     {
         if (timedInputFeedback)
             return;
-        judgmentText.text = result;
-
-        switch (result)
-        {
-            case "Perfect":
-                judgmentText.color = Color.yellow;
-                break;
-
-            case "Great":
-                judgmentText.color = Color.green;
-                break;
-
-            case "Good":
-                judgmentText.color = Color.cyan;
-                break;
-
-            case "Bad":
-                judgmentText.color = new Color(1f, 0.5f, 0f);
-                break;
-
-            default:
-                judgmentText.color = Color.gray;
-                break;
-        }
-
+        judgmentText.text = "";
         sliderTicks.HighlightNearestTick(
             movingBar.NormalizedPosition
         );

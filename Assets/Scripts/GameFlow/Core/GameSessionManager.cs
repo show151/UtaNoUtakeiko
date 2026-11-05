@@ -9,6 +9,17 @@ namespace Uta.GameFlow
         public GameSessionState CurrentState { get; private set; }
             = GameSessionState.Title;
 
+        // Resolve the timer in the core assembly, where the session and its
+        // timeout component share the same type definitions.
+        public float? RemainingTime
+        {
+            get
+            {
+                var timeout = GetComponent<GameSessionTimeout>();
+                return timeout != null ? timeout.RemainingTime : (float?)null;
+            }
+        }
+
         public event Action<GameSessionState, GameSessionState>
             OnStateChanged;
 

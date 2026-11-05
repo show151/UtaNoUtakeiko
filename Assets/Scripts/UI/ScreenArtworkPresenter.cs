@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -18,8 +17,6 @@ namespace Uta.GameFlow
     {
         [SerializeField] private GameSessionManager sessionManager;
         [SerializeField] private GameSessionPlayConnector playConnector;
-        private Component sessionTimeoutComponent;
-        private PropertyInfo remainingTimeProperty;
         [SerializeField] private GameSessionPlaybackConnector playbackConnector;
 
         [Header("Artwork (Sprite / 2D and UI)")]
@@ -53,7 +50,8 @@ namespace Uta.GameFlow
         private Text gameplayTimerText;
         private Text playbackLyricText;
         private Text playbackTitleText;
-        private Text playbackPitchText;
+        private Text playbackTargetPitchText;
+        private Text playbackInputPitchText;
         private RectTransform playbackScorePanel;
         private readonly List<PlaybackNoteVisual> playbackNoteVisuals = new List<PlaybackNoteVisual>();
 
@@ -116,7 +114,6 @@ namespace Uta.GameFlow
             if (playConnector == null)
                 playConnector = GetComponent<GameSessionPlayConnector>()
                     ?? FindFirstObjectByType<GameSessionPlayConnector>();
-            ResolveSessionTimeout();
             if (playbackConnector == null)
                 playbackConnector = GetComponent<GameSessionPlaybackConnector>()
                     ?? FindFirstObjectByType<GameSessionPlaybackConnector>();
@@ -314,14 +311,14 @@ namespace Uta.GameFlow
             gameplayTimerText = null;
             playbackLyricText = null;
             playbackTitleText = null;
-            playbackPitchText = null;
+            playbackTargetPitchText = null;
+            playbackInputPitchText = null;
             playbackScorePanel = null;
             playbackNoteVisuals.Clear();
 
             switch (state)
             {
                 case GameSessionState.Title:
-                    AddText("タイトル", 70, new Vector2(0.5f, 0.76f), new Vector2(1300, 120));
                     AddActionButton("はじめる", new Vector2(0.5f, 0.2f), Confirm);
                     break;
 
@@ -383,50 +380,18 @@ namespace Uta.GameFlow
             }
         }
 
-        private void ResolveSessionTimeout()
-        {
-            if (sessionTimeoutComponent != null)
-                return;
-
-            // The project currently contains an imported GameSessionTimeout
-            // type with the same name, so resolve the attached component by
-            // its runtime type name instead of a compile-time generic type.
-            sessionTimeoutComponent = GetComponent("GameSessionTimeout");
-            if (sessionTimeoutComponent == null)
-            {
-                var components = FindObjectsByType<MonoBehaviour>(
-                    FindObjectsSortMode.None);
-                foreach (var component in components)
-                {
-                    if (component != null &&
-                        component.GetType().Name == "GameSessionTimeout")
-                    {
-                        sessionTimeoutComponent = component;
-                        break;
-                    }
-                }
-            }
-
-            if (sessionTimeoutComponent != null)
-                remainingTimeProperty = sessionTimeoutComponent.GetType()
-                    .GetProperty("RemainingTime");
-        }
-
         private void UpdateGameplayTimer(GameSessionState state)
         {
             if (state != GameSessionState.Playing || gameplayTimerText == null)
                 return;
 
-            ResolveSessionTimeout();
-            float remainingTime = 0f;
-            if (sessionTimeoutComponent != null && remainingTimeProperty != null)
+            float? remainingTime = sessionManager.RemainingTime;
+            if (!remainingTime.HasValue)
             {
-                object value = remainingTimeProperty.GetValue(sessionTimeoutComponent);
-                if (value is float timerValue)
-                    remainingTime = timerValue;
+                gameplayTimerText.text = "残り時間 --:--";
+                return;
             }
-
-            int seconds = Mathf.CeilToInt(Mathf.Max(0f, remainingTime));
+            int seconds = Mathf.CeilToInt(Mathf.Max(0f, remainingTime.Value));
             gameplayTimerText.text = $"残り時間 {seconds / 60:00}:{seconds % 60:00}";
         }
 
@@ -435,45 +400,41 @@ namespace Uta.GameFlow
             var panelImage = CreateImage(
                 "Playback Score Panel", uiRoot,
                 new Vector2(0.40f, 0.13f), new Vector2(0.90f, 0.9f),
-                Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.78f));
+                Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.94f));
             playbackScorePanel = panelImage.rectTransform;
 
             playbackTitleText = CreateChildText(
                 "Playback Score Title", playbackScorePanel, "歌う準備をしているよ",
-                38, new Vector2(0.5f, 0.88f), new Vector2(820, 70));
+                38, new Vector2(0.5f, 0.93f), new Vector2(820, 60));
             playbackTitleText.color = new Color(0.7f, 0.9f, 1f, 1f);
 
             var measureText = CreateChildText(
                 "Playback Measure", playbackScorePanel, "", 24,
-                new Vector2(0.5f, 0.78f), new Vector2(700, 50));
+                new Vector2(0.5f, 0.84f), new Vector2(700, 50));
             measureText.color = new Color(0.75f, 0.82f, 0.9f, 1f);
 
             var targetLegend = CreateChildText(
                 "Target Pitch Legend", playbackScorePanel, "● 本来の音", 24,
-                new Vector2(0.3f, 0.68f), new Vector2(300, 52));
+                new Vector2(0.3f, 0.75f), new Vector2(300, 52));
             targetLegend.color = new Color(0.92f, 0.96f, 1f, 1f);
             var inputLegend = CreateChildText(
                 "Player Pitch Legend", playbackScorePanel, "● 入力結果", 24,
-                new Vector2(0.7f, 0.68f), new Vector2(300, 52));
+                new Vector2(0.7f, 0.75f), new Vector2(300, 52));
             inputLegend.color = new Color(1f, 0.78f, 0.2f, 1f);
 
-            playbackPitchText = CreateChildText(
-                "Playback Pitch Values", playbackScorePanel, "", 24,
-                new Vector2(0.5f, 0.56f), new Vector2(820, 48));
-            playbackPitchText.color = new Color(1f, 0.96f, 0.84f, 1f);
-
-            var lowerLedger = CreateImage(
-                "Lower C Ledger Line", playbackScorePanel,
-                new Vector2(0.32f, 0.42f), new Vector2(0.68f, 0.42f),
-                new Vector2(0f, -40f), new Vector2(0f, 2f),
-                new Color(0.75f, 0.84f, 0.92f, 0.78f));
-            lowerLedger.raycastTarget = false;
+            playbackTargetPitchText = CreateChildText(
+                "Target Pitch Value", playbackScorePanel, "—", 28,
+                new Vector2(0.3f, 0.67f), new Vector2(300, 48));
+            playbackInputPitchText = CreateChildText(
+                "Input Pitch Value", playbackScorePanel, "—", 28,
+                new Vector2(0.7f, 0.67f), new Vector2(300, 48));
+            playbackInputPitchText.color = new Color(1f, 0.78f, 0.2f, 1f);
 
             for (int i = 0; i < 5; i++)
             {
                 var line = CreateImage(
                     "Staff Line " + (i + 1), playbackScorePanel,
-                    new Vector2(0.08f, 0.42f), new Vector2(0.94f, 0.42f),
+                    new Vector2(0.08f, 0.39f), new Vector2(0.94f, 0.39f),
                     new Vector2(0f, i * 40f), new Vector2(0f, 2f),
                     new Color(0.75f, 0.84f, 0.92f, 0.78f));
                 line.raycastTarget = false;
@@ -579,7 +540,7 @@ namespace Uta.GameFlow
         {
             var noteText = CreateChildText(
                 objectName, playbackScorePanel, symbol, fontSize,
-                new Vector2(0.5f, 0.42f), new Vector2(80, 80));
+                new Vector2(0.5f, 0.39f), new Vector2(80, 80));
             playbackNoteVisuals.Add(new PlaybackNoteVisual
             {
                 Note = note,
@@ -671,17 +632,14 @@ namespace Uta.GameFlow
                     activeTargetNote = visual.Note;
             }
 
-            if (playbackPitchText != null)
-            {
-                string targetPitch = activeTargetNote != null
+            if (playbackTargetPitchText != null)
+                playbackTargetPitchText.text = activeTargetNote != null
                     ? PitchStepLabel(activeTargetNote.TargetPitchStep)
                     : "—";
-                string inputPitch = activeInputPitchStep.HasValue
+            if (playbackInputPitchText != null)
+                playbackInputPitchText.text = activeInputPitchStep.HasValue
                     ? PitchStepLabel(activeInputPitchStep.Value)
                     : "—";
-                playbackPitchText.text =
-                    $"本来の音: {targetPitch}　入力結果: {inputPitch}";
-            }
 
             if (string.IsNullOrEmpty(activeLyric))
                 activeLyric = FallbackLyricForMeasure(
@@ -719,10 +677,9 @@ namespace Uta.GameFlow
                 default: diatonicStep = 6; break;
             }
 
-            // Pitch steps are semitones from C4. Convert to diatonic staff
-            // positions with E4 on the bottom line; accidentals stay on that
-            // note position and remain readable in the pitch value above.
-            return (octave * 7 + diatonicStep - 2) * 20f;
+            // Place C4 on the bottom line for a compact, readable display.
+            // This shifts only the visual; the actual pitch stays unchanged.
+            return (octave * 7 + diatonicStep) * 20f;
         }
 
         private static string PitchStepLabel(int semitoneStep)
@@ -1174,7 +1131,18 @@ namespace Uta.GameFlow
 
             var labelText = CreateText("Label", buttonObject.transform, label, 30, TextAnchor.MiddleCenter);
             Stretch(labelText.rectTransform);
+            labelText.rectTransform.offsetMin = new Vector2(52f, 0f);
             labelText.color = Color.white;
+
+            bool isSelect = action.Method.Name == nameof(SelectNext);
+            var icon = CreateText("Physical Button Icon", buttonObject.transform,
+                "●", 50, TextAnchor.MiddleCenter);
+            icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            icon.rectTransform.anchoredPosition = new Vector2(39f, 0f);
+            icon.rectTransform.sizeDelta = new Vector2(62f, 62f);
+            icon.color = isSelect ? new Color(1f, 0.25f, 0.23f, 1f)
+                : new Color(1f, 0.85f, 0.12f, 1f);
+            icon.raycastTarget = false;
         }
 
         private Text AddText(string value, int fontSize, Vector2 anchor, Vector2 size)
@@ -1194,6 +1162,9 @@ namespace Uta.GameFlow
         {
             var obj = CreateUiObject(objectName, parent);
             var text = obj.AddComponent<Text>();
+            var outline = obj.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.95f);
+            outline.effectDistance = new Vector2(2f, -2f);
             text.font = uiFont != null ? uiFont : Resources.GetBuiltinResource<Font>("Arial.ttf");
             text.text = value;
             text.fontSize = fontSize;
