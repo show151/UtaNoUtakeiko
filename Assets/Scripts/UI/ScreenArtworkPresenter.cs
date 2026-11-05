@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,6 +7,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UtaNoUtakeiko.Gameplay;
 using UtaNoUtakeiko.Data;
+using UtaNoUtakeiko.Ranking;
 
 namespace Uta.GameFlow
 {
@@ -71,10 +74,12 @@ namespace Uta.GameFlow
         private bool countdownRunning;
         private bool finishDisplayRunning;
 
-        private static readonly string[] DemoNames =
-            { "あおい", "ゆき", "ほし", "みなと", "そら", "りん", "はる", "つき", "うみ", "こと" };
-        private static readonly float[] DemoRates =
-            { 99f, 97f, 95f, 93f, 91f, 89f, 87f, 84f, 80f, 75f };
+        private RankingRepository rankingRepository;
+        private List<RankingEntry> rankingEntries;
+        private RankingEntry currentRankingEntry;
+        private ScoreResult currentRankingResult;
+        private List<string> rankingRows;
+        private List<bool> rankingPlayerRows;
 
         private Font uiFont;
         [SerializeField, Min(0f)] private float warningTimeSeconds = 10f;
@@ -938,9 +943,26 @@ namespace Uta.GameFlow
             ScoreResult result = playConnector != null
                 ? playConnector.CurrentScoreResult
                 : null;
-            float rate = result != null ? result.AchievementRate : 0f;
-            playerRank = CalculateDemoRank(rate);
             string savedName = PlayerPrefs.GetString("Uta.PlayerName", "あなた");
+            playerName = savedName;
+            rankingRepository = rankingRepository ?? new RankingRepository(Path.Combine(Application.persistentDataPath, "ranking.json"));
+            if (!ReferenceEquals(currentRankingResult, result))
+            {
+                currentRankingResult = result;
+                rankingEntries = rankingRepository.Load();
+                currentRankingEntry = result == null ? null : new RankingEntry
+                {
+                    Id = Guid.NewGuid().ToString("N"), Name = savedName, Result = new ScoreResult
+                    {
+                        SongId = result.SongId, Difficulty = result.Difficulty, Score = result.Score,
+                        MaxScore = result.MaxScore, PerfectCount = result.PerfectCount,
+                        GreatCount = result.GreatCount, GoodCount = result.GoodCount,
+                        BadCount = result.BadCount, MissCount = result.MissCount
+                    }
+                };
+                if (currentRankingEntry != null) rankingEntries.Add(currentRankingEntry);
+            }
+            BuildRankingRows(result);
 
             CreateImage(
                 "Ranking Header Background", uiRoot,
@@ -960,43 +982,10 @@ namespace Uta.GameFlow
                 Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.84f));
             RectTransform detailsPanel = detailsPanelImage.rectTransform;
 
-            var rows = new List<string>();
-            var playerRows = new List<bool>();
-            if (playerRank <= 10)
-            {
-                int demoIndex = 0;
-                for (int rank = 1; rank <= 10; rank++)
-                {
-                    bool isPlayer = rank == playerRank;
-                    if (isPlayer)
-                    {
-                        playerName = savedName;
-                        rows.Add($"{rank,2}位　{playerName}　{rate:F1}%");
-                    }
-                    else
-                    {
-                        rows.Add($"{rank,2}位　{DemoNames[demoIndex]}　{DemoRates[demoIndex]:F1}%");
-                        demoIndex++;
-                    }
-                    playerRows.Add(isPlayer);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < 7; i++)
-                {
-                    rows.Add($"{i + 1,2}位　{DemoNames[i]}　{DemoRates[i]:F1}%");
-                    playerRows.Add(false);
-                }
-                rows.Add("・・・");
-                playerRows.Add(false);
-                rows.Add($"{playerRank,2}位　{savedName}　{rate:F1}%");
-                playerRows.Add(true);
-                rows.Add("・・・");
-                playerRows.Add(false);
-            }
+            var rows = rankingRows;
+            var playerRows = rankingPlayerRows;
 
-            float rowStep = 0.88f / rows.Count;
+            float rowStep = 0.88f / Math.Max(1, rows.Count);
             for (int i = 0; i < rows.Count; i++)
             {
                 float rowY = 0.94f - rowStep * (i + 0.5f);
@@ -1021,11 +1010,11 @@ namespace Uta.GameFlow
                 "Ranking Place Label", detailsPanel, "今回の順位", 29,
                 new Vector2(0.5f, 0.84f), new Vector2(520, 58));
             var rankValue = CreateChildText(
-                "Ranking Place Value", detailsPanel, $"{playerRank}位", 64,
+                "Ranking Place Value", detailsPanel, playerRank > 0 ? $"{playerRank}位" : "—", 64,
                 new Vector2(0.5f, 0.69f), new Vector2(520, 92));
             rankValue.color = new Color(1f, 0.84f, 0.39f, 1f);
 
-            if (playerRank <= 10)
+            if (playerRank > 0 && playerRank <= 10)
             {
                 var prompt = CreateChildText(
                     "Ranking Name Prompt", detailsPanel,
@@ -1079,10 +1068,13 @@ namespace Uta.GameFlow
             input.lineType = InputField.LineType.SingleLine;
             input.onValueChanged.AddListener(value =>
             {
-                string previousName = playerName;
                 playerName = string.IsNullOrWhiteSpace(value) ? "あなた" : value.Trim();
+                if (currentRankingEntry != null) currentRankingEntry.Name = playerName;
                 if (rankingListText != null)
-                    rankingListText.text = rankingListText.text.Replace(previousName, playerName);
+                {
+                    BuildRankingRows(currentRankingResult);
+                    rankingListText.text = string.Join("\n", rankingRows);
+                }
             });
             return input;
         }
@@ -1139,6 +1131,15 @@ namespace Uta.GameFlow
                         PlayerPrefs.SetString("Uta.PlayerName", playerName);
                         PlayerPrefs.Save();
                     }
+                    if (currentRankingEntry != null)
+                    {
+                        currentRankingEntry.Name = playerName;
+                        try { rankingRepository.Save(rankingEntries); }
+                        catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+                        {
+                            Debug.LogWarning("ランキングを保存できませんでした: " + e.Message);
+                        }
+                    }
                     sessionManager.TryTransition(GameSessionState.Announcement);
                     break;
                 case GameSessionState.Announcement:
@@ -1186,14 +1187,42 @@ namespace Uta.GameFlow
                 sessionManager.TryTransition(GameSessionState.Playing);
         }
 
-        private int CalculateDemoRank(float rate)
+        private void BuildRankingRows(ScoreResult result)
         {
-            for (int i = 0; i < DemoRates.Length; i++)
+            rankingRows = new List<string>();
+            rankingPlayerRows = new List<bool>();
+            playerRank = 0;
+            if (result == null || currentRankingEntry == null)
             {
-                if (rate > DemoRates[i])
-                    return i + 1;
+                rankingRows.Add("記録がありません");
+                rankingPlayerRows.Add(false);
+                return;
             }
-            return 11;
+            var comparer = new RankingComparer();
+            var matching = rankingEntries.FindAll(e => e.Result.SongId == result.SongId && e.Result.Difficulty == result.Difficulty);
+            matching.Sort((a, b) => comparer.Compare(a.Result, b.Result));
+            int rank = 0;
+            var ranks = new List<int>();
+            for (int i = 0; i < matching.Count; i++)
+            {
+                if (i == 0 || comparer.Compare(matching[i - 1].Result, matching[i].Result) != 0) rank = i + 1;
+                ranks.Add(rank);
+                if (matching[i].Id == currentRankingEntry.Id) playerRank = rank;
+            }
+            int playerIndex = matching.FindIndex(e => e.Id == currentRankingEntry.Id);
+            int topCount = playerIndex < 10 ? Math.Min(10, matching.Count) : Math.Min(7, matching.Count);
+            for (int i = 0; i < topCount; i++) AddRankingRow(matching[i], ranks[i]);
+            if (playerIndex >= 10)
+            {
+                rankingRows.Add("・・・"); rankingPlayerRows.Add(false);
+                AddRankingRow(matching[playerIndex], ranks[playerIndex]);
+            }
+        }
+
+        private void AddRankingRow(RankingEntry entry, int rank)
+        {
+            rankingRows.Add($"{rank,2}位　{entry.Name}　{entry.Result.AchievementRate:F1}%");
+            rankingPlayerRows.Add(entry.Id == currentRankingEntry.Id);
         }
 
         private static string RankLabel(float rate)
