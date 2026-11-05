@@ -55,6 +55,37 @@ public class NoteProgression : MonoBehaviour
     private float pendingUnitDuration;
     private List<InputUnit> currentGameplayUnits;
     private bool pendingIsHold;
+    [SerializeField, Range(0f, 1f)] private float judgmentSoundVolume = 0.7f;
+    private AudioSource judgmentAudio;
+    private AudioClip perfectSound, greatSound, goodSound, badSound, missSound;
+    private bool resolvingSessionTimeout;
+
+    private void PlayJudgmentSound(string judgment)
+    {
+        if (judgmentAudio == null)
+        {
+            judgmentAudio = gameObject.AddComponent<AudioSource>();
+            judgmentAudio.playOnAwake = false;
+            judgmentAudio.spatialBlend = 0f;
+            perfectSound = Resources.Load<AudioClip>("GameAudio/perfect");
+            greatSound = Resources.Load<AudioClip>("GameAudio/great");
+            goodSound = Resources.Load<AudioClip>("GameAudio/good");
+            badSound = Resources.Load<AudioClip>("GameAudio/bad");
+            missSound = Resources.Load<AudioClip>("GameAudio/miss");
+        }
+
+        AudioClip clip;
+        switch (judgment)
+        {
+            case "Perfect": clip = perfectSound; break;
+            case "Great": clip = greatSound; break;
+            case "Good": clip = goodSound; break;
+            case "Bad": clip = badSound; break;
+            case "Miss": clip = missSound; break;
+            default: return;
+        }
+        if (clip != null) judgmentAudio.PlayOneShot(clip, judgmentSoundVolume);
+    }
 
     private void OnEnable()
     {
@@ -307,6 +338,8 @@ public class NoteProgression : MonoBehaviour
 
     private void HandleGameplayResolved(TimedInputTrialResult result)
     {
+        if (!resolvingSessionTimeout)
+            PlayJudgmentSound(result.PitchJudgment);
         completedTrialResults.Add(result);
         if (currentGameplayUnits != null)
         {
@@ -444,7 +477,15 @@ public class NoteProgression : MonoBehaviour
         if (!isGameplayInput || gameplayTrial == null)
             return false;
 
-        gameplayTrial.ResolveRemainingAsTimedOut();
+        resolvingSessionTimeout = true;
+        try
+        {
+            gameplayTrial.ResolveRemainingAsTimedOut();
+        }
+        finally
+        {
+            resolvingSessionTimeout = false;
+        }
         if (gameplayTrial.ResolvedCount != gameplayTrial.Count)
             return false;
 
