@@ -887,17 +887,17 @@ namespace Uta.GameFlow
             ScoreResult result = playConnector != null
                 ? playConnector.CurrentScoreResult
                 : null;
-            float rate = result != null ? result.AchievementRate : 0f;
-            string rank = RankLabel(rate);
-            string message = rate >= 95f ? "すごい！ほとんど音が合ってたよ。次はパーフェクトを目指そう♪"
-                : rate >= 70f ? "一緒に歌えてうれしかったよ！次も楽しく歌おうね♪"
-                : "最後までよく頑張ったね！次はもっと一緒に歌おう♪";
+            SongChart chart = playConnector != null
+                ? playConnector.CurrentSongChart
+                : null;
+            ResultDisplayModel display = ResultDisplayModel.Create(chart, result);
 
             CreateImage(
                 "Result Header Background", uiRoot,
                 new Vector2(0.04f, 0.88f), new Vector2(0.98f, 0.98f),
                 Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.82f));
-            AddText("リザルト", 52, new Vector2(0.5f, 0.93f), new Vector2(1000, 82));
+            AddText($"{display.SongName}　リザルト", 52,
+                new Vector2(0.5f, 0.93f), new Vector2(1000, 82));
 
             var scorePanelImage = CreateImage(
                 "Result Score Panel", uiRoot,
@@ -910,11 +910,12 @@ namespace Uta.GameFlow
                 new Vector2(0.5f, 0.86f), new Vector2(900, 54));
             scoreLabel.color = new Color(0.78f, 0.86f, 0.96f, 1f);
             CreateChildText(
-                "Result Score Value", scorePanel, $"{result?.Score ?? 0:N0}", 78,
+                "Result Score Value", scorePanel, $"{display.Score:N0}", 78,
                 new Vector2(0.5f, 0.68f), new Vector2(980, 112));
 
             var rankLine = CreateChildText(
-                "Result Rank Line", scorePanel, $"達成率  {rate:F1}%　　 ランク  {rank}", 38,
+                "Result Rank Line", scorePanel,
+                $"達成率  {display.AchievementRate:F1}%　　 ランク  {display.Rank}", 38,
                 new Vector2(0.5f, 0.49f), new Vector2(980, 76));
             rankLine.color = new Color(1f, 0.84f, 0.39f, 1f);
 
@@ -924,14 +925,11 @@ namespace Uta.GameFlow
                 Vector2.zero, new Vector2(0f, 16f), new Color(0.48f, 0.58f, 0.72f, 0.65f));
             CreateImage(
                 "Result Achievement Fill", rateTrack.transform,
-                Vector2.zero, new Vector2(Mathf.Clamp01(rate / 100f), 1f),
+                Vector2.zero, new Vector2(Mathf.Clamp01(display.AchievementRate / 100f), 1f),
                 Vector2.zero, Vector2.zero, new Color(1f, 0.77f, 0.22f, 1f));
 
-            string judgmentSummary = result != null
-                ? $"Perfect  {result.PerfectCount}　 Great  {result.GreatCount}　 Good  {result.GoodCount}\nBad  {result.BadCount}　 Miss  {result.MissCount}"
-                : "判定結果はありません";
             var judgments = CreateChildText(
-                "Result Judgment Summary", scorePanel, judgmentSummary, 31,
+                "Result Judgment Summary", scorePanel, display.JudgmentSummary, 31,
                 new Vector2(0.5f, 0.17f), new Vector2(1000, 128));
             judgments.color = new Color(0.95f, 0.97f, 1f, 1f);
 
@@ -945,7 +943,7 @@ namespace Uta.GameFlow
                 new Vector2(0.5f, 0.78f), new Vector2(580, 58));
             messageHeading.color = new Color(1f, 0.84f, 0.39f, 1f);
             CreateChildText(
-                "Uta Result Message", messagePanel, message, 30,
+                "Uta Result Message", messagePanel, display.Message, 30,
                 new Vector2(0.5f, 0.42f), new Vector2(590, 145));
 
             AddActionButton("ランキングへ　›", new Vector2(0.33f, 0.095f), Confirm);
@@ -1242,15 +1240,6 @@ namespace Uta.GameFlow
         {
             rankingRows.Add($"{rank,2}位　{entry.Name}　{entry.Result.AchievementRate:F1}%");
             rankingPlayerRows.Add(entry.Id == currentRankingEntry.Id);
-        }
-
-        private static string RankLabel(float rate)
-        {
-            if (rate >= 95f) return "S";
-            if (rate >= 90f) return "A";
-            if (rate >= 80f) return "B";
-            if (rate >= 70f) return "C";
-            return "D";
         }
 
         private static string SafeLabel(string[] values, int index)
