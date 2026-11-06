@@ -24,7 +24,7 @@ namespace UtaNoUtakeiko.Tests
                 Assert.IsNotNull(text);
                 string content = (string)text.GetType().GetProperty("text").GetValue(text);
                 StringAssert.Contains("<color=#72EEFF>Great</color>", content);
-                StringAssert.DoesNotContain("HOLD", content);
+                StringAssert.Contains("HOLD <color=#FF90A1>Miss</color>", content);
                 Assert.Greater(label.position.y, go.transform.Find("Note_1").position.y);
                 display.SeekToNote(1);
                 Assert.IsFalse(label.gameObject.activeSelf);

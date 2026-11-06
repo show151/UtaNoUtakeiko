@@ -357,6 +357,10 @@ public class NoteDisplay : MonoBehaviour
 
         string pitchResult = timedOut ? "Miss" : pitch;
         label.text = ColorJudgment(pitchResult);
+        if (holdSucceeded.HasValue)
+            label.text += "\nHOLD " + ColorJudgment(holdSucceeded.Value ? "Perfect" : "Miss");
+        else if (holdPending)
+            label.text += "\n<color=#FFFFFF>HOLD ...</color>";
         label.gameObject.SetActive(true);
     }
 
