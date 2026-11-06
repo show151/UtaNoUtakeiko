@@ -10,6 +10,7 @@ namespace UtaNoUtakeiko.Data
         public string UnitId;
         public int TargetPitchStep;
         public bool IsHold;
+        public string StairGroupId;
         public float StartSeconds;
         public float EndSeconds;
         public List<string> SourceNoteIds = new List<string>();

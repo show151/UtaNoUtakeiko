@@ -61,6 +61,13 @@ public class JudgmentUI : MonoBehaviour
         judgmentText.color = isHold ? new Color(1f, 0.7f, 0.24f) : Color.white;
     }
 
+    public void ShowStairPrompt(bool started)
+    {
+        if (!timedInputFeedback || judgmentText == null) return;
+        judgmentText.text = started ? "黄色を押したまま赤で判定" : "階段：黄色を長押し";
+        judgmentText.color = new Color(1f, 0.7f, 0.24f);
+    }
+
     // Pitch is captured at the press; HOLD remains pending until completion.
     public void ShowTimedCapturedPitch(string pitch, bool isHold)
     {

@@ -59,6 +59,9 @@ public class NoteProgression : MonoBehaviour
     private AudioSource judgmentAudio;
     private AudioClip perfectSound, greatSound, goodSound, badSound, missSound;
     private bool resolvingSessionTimeout;
+    private bool stairActive;
+    private int stairNextIndex;
+    private int stairEndIndex;
 
     private void PlayJudgmentSound(string judgment)
     {
@@ -94,6 +97,7 @@ public class NoteProgression : MonoBehaviour
             judgmentSystem.OnJudged += HandleJudgment;
             judgmentSystem.OnPressPositionCaptured += HandleGameplayPressStarted;
             judgmentSystem.OnPressCaptureCanceled += HandleGameplayPressCanceled;
+            judgmentSystem.OnRedPress += HandleStairRedPress;
             judgmentSystem.OnJudgedWithPosition += HandleJudgmentWithPosition;
             judgmentSystem.OnJudgedWithPositionAndDuration
                 += HandleJudgmentWithDuration;
@@ -107,6 +111,7 @@ public class NoteProgression : MonoBehaviour
             judgmentSystem.OnJudged -= HandleJudgment;
             judgmentSystem.OnPressPositionCaptured -= HandleGameplayPressStarted;
             judgmentSystem.OnPressCaptureCanceled -= HandleGameplayPressCanceled;
+            judgmentSystem.OnRedPress -= HandleStairRedPress;
             judgmentSystem.OnJudgedWithPosition -= HandleJudgmentWithPosition;
             judgmentSystem.OnJudgedWithPositionAndDuration
                 -= HandleJudgmentWithDuration;
@@ -286,7 +291,7 @@ public class NoteProgression : MonoBehaviour
         noteDisplay.InitializeInputUnits(notePositions, units);
         noteDisplay.SeekToNote(0);
         judgmentUI.SetTimedInputFeedback(true);
-        judgmentUI.ShowTimedInputPrompt(units[0].IsHold);
+        ShowInputPrompt(0);
         judgmentSystem.enabled = true;
         judgmentSystem.ResetJudgment(notePositions[0]);
 
@@ -303,6 +308,20 @@ public class NoteProgression : MonoBehaviour
             return;
 
         int active = currentNoteIndex;
+        if (active >= 0 && active < currentGameplayUnits.Count &&
+            !string.IsNullOrEmpty(currentGameplayUnits[active].StairGroupId))
+        {
+            string group = currentGameplayUnits[active].StairGroupId;
+            stairActive = true;
+            stairNextIndex = active;
+            stairEndIndex = active;
+            while (stairEndIndex < currentGameplayUnits.Count &&
+                   currentGameplayUnits[stairEndIndex].StairGroupId == group)
+                stairEndIndex++;
+            judgmentSystem.StartStairMovement();
+            CaptureStairNote(capturedPosition);
+            return;
+        }
         pendingPressIndex = active >= 0 &&
                             active < gameplayTrial.Count &&
                             !gameplayTrial.IsResolved(active)
@@ -324,6 +343,7 @@ public class NoteProgression : MonoBehaviour
 
     private void HandleGameplayPressCanceled()
     {
+        if (stairActive) { FinishStair(); return; }
         if (!isGameplayInput || isAdvancing)
             return;
 
@@ -334,6 +354,54 @@ public class NoteProgression : MonoBehaviour
         pendingUnitDuration = 0f;
         judgmentUI.ShowTimedInputPrompt(currentGameplayUnits[currentNoteIndex].IsHold);
         noteDisplay.ResetInputProgress(currentNoteIndex);
+    }
+
+    private void HandleStairRedPress()
+    {
+        if (!stairActive || !isGameplayInput || !judgmentSystem.IsInputHeld ||
+            stairNextIndex >= stairEndIndex) return;
+        CaptureStairNote(judgmentSystem.CurrentPosition);
+    }
+
+    private void CaptureStairNote(float position)
+    {
+        if (!stairActive || stairNextIndex >= stairEndIndex) return;
+        int index = stairNextIndex;
+        currentNoteIndex = index;
+        string judgment = judgmentSystem.JudgePosition(position, notePositions[index]);
+        if (!gameplayTrial.TryRecordPlayerRelease(index, judgment, position, 0f, 0f)) return;
+        stairNextIndex++;
+        if (stairNextIndex < stairEndIndex)
+        {
+            currentNoteIndex = stairNextIndex;
+            noteDisplay.SeekToNote(currentNoteIndex);
+        }
+        judgmentUI.ShowStairPrompt(true);
+    }
+
+    private void FinishStair()
+    {
+        if (!stairActive) return;
+        stairActive = false;
+        judgmentSystem.StopStairMovement();
+        for (int i = stairNextIndex; i < stairEndIndex; i++)
+            gameplayTrial.TryRecordMissingInput(i);
+        int nextIndex = stairEndIndex;
+        pendingPressIndex = -1;
+        pendingIsHold = false;
+        isAdvancing = true;
+        if (nextIndex >= notePositions.Length)
+            CompleteGameplayInput();
+        else
+            StartCoroutine(AdvanceGameplay(nextIndex, scrollBeforeRelease: false));
+    }
+
+    private void ShowInputPrompt(int index)
+    {
+        if (!string.IsNullOrEmpty(currentGameplayUnits[index].StairGroupId))
+            judgmentUI.ShowStairPrompt(false);
+        else
+            judgmentUI.ShowTimedInputPrompt(currentGameplayUnits[index].IsHold);
     }
 
     private void HandleGameplayResolved(TimedInputTrialResult result)
@@ -466,7 +534,7 @@ public class NoteProgression : MonoBehaviour
         currentNoteIndex = nextIndex;
         judgmentUI.ClearJudgment();
         judgmentSystem.ResetJudgment(notePositions[nextIndex]);
-        judgmentUI.ShowTimedInputPrompt(currentGameplayUnits[nextIndex].IsHold);
+        ShowInputPrompt(nextIndex);
         isAdvancing = false;
     }
 
@@ -510,6 +578,8 @@ public class NoteProgression : MonoBehaviour
 
     public void StopPlayback()
     {
+        stairActive = false;
+        if (judgmentSystem != null) judgmentSystem.StopStairMovement();
         isPlaying = false;
         isAdvancing = false;
         isTimedPreview = false;
@@ -596,6 +666,7 @@ public class NoteProgression : MonoBehaviour
         float position,
         float heldSeconds)
     {
+        if (stairActive) { FinishStair(); return; }
         if (isGameplayInput && gameplayTrial != null)
         {
             // Never resolve more than one unit from the same physical release.

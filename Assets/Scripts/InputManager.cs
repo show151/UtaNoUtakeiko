@@ -77,6 +77,9 @@ public class InputManager : MonoBehaviour
     // ボタンを押し始めた瞬間
     public event Action OnPressStarted;
 
+    // The red button is Space on the existing two-button keyboard device.
+    public event Action OnRedPress;
+
     private void Awake()
     {
         lastInputAvailable = IsInputAvailable;
@@ -160,6 +163,9 @@ public class InputManager : MonoBehaviour
             CancelActivePress("input disabled in current state");
             return;
         }
+
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+            OnRedPress?.Invoke();
 
         if (isTestMode)
         {

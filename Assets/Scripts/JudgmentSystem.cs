@@ -9,6 +9,7 @@ public class JudgmentSystem : MonoBehaviour
     // Used only by the Issue #53 timed input trial to pin the press to its unit.
     public event Action<float> OnPressPositionCaptured;
     public event Action OnPressCaptureCanceled;
+    public event Action OnRedPress;
     public bool HasCapturedPress => hasCapturedPress;
     public float CapturedPosition => capturedPosition;
     public string CapturedPitchJudgment => GetPitchJudgment(capturedPosition);
@@ -38,6 +39,7 @@ public class JudgmentSystem : MonoBehaviour
         inputManager.OnPressStarted += HandlePressStarted;
         inputManager.OnPressReleased += HandlePressReleased;
         inputManager.OnPressCanceled += HandlePressCanceled;
+        inputManager.OnRedPress += HandleRedPress;
     }
 
     private void OnDisable()
@@ -47,9 +49,24 @@ public class JudgmentSystem : MonoBehaviour
             inputManager.OnPressStarted -= HandlePressStarted;
             inputManager.OnPressReleased -= HandlePressReleased;
             inputManager.OnPressCanceled -= HandlePressCanceled;
+            inputManager.OnRedPress -= HandleRedPress;
         }
 
         hasCapturedPress = false;
+    }
+
+    private void HandleRedPress() => OnRedPress?.Invoke();
+
+    public void StartStairMovement() => movingBar?.StartStairMovement();
+    public void StopStairMovement() => movingBar?.StopStairMovement();
+    public float CurrentPosition => movingBar != null ? movingBar.NormalizedPosition : 0f;
+    public string JudgePosition(float position, float target)
+    {
+        float previousTarget = targetPosition;
+        targetPosition = Mathf.Clamp01(target);
+        string result = GetPitchJudgment(position);
+        targetPosition = previousTarget;
+        return result;
     }
 
     private void HandlePressStarted()
