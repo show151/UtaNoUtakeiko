@@ -187,6 +187,13 @@ namespace UtaNoUtakeiko.Gameplay
             }
         }
 
+        public bool TryRecordMissingInput(int index)
+        {
+            if (index < 0 || index >= units.Count || IsResolved(index)) return false;
+            ResolveMiss(index);
+            return true;
+        }
+
         public void Expire(float elapsedSeconds)
         {
             for (int i = 0; i < units.Count; i++)

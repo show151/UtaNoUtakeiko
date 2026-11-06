@@ -26,5 +26,8 @@ namespace UtaNoUtakeiko.Data
 
         // ’·‰Ÿ‚µ‘ÎÛ‚©‚Ç‚¤‚©
         public bool IsHold;
+
+        // Matching non-empty IDs mark consecutive stair-hold notes.
+        public string StairGroupId;
     }
 }
