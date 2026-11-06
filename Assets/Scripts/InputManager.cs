@@ -2,6 +2,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Uta.GameFlow;
 
 public class InputManager : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class InputManager : MonoBehaviour
     // 長押しされたとき
     public event Action OnLongPress;
 
+
     // 入力可能状態が変化したときに通知する
     public event Action<bool> OnInputAvailabilityChanged;
 
@@ -19,7 +21,7 @@ public class InputManager : MonoBehaviour
 
     // Physical key/pedal state; a scoring event must never advance while held.
     public bool IsPhysicallyPressed => isTestMode
-        ? pressedKeyboard != null && pressedKeyboard.added && pressedKeyboard.spaceKey.isPressed
+        ? pressedKeyboard != null && pressedKeyboard.added && pressedKeyboard.enterKey.isPressed
         : isPressed;
 
     // 前回の入力可能状態
@@ -42,6 +44,8 @@ public class InputManager : MonoBehaviour
 
     // Reject unrealistically short key pulses (observed ~0.007-0.011s).
     [SerializeField, Min(0f)] private float minimumPressSeconds = 0.03f;
+
+    [SerializeField] private GameSessionManager sessionManager;
 
     // 最後に入力を認識した時刻
     private float lastInputTime = -1f;
@@ -117,6 +121,14 @@ public class InputManager : MonoBehaviour
         OnPressCanceled?.Invoke();
     }
 
+    private bool CanAcceptInput()
+    {
+        if (sessionManager == null)
+            return false;
+
+        return sessionManager.CurrentState != GameSessionState.Playing;
+    }
+
     private void OnApplicationFocus(bool hasFocus)
     {
         if (!hasFocus)
@@ -141,9 +153,13 @@ public class InputManager : MonoBehaviour
         bool releasedThisFrame = false;
         bool isHolding = false;
 
-        // =================================
-        // 入力取得部分
-        // =================================
+        // 以下、既存の処理
+
+        if (!CanAcceptInput())
+        {
+            CancelActivePress("input disabled in current state");
+            return;
+        }
 
         if (isTestMode)
         {
@@ -153,9 +169,9 @@ public class InputManager : MonoBehaviour
             Keyboard keyboard = isPressed ? pressedKeyboard : Keyboard.current;
             if (keyboard != null && keyboard.added)
             {
-                pressedThisFrame = keyboard.spaceKey.wasPressedThisFrame;
-                releasedThisFrame = keyboard.spaceKey.wasReleasedThisFrame;
-                isHolding = keyboard.spaceKey.isPressed;
+                pressedThisFrame = keyboard.enterKey.wasPressedThisFrame;
+                releasedThisFrame = keyboard.enterKey.wasReleasedThisFrame;
+                isHolding = keyboard.enterKey.isPressed;
 
                 if (isPressed && Keyboard.current != keyboard && logKeyboardDiagnostics)
                     Debug.LogWarning(

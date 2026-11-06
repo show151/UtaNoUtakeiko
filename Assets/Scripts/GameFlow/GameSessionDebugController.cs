@@ -21,11 +21,11 @@ namespace Uta.GameFlow
                 return;
 
             // Keep the existing convenient test shortcut for the countdown.
-            if (Keyboard.current.enterKey.wasPressedThisFrame &&
-                sessionManager.CurrentState == GameSessionState.Countdown)
-            {
-                sessionManager.TryTransition(GameSessionState.Playing);
-            }
+            //if (Keyboard.current.enterKey.wasPressedThisFrame &&
+            //    sessionManager.CurrentState == GameSessionState.Countdown)
+            //{
+            //    sessionManager.TryTransition(GameSessionState.Playing);
+            //}
 
             if (Keyboard.current.escapeKey.wasPressedThisFrame)
             {
