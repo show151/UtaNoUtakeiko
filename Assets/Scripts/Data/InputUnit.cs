@@ -13,10 +13,10 @@ namespace UtaNoUtakeiko.Data
         public float StartSeconds;
         public float EndSeconds;
         public List<string> SourceNoteIds = new List<string>();
-        // HOLD gameplay uses one real-time second per grouped source note.
+        // Production HOLD defaults to one second per input, regardless of note count.
         // Scheduled EndSeconds remains the compressed BPM preview timeline.
         public float RequiredHoldSeconds => IsHold
-            ? (HoldDurationSeconds > 0f ? HoldDurationSeconds : (SourceNoteIds == null || SourceNoteIds.Count == 0 ? 1 : SourceNoteIds.Count))
+            ? (HoldDurationSeconds > 0f ? HoldDurationSeconds : 1f)
             : 0f;
         public float HoldDurationSeconds;
         public float DurationSeconds => EndSeconds - StartSeconds;

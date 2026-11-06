@@ -130,7 +130,30 @@ namespace UtaNoUtakeiko.Tests
             Assert.AreEqual(1, units.Count);
             Assert.IsTrue(units[0].IsHold);
             Assert.AreEqual(2, units[0].SourceNoteIds.Count);
-            Assert.AreEqual(2f, units[0].RequiredHoldSeconds, 0.001f);
+            Assert.AreEqual(1f, units[0].RequiredHoldSeconds, 0.001f);
+        }
+
+        [Test]
+        public void ThreeEqualNotesRequireOnlyOneSecond()
+        {
+            var chart = new SongChart { SongId = "TEST", Bpm = 120 };
+            var section = new Section
+            {
+                SongId = "TEST", SectionId = "A", StartMeasure = 1, EndMeasure = 1,
+                Notes = new List<Note>
+                {
+                    new Note { NoteId = "A", MeasureNumber = 1, NoteIndexInMeasure = 0, TargetPitchStep = 2, DurationBeats = 1 },
+                    new Note { NoteId = "B", MeasureNumber = 1, NoteIndexInMeasure = 1, TargetPitchStep = 2, DurationBeats = 1 },
+                    new Note { NoteId = "C", MeasureNumber = 1, NoteIndexInMeasure = 2, TargetPitchStep = 2, DurationBeats = 1 }
+                }
+            };
+            chart.Sections.Add(section);
+            var plan = new PlayPlan { SongId = "TEST", SectionIds = new List<string> { "A" }, Notes = new List<Note>(section.Notes) };
+
+            Assert.IsTrue(InputUnitBuilder.TryBuild(chart, plan, out List<InputUnit> units, out string error), error);
+            Assert.AreEqual(1, units.Count);
+            Assert.AreEqual(3, units[0].SourceNoteIds.Count);
+            Assert.AreEqual(1f, units[0].RequiredHoldSeconds, 0.001f);
         }
     }
 }
