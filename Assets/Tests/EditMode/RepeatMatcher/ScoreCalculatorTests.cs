@@ -141,7 +141,7 @@ namespace UtaNoUtakeiko.Tests
         }
 
         [Test]
-        public void TimedOutNote_DoesNotCountAsMiss()
+        public void TimedOutNote_CountsAsMiss()
         {
             var results = new List<UnitResult>
             {
@@ -173,7 +173,7 @@ namespace UtaNoUtakeiko.Tests
 
             Assert.AreEqual(1, score.PerfectCount);
             Assert.AreEqual(1, score.GreatCount);
-            Assert.AreEqual(0, score.MissCount);
+            Assert.AreEqual(2, score.MissCount);
             Assert.AreEqual(4, score.UnitResults.Count);
 
             Assert.AreEqual(
