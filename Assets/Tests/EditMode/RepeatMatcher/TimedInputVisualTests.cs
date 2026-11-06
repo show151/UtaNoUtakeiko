@@ -24,7 +24,7 @@ namespace UtaNoUtakeiko.Tests
                 Assert.IsNotNull(text);
                 string content = (string)text.GetType().GetProperty("text").GetValue(text);
                 StringAssert.Contains("<color=#72EEFF>Great</color>", content);
-                StringAssert.Contains("HOLD <color=#FF90A1>Miss</color>", content);
+                StringAssert.DoesNotContain("HOLD", content);
                 Assert.Greater(label.position.y, go.transform.Find("Note_1").position.y);
                 display.SeekToNote(1);
                 Assert.IsFalse(label.gameObject.activeSelf);
@@ -33,6 +33,33 @@ namespace UtaNoUtakeiko.Tests
             {
                 Object.DestroyImmediate(go);
             }
+        }
+
+        [Test]
+        public void StairNotes_AreConnectedAndLinksDisappearWhenPassed()
+        {
+            var go = new GameObject("StairVisual_Test");
+            try
+            {
+                var display = go.AddComponent<NoteDisplay>();
+                display.InitializeInputUnits(new[] { 0.8f, 0.5f, 0.2f, 0.4f },
+                    new List<InputUnit> {
+                        new InputUnit { StairGroupId = "A" },
+                        new InputUnit { StairGroupId = "A" },
+                        new InputUnit { StairGroupId = "A" },
+                        new InputUnit() });
+                var horizontal = go.transform.Find("Note_1/StairHorizontal");
+                var vertical = go.transform.Find("Note_1/StairVertical");
+                Assert.IsNotNull(horizontal);
+                Assert.IsNotNull(vertical);
+                Assert.IsNull(go.transform.Find("Note_3/StairHorizontal"));
+                Assert.IsNull(go.transform.Find("Note_4/StairHorizontal"));
+                display.SeekToNote(1);
+                Assert.IsFalse(horizontal.GetComponent<SpriteRenderer>().enabled);
+                Assert.IsFalse(vertical.GetComponent<SpriteRenderer>().enabled);
+                Assert.IsTrue(go.transform.Find("Note_2/StairHorizontal").GetComponent<SpriteRenderer>().enabled);
+            }
+            finally { Object.DestroyImmediate(go); }
         }
 
         [Test]
