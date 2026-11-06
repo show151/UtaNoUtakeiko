@@ -39,6 +39,8 @@ namespace Uta.GameFlow
         [SerializeField] private string[] songSymbols = { "☆" };
         [SerializeField] private float countdownSeconds = 5f;
         [SerializeField, Min(0f)] private float finishDisplaySeconds = 2f;
+        [SerializeField, Min(0.1f)] private float announcementReturnSeconds = 10f;
+        private float announcementElapsed;
 
         private Canvas screenCanvas;
         private Image backgroundImage;
@@ -93,6 +95,7 @@ namespace Uta.GameFlow
 
         private void OnEnable()
         {
+            announcementElapsed = 0f;
             if (sessionManager == null)
                 sessionManager = GetComponent<GameSessionManager>();
 
@@ -148,6 +151,15 @@ namespace Uta.GameFlow
                 return;
 
             GameSessionState state = sessionManager.CurrentState;
+            if (state == GameSessionState.Announcement)
+            {
+                announcementElapsed += Time.unscaledDeltaTime;
+                if (announcementElapsed >= Mathf.Max(0.1f, announcementReturnSeconds))
+                {
+                    sessionManager.RecoverToTitle();
+                    return;
+                }
+            }
             UpdateGameplayTimer(state);
             if (state == GameSessionState.Playing && !warningPlaying &&
                 sessionManager.RemainingTime is float timeRemaining &&
@@ -205,6 +217,7 @@ namespace Uta.GameFlow
 
         private void HandleStateChanged(GameSessionState previous, GameSessionState next)
         {
+            announcementElapsed = 0f;
             lastSingingCountdown = -1;
             ApplyAudioState(next);
             ApplyState(next);
