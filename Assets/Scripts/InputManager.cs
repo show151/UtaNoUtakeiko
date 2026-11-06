@@ -126,7 +126,7 @@ public class InputManager : MonoBehaviour
         if (sessionManager == null)
             return false;
 
-        return sessionManager.CurrentState != GameSessionState.Playing;
+        return sessionManager.CurrentState != GameSessionState.Countdown;
     }
 
     private void OnApplicationFocus(bool hasFocus)
