@@ -51,25 +51,29 @@ public sealed class StairHoldDemo : MonoBehaviour
             session.Begin();
             running = true;
             bar.StartStairMovement();
+            CaptureCurrentPosition();
         }
 
         if (running && keyboard.enterKey.isPressed && keyboard.spaceKey.wasPressedThisFrame)
         {
-            int index = session.CapturedCount;
-            float position = bar.NormalizedPosition;
-            if (session.TryCapture(position))
-            {
-                float difference = Mathf.Abs(position - targets[index]);
-                judgments[index] = difference <= 0.02f ? "Perfect" :
-                    difference <= 0.05f ? "Great" : difference <= 0.10f ? "Good" :
-                    difference <= 0.20f ? "Bad" : "Miss";
-                if (session.IsComplete)
-                    FinishDemo();
-            }
+            CaptureCurrentPosition();
         }
 
         if (running && keyboard.enterKey.wasReleasedThisFrame)
             FinishDemo();
+    }
+
+    private void CaptureCurrentPosition()
+    {
+        int index = session.CapturedCount;
+        float position = bar.NormalizedPosition;
+        if (!session.TryCapture(position)) return;
+
+        float difference = Mathf.Abs(position - targets[index]);
+        judgments[index] = difference <= 0.02f ? "Perfect" :
+            difference <= 0.05f ? "Great" : difference <= 0.10f ? "Good" :
+            difference <= 0.20f ? "Bad" : "Miss";
+        if (session.IsComplete) FinishDemo();
     }
 
     private void FinishDemo()
@@ -91,7 +95,7 @@ public sealed class StairHoldDemo : MonoBehaviour
         }
         GUI.Label(new Rect(30, 20, 850, 50), "階段長押しデモ", titleStyle);
         GUI.Label(new Rect(30, 75, 900, 38), "黄色：Enterを押し続ける　赤：Spaceで判定　R：やり直し", textStyle);
-        GUI.Label(new Rect(30, 112, 900, 38), "ファ → ミ → レ → ド の順に、目標の高さで赤を押してください", textStyle);
+        GUI.Label(new Rect(30, 112, 1100, 38), "最初のファは黄色で判定、ミ → レ → ドは黄色を押したまま赤で判定", textStyle);
         float top = 180f;
         float height = Mathf.Max(200f, Mathf.Min(420f, Screen.height - top - 70f));
         float x = 100f;
