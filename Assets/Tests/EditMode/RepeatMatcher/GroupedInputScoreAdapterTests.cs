@@ -70,6 +70,8 @@ namespace UtaNoUtakeiko.Tests
 
             Assert.AreEqual(0, score.Score);
             Assert.IsTrue(score.TimedOut);
+            Assert.AreEqual(12, score.MissCount);
+            Assert.AreEqual(12, vocal.MissCount);
             Assert.AreEqual(12, score.UnitResults.Count);
             Assert.AreEqual(21, vocal.UnitResults.Count);
             Assert.IsTrue(vocal.UnitResults.All(r => !r.CapturedPitchStep.HasValue));
