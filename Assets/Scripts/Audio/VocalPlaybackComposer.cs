@@ -15,7 +15,12 @@ namespace Uta.GameFlow
             public AudioClip Clip;
             public double StartSeconds;
             public double DurationSeconds;
+            public int SectionIndex;
+            public bool FadeInAtSectionStart;
+            public bool FadeOutAtSectionEnd;
         }
+
+        private const double SectionBoundaryCrossfadeSeconds = 0.02;
 
         public static AudioClip Compose(
             SongChart chart,
@@ -60,8 +65,12 @@ namespace Uta.GameFlow
             var placements = new List<Placement>();
 
             // çƒê∂êÊÇÃäeâπïÑÇ…ëŒÇµÇƒÅAå≥ì¸óÕÇÃâπíˆÇéQè∆
-            foreach (var section in plan.Sections)
+            for (int sectionIndex = 0;
+                 sectionIndex < plan.Sections.Count;
+                 sectionIndex++)
             {
+                var section = plan.Sections[sectionIndex];
+
                 if (section.Notes == null ||
                     section.SourceNoteIds == null ||
                     section.Notes.Count != section.SourceNoteIds.Count)
@@ -137,12 +146,28 @@ namespace Uta.GameFlow
                         Clip = clip,
                         StartSeconds = startBeat * secondsPerBeat,
                         DurationSeconds =
-                            note.DurationBeats * secondsPerBeat
+                            note.DurationBeats * secondsPerBeat,
+                        SectionIndex = sectionIndex
                     });
                 }
             }
 
             // ì¸óÕÇ™É[ÉçÇÃèÍçáÇ‡ñ≥âπÇÃAudioClipÇê∂ê¨
+            // Fade only at playback-section edges. Absolute beat positions stay
+            // fixed, so these fades do not accumulate timing drift.
+            foreach (var sectionPlacements in placements.GroupBy(p => p.SectionIndex))
+            {
+                var ordered = sectionPlacements
+                    .OrderBy(p => p.StartSeconds)
+                    .ToList();
+
+                if (ordered.Count == 0)
+                    continue;
+
+                ordered[0].FadeInAtSectionStart = true;
+                ordered[ordered.Count - 1].FadeOutAtSectionEnd = true;
+            }
+
             int frequency = placements.Count > 0
                 ? placements[0].Clip.frequency
                 : AudioSettings.outputSampleRate;
@@ -197,6 +222,15 @@ namespace Uta.GameFlow
                         $"âπê∫ÇÃì«Ç›çûÇ›Ç…é∏îs: {clip.name}"
                     );
 
+                ApplySectionBoundaryCrossfade(
+                    clipSamples,
+                    clip.samples,
+                    channels,
+                    frequency,
+                    placement.FadeInAtSectionStart,
+                    placement.FadeOutAtSectionEnd
+                );
+
                 int copyFrames = Math.Min(
                     clip.samples, expectedFrames
                 );
@@ -232,6 +266,56 @@ namespace Uta.GameFlow
             );
 
             return output;
+        }
+
+        private static void ApplySectionBoundaryCrossfade(
+            float[] samples,
+            int frameCount,
+            int channels,
+            int frequency,
+            bool fadeIn,
+            bool fadeOut)
+        {
+            if (frameCount <= 0 || channels <= 0 || (!fadeIn && !fadeOut))
+                return;
+
+            int fadeFrames = Math.Min(
+                (int)Math.Round(SectionBoundaryCrossfadeSeconds * frequency),
+                frameCount / 2
+            );
+
+            if (fadeFrames <= 0)
+                return;
+
+            double denominator = Math.Max(1, fadeFrames - 1);
+
+            if (fadeIn)
+            {
+                for (int frame = 0; frame < fadeFrames; frame++)
+                {
+                    double progress = frame / denominator;
+                    float gain = (float)Math.Sin(progress * Math.PI * 0.5);
+                    int sampleIndex = frame * channels;
+
+                    for (int channel = 0; channel < channels; channel++)
+                        samples[sampleIndex + channel] *= gain;
+                }
+            }
+
+            if (fadeOut)
+            {
+                int fadeStart = frameCount - fadeFrames;
+
+                for (int frame = 0; frame < fadeFrames; frame++)
+                {
+                    double progress = frame / denominator;
+                    float gain = (float)Math.Cos(progress * Math.PI * 0.5);
+                    int sampleIndex = (fadeStart + frame) * channels;
+
+                    for (int channel = 0; channel < channels; channel++)
+                        samples[sampleIndex + channel] *= gain;
+                }
+            }
         }
     }
 }
