@@ -1103,6 +1103,10 @@ namespace Uta.GameFlow
             {
                 int count = Mathf.Max(1, difficultyLabels == null ? 0 : difficultyLabels.Length);
                 difficultyIndex = (difficultyIndex + 1) % count;
+                // Temporarily hide Normal until its chart and audio are ready.
+                // Keep the original indices so Hard still selects its own chart.
+                if (difficultyIndex == 1 && count > 2)
+                    difficultyIndex = 2;
                 if (selectionValue != null)
                     selectionValue.text = SafeLabel(difficultyLabels, difficultyIndex);
             }
