@@ -16,6 +16,7 @@ namespace UtaNoUtakeiko.Data
     public class SongChart
     {
         public string SongId;
+        public string DisplayName;
         public string DifficultyId;
 
         public int Bpm;
