@@ -135,11 +135,24 @@ namespace UtaNoUtakeiko.Gameplay
             };
 
             var noteIds = new HashSet<string>();
+            string stairGroup = null;
+            int? firstStairPitch = null;
             foreach (InputUnit unit in units)
             {
                 if (unit == null || !resultsByUnit.TryGetValue(unit.UnitId, out var result) ||
                     unit.SourceNoteIds == null || unit.SourceNoteIds.Count == 0)
                     throw new ArgumentException("Input unit mapping is invalid.");
+
+                // Change only vocal playback; retain the actual scoring results.
+                if (string.IsNullOrEmpty(unit.StairGroupId) || unit.StairGroupId != stairGroup)
+                {
+                    stairGroup = unit.StairGroupId;
+                    firstStairPitch = null;
+                    if (!string.IsNullOrEmpty(stairGroup) && result.InputState == InputState.Completed)
+                        firstStairPitch = result.CapturedPitchStep;
+                }
+                bool useFirstPitch = !string.IsNullOrEmpty(stairGroup) &&
+                    firstStairPitch.HasValue && result.InputState == InputState.TimedOut;
 
                 foreach (string sourceNoteId in unit.SourceNoteIds)
                 {
@@ -149,8 +162,8 @@ namespace UtaNoUtakeiko.Gameplay
                     expanded.UnitResults.Add(new UnitResult
                     {
                         UnitId = sourceNoteId,
-                        InputState = result.InputState,
-                        CapturedPitchStep = result.CapturedPitchStep,
+                        InputState = useFirstPitch ? InputState.Completed : result.InputState,
+                        CapturedPitchStep = useFirstPitch ? firstStairPitch : result.CapturedPitchStep,
                         Judgment = result.Judgment,
                         HoldJudgment = null,
                         BaseScore = 0,
