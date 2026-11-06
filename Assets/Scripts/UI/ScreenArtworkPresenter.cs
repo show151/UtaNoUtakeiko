@@ -476,7 +476,7 @@ namespace Uta.GameFlow
                     break;
 
                 case GameSessionState.Announcement:
-                    AddText("また遊んでね", 64, new Vector2(0.5f, 0.6f), new Vector2(1100, 120));
+                    AddText("遊んでくれてありがとう", 64, new Vector2(0.5f, 0.6f), new Vector2(1100, 120));
                     AddActionButton("タイトルへ", new Vector2(0.5f, 0.2f), Confirm);
                     break;
 
