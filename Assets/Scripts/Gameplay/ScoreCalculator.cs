@@ -110,6 +110,7 @@ namespace UtaNoUtakeiko.Gameplay
                         throw new ArgumentException(
                             $"ŠÔØ‚êŒ‹‰Ê‚ª•s³‚Å‚·: {unit.UnitId}");
                     }
+                    scoreResult.MissCount++;
                 }
                 else if (unit.InputState == InputState.Completed)
                 {
