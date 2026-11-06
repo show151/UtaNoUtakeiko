@@ -2,7 +2,8 @@
   "name": "Uta.TimedInput.PlayModeTests",
   "rootNamespace": "Uta.Tests",
   "references": [
-    "Uta.Runtime"
+    "Uta.Runtime",
+    "Uta.GameFlow.Core"
   ],
   "optionalUnityReferences": [
     "TestAssemblies"
