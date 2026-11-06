@@ -1119,7 +1119,13 @@ namespace Uta.GameFlow
             if (sessionManager == null)
                 return;
 
-            PlayEffect(decisionSound);
+            // ゲームプレイ中・リザルト以外で効果音を再生
+            if (sessionManager.CurrentState != GameSessionState.Playing &&
+                sessionManager.CurrentState != GameSessionState.Playback &&
+                sessionManager.CurrentState != GameSessionState.Countdown)
+            {
+                PlayEffect(decisionSound);
+            }
 
             switch (sessionManager.CurrentState)
             {
