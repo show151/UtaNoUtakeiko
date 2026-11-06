@@ -1,0 +1,940 @@
+{
+  "SongId": "SENBONZAKURA",
+  "DisplayName": "千本桜",
+  "DifficultyId": "HARD",
+  "Bpm": 154,
+  "TimeSignatureNumerator": 4,
+  "TimeSignatureDenominator": 4,
+  "PitchBaseMidi": 55,
+  "PitchStepCount": 15,
+  "PickupBeats": 1,
+  "Sections": [
+    {
+      "SongId": "SENBONZAKURA",
+      "SectionId": "CHORUS",
+      "StartMeasure": 1,
+      "EndMeasure": 17,
+      "Notes": [
+        {
+          "NoteId": "SENBON_M16_N01",
+          "MeasureNumber": 1,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 2,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M16_N02",
+          "MeasureNumber": 1,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M17_N01",
+          "MeasureNumber": 2,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M17_N02",
+          "MeasureNumber": 2,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M17_N03",
+          "MeasureNumber": 2,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M17_N04",
+          "MeasureNumber": 2,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M17_N05",
+          "MeasureNumber": 2,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M18_N01",
+          "MeasureNumber": 3,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 12,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M18_N02",
+          "MeasureNumber": 3,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 14,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M18_N03",
+          "MeasureNumber": 3,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M18_N04",
+          "MeasureNumber": 3,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M18_N05",
+          "MeasureNumber": 3,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M18_N06",
+          "MeasureNumber": 3,
+          "NoteIndexInMeasure": 5,
+          "TargetPitchStep": 2,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N01"
+        },
+        {
+          "NoteId": "SENBON_M18_N07",
+          "MeasureNumber": 3,
+          "NoteIndexInMeasure": 6,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N02"
+        },
+        {
+          "NoteId": "SENBON_M19_N01",
+          "MeasureNumber": 4,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N01"
+        },
+        {
+          "NoteId": "SENBON_M19_N02",
+          "MeasureNumber": 4,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N02"
+        },
+        {
+          "NoteId": "SENBON_M19_N03",
+          "MeasureNumber": 4,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N03"
+        },
+        {
+          "NoteId": "SENBON_M19_N04",
+          "MeasureNumber": 4,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N04"
+        },
+        {
+          "NoteId": "SENBON_M19_N05",
+          "MeasureNumber": 4,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N05"
+        },
+        {
+          "NoteId": "SENBON_M20_N01",
+          "MeasureNumber": 5,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 10,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "StairGroupId": "STAIR_A"
+        },
+        {
+          "NoteId": "SENBON_M20_N02",
+          "MeasureNumber": 5,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "StairGroupId": "STAIR_A"
+        },
+        {
+          "NoteId": "SENBON_M20_N03",
+          "MeasureNumber": 5,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "StairGroupId": "STAIR_A"
+        },
+        {
+          "NoteId": "SENBON_M20_N04",
+          "MeasureNumber": 5,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "StairGroupId": "STAIR_A"
+        },
+        {
+          "NoteId": "SENBON_M20_N05",
+          "MeasureNumber": 5,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M20_N06",
+          "MeasureNumber": 5,
+          "NoteIndexInMeasure": 5,
+          "TargetPitchStep": 2,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N01"
+        },
+        {
+          "NoteId": "SENBON_M20_N07",
+          "MeasureNumber": 5,
+          "NoteIndexInMeasure": 6,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N02"
+        },
+        {
+          "NoteId": "SENBON_M21_N01",
+          "MeasureNumber": 6,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N01"
+        },
+        {
+          "NoteId": "SENBON_M21_N02",
+          "MeasureNumber": 6,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N02"
+        },
+        {
+          "NoteId": "SENBON_M21_N03",
+          "MeasureNumber": 6,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N03"
+        },
+        {
+          "NoteId": "SENBON_M21_N04",
+          "MeasureNumber": 6,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N04"
+        },
+        {
+          "NoteId": "SENBON_M21_N05",
+          "MeasureNumber": 6,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N05"
+        },
+        {
+          "NoteId": "SENBON_M22_N01",
+          "MeasureNumber": 7,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 12,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N01"
+        },
+        {
+          "NoteId": "SENBON_M22_N02",
+          "MeasureNumber": 7,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 14,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N02"
+        },
+        {
+          "NoteId": "SENBON_M22_N03",
+          "MeasureNumber": 7,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N03"
+        },
+        {
+          "NoteId": "SENBON_M22_N04",
+          "MeasureNumber": 7,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N04"
+        },
+        {
+          "NoteId": "SENBON_M22_N05",
+          "MeasureNumber": 7,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N05"
+        },
+        {
+          "NoteId": "SENBON_M22_N06",
+          "MeasureNumber": 7,
+          "NoteIndexInMeasure": 5,
+          "TargetPitchStep": 2,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N01"
+        },
+        {
+          "NoteId": "SENBON_M22_N07",
+          "MeasureNumber": 7,
+          "NoteIndexInMeasure": 6,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N02"
+        },
+        {
+          "NoteId": "SENBON_M23_N01",
+          "MeasureNumber": 8,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 10,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N01"
+        },
+        {
+          "NoteId": "SENBON_M23_N02",
+          "MeasureNumber": 8,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N02"
+        },
+        {
+          "NoteId": "SENBON_M23_N03",
+          "MeasureNumber": 8,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N03"
+        },
+        {
+          "NoteId": "SENBON_M23_N04",
+          "MeasureNumber": 8,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N04"
+        },
+        {
+          "NoteId": "SENBON_M24_N01",
+          "MeasureNumber": 9,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M24_N02",
+          "MeasureNumber": 9,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M24_N03",
+          "MeasureNumber": 9,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 4,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M24_N04",
+          "MeasureNumber": 9,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 0,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M24_N05",
+          "MeasureNumber": 9,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 2,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M24_N06",
+          "MeasureNumber": 9,
+          "NoteIndexInMeasure": 5,
+          "TargetPitchStep": 2,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N01"
+        },
+        {
+          "NoteId": "SENBON_M24_N07",
+          "MeasureNumber": 9,
+          "NoteIndexInMeasure": 6,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N02"
+        },
+        {
+          "NoteId": "SENBON_M25_N01",
+          "MeasureNumber": 10,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N01"
+        },
+        {
+          "NoteId": "SENBON_M25_N02",
+          "MeasureNumber": 10,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N02"
+        },
+        {
+          "NoteId": "SENBON_M25_N03",
+          "MeasureNumber": 10,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N03"
+        },
+        {
+          "NoteId": "SENBON_M25_N04",
+          "MeasureNumber": 10,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N04"
+        },
+        {
+          "NoteId": "SENBON_M25_N05",
+          "MeasureNumber": 10,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N05"
+        },
+        {
+          "NoteId": "SENBON_M26_N01",
+          "MeasureNumber": 11,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 12,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N01"
+        },
+        {
+          "NoteId": "SENBON_M26_N02",
+          "MeasureNumber": 11,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 14,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N02"
+        },
+        {
+          "NoteId": "SENBON_M26_N03",
+          "MeasureNumber": 11,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N03"
+        },
+        {
+          "NoteId": "SENBON_M26_N04",
+          "MeasureNumber": 11,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N04"
+        },
+        {
+          "NoteId": "SENBON_M26_N05",
+          "MeasureNumber": 11,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N05"
+        },
+        {
+          "NoteId": "SENBON_M26_N06",
+          "MeasureNumber": 11,
+          "NoteIndexInMeasure": 5,
+          "TargetPitchStep": 2,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N01"
+        },
+        {
+          "NoteId": "SENBON_M26_N07",
+          "MeasureNumber": 11,
+          "NoteIndexInMeasure": 6,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N02"
+        },
+        {
+          "NoteId": "SENBON_M27_N01",
+          "MeasureNumber": 12,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N01"
+        },
+        {
+          "NoteId": "SENBON_M27_N02",
+          "MeasureNumber": 12,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N02"
+        },
+        {
+          "NoteId": "SENBON_M27_N03",
+          "MeasureNumber": 12,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N03"
+        },
+        {
+          "NoteId": "SENBON_M27_N04",
+          "MeasureNumber": 12,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N04"
+        },
+        {
+          "NoteId": "SENBON_M27_N05",
+          "MeasureNumber": 12,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N05"
+        },
+        {
+          "NoteId": "SENBON_M28_N01",
+          "MeasureNumber": 13,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 10,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N01"
+        },
+        {
+          "NoteId": "SENBON_M28_N02",
+          "MeasureNumber": 13,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N02"
+        },
+        {
+          "NoteId": "SENBON_M28_N03",
+          "MeasureNumber": 13,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N03"
+        },
+        {
+          "NoteId": "SENBON_M28_N04",
+          "MeasureNumber": 13,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N04"
+        },
+        {
+          "NoteId": "SENBON_M28_N05",
+          "MeasureNumber": 13,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N05"
+        },
+        {
+          "NoteId": "SENBON_M28_N06",
+          "MeasureNumber": 13,
+          "NoteIndexInMeasure": 5,
+          "TargetPitchStep": 2,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N01"
+        },
+        {
+          "NoteId": "SENBON_M28_N07",
+          "MeasureNumber": 13,
+          "NoteIndexInMeasure": 6,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N02"
+        },
+        {
+          "NoteId": "SENBON_M29_N01",
+          "MeasureNumber": 14,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N01"
+        },
+        {
+          "NoteId": "SENBON_M29_N02",
+          "MeasureNumber": 14,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.75,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N02"
+        },
+        {
+          "NoteId": "SENBON_M29_N03",
+          "MeasureNumber": 14,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N03"
+        },
+        {
+          "NoteId": "SENBON_M29_N04",
+          "MeasureNumber": 14,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N04"
+        },
+        {
+          "NoteId": "SENBON_M29_N05",
+          "MeasureNumber": 14,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M17_N05"
+        },
+        {
+          "NoteId": "SENBON_M30_N01",
+          "MeasureNumber": 15,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 12,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N01"
+        },
+        {
+          "NoteId": "SENBON_M30_N02",
+          "MeasureNumber": 15,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 14,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N02"
+        },
+        {
+          "NoteId": "SENBON_M30_N03",
+          "MeasureNumber": 15,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N03"
+        },
+        {
+          "NoteId": "SENBON_M30_N04",
+          "MeasureNumber": 15,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N04"
+        },
+        {
+          "NoteId": "SENBON_M30_N05",
+          "MeasureNumber": 15,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M18_N05"
+        },
+        {
+          "NoteId": "SENBON_M30_N06",
+          "MeasureNumber": 15,
+          "NoteIndexInMeasure": 5,
+          "TargetPitchStep": 2,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N01"
+        },
+        {
+          "NoteId": "SENBON_M30_N07",
+          "MeasureNumber": 15,
+          "NoteIndexInMeasure": 6,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M16_N02"
+        },
+        {
+          "NoteId": "SENBON_M31_N01",
+          "MeasureNumber": 16,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 10,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N01"
+        },
+        {
+          "NoteId": "SENBON_M31_N02",
+          "MeasureNumber": 16,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 9,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N02"
+        },
+        {
+          "NoteId": "SENBON_M31_N03",
+          "MeasureNumber": 16,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 7,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N03"
+        },
+        {
+          "NoteId": "SENBON_M31_N04",
+          "MeasureNumber": 16,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 5,
+          "DurationBeats": 1,
+          "IsRest": false,
+          "IsHold": false,
+          "RepeatSourceNoteId": "SENBON_M20_N04"
+        },
+        {
+          "NoteId": "SENBON_M32_N01",
+          "MeasureNumber": 17,
+          "NoteIndexInMeasure": 0,
+          "TargetPitchStep": 7,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M32_N02",
+          "MeasureNumber": 17,
+          "NoteIndexInMeasure": 1,
+          "TargetPitchStep": 5,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M32_N03",
+          "MeasureNumber": 17,
+          "NoteIndexInMeasure": 2,
+          "TargetPitchStep": 9,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M32_N04",
+          "MeasureNumber": 17,
+          "NoteIndexInMeasure": 3,
+          "TargetPitchStep": 12,
+          "DurationBeats": 0.5,
+          "IsRest": false,
+          "IsHold": false
+        },
+        {
+          "NoteId": "SENBON_M32_N05",
+          "MeasureNumber": 17,
+          "NoteIndexInMeasure": 4,
+          "TargetPitchStep": 14,
+          "DurationBeats": 2,
+          "IsRest": false,
+          "IsHold": false
+        }
+      ]
+    }
+  ],
+  "RepeatMappings": [],
+  "LyricLines": []
+}

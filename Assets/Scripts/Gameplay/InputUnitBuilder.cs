@@ -64,6 +64,17 @@ namespace UtaNoUtakeiko.Gameplay
                         return false;
                     }
 
+                    // Omitted note-level repeats reuse an earlier result and require no input.
+                    if (!note.IsRest && !playableIds.Contains(note.NoteId))
+                    {
+                        if (string.IsNullOrEmpty(note.RepeatSourceNoteId))
+                        {
+                            error = "入力対象の音符が欠落しています: " + note.NoteId;
+                            return false;
+                        }
+                        lastWasRest = true;
+                        continue;
+                    }
                     double startBeat = currentBeat;
                     currentBeat += note.DurationBeats;
                     float start = (float)(startBeat * 60.0 / chart.Bpm * TimeScale);

@@ -29,5 +29,8 @@ namespace UtaNoUtakeiko.Data
 
         // Matching non-empty IDs mark consecutive stair-hold notes.
         public string StairGroupId;
+
+        // Optional direct source for repeated input at another playback position.
+        public string RepeatSourceNoteId;
     }
 }

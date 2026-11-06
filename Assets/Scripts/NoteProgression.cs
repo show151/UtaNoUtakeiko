@@ -59,6 +59,8 @@ public class NoteProgression : MonoBehaviour
     private AudioSource judgmentAudio;
     private AudioClip perfectSound, greatSound, goodSound, badSound, missSound;
     private bool resolvingSessionTimeout;
+
+    public void SetPitchStepCount(int count) => judgmentSystem?.SetPitchStepCount(count);
     private bool stairActive;
     private int stairNextIndex;
     private int stairEndIndex;

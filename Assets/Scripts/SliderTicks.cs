@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class SliderTicks : MonoBehaviour
 {
@@ -27,18 +28,30 @@ public class SliderTicks : MonoBehaviour
     [SerializeField] private float glowSizeMultiplier = 1.5f;
 
     private Coroutine glowCoroutine;
+    private readonly List<GameObject> generatedTicks = new List<GameObject>();
 
     private SpriteRenderer[] tickRenderers;
     private SpriteRenderer[] glowRenderers;
 
     private void Start()
     {
+        ConfigureTickCount(tickCount);
+    }
+
+    public void ConfigureTickCount(int count)
+    {
+        count = Mathf.Max(2, count);
+        if (tickRenderers != null && tickCount == count) return;
+        if (glowCoroutine != null) { StopCoroutine(glowCoroutine); glowCoroutine = null; }
+        foreach (var child in generatedTicks) if (child != null) Destroy(child);
+        generatedTicks.Clear();
+        tickCount = count;
         if (tickSprite == null || dividerSprite == null)
         {
             Debug.LogError("Spriteが未設定です。", this);
             return;
         }
-        softGlowSprite = CreateSoftGlowSprite();
+        if (softGlowSprite == null) softGlowSprite = CreateSoftGlowSprite();
 
         tickRenderers = new SpriteRenderer[tickCount];
         glowRenderers = new SpriteRenderer[tickCount];
@@ -61,6 +74,7 @@ public class SliderTicks : MonoBehaviour
 
             // 発光用Sprite
             GameObject glow = new GameObject($"Glow_{i}");
+            generatedTicks.Add(glow);
             glow.transform.SetParent(transform);
             glow.transform.position = new Vector3(tickX, y, 0f);
 
@@ -87,6 +101,7 @@ public class SliderTicks : MonoBehaviour
 
             // 通常のブロック
             GameObject tick = new GameObject($"Tick_{i}");
+            generatedTicks.Add(tick);
             tick.transform.SetParent(transform);
             tick.transform.position =
                 new Vector3(tickX, y, 0f);
@@ -114,6 +129,7 @@ public class SliderTicks : MonoBehaviour
 
             GameObject divider =
                 new GameObject($"Divider_{i}");
+            generatedTicks.Add(divider);
 
             divider.transform.SetParent(transform);
             divider.transform.position =

@@ -610,8 +610,7 @@ namespace Uta.GameFlow
                         elapsedBeats = 0d;
                     }
 
-                    float startSeconds = (float)(
-                        ((note.MeasureNumber - 1) * beatsPerMeasure + elapsedBeats)
+                    float startSeconds = (float)(SongTiming.StartBeat(chart, note.MeasureNumber, elapsedBeats)
                         * secondsPerBeat);
                     elapsedBeats += note.DurationBeats;
                     float endSeconds = startSeconds + note.DurationBeats * secondsPerBeat;
@@ -684,7 +683,11 @@ namespace Uta.GameFlow
                     60f / chart.Bpm *
                     chart.TimeSignatureNumerator * 4f /
                     chart.TimeSignatureDenominator;
-                activeMeasure = Mathf.FloorToInt(now / secondsPerMeasure) + 1;
+                float elapsedBeats = now * chart.Bpm / 60f;
+                float beatsPerMeasure = chart.TimeSignatureNumerator * 4f / chart.TimeSignatureDenominator;
+                activeMeasure = chart.PickupBeats > 0f && elapsedBeats >= chart.PickupBeats
+                    ? Mathf.FloorToInt((elapsedBeats - chart.PickupBeats) / beatsPerMeasure) + 2
+                    : chart.PickupBeats > 0f ? 1 : Mathf.FloorToInt(now / secondsPerMeasure) + 1;
                 if (chart.LyricLines != null)
                 {
                     foreach (var line in chart.LyricLines)
@@ -711,7 +714,7 @@ namespace Uta.GameFlow
 
                 float y = visual.Note != null && visual.Note.IsRest
                     ? 80f
-                    : PitchStepToStaffOffset(visual.PitchStep);
+                    : PitchStepToStaffOffset(visual.PitchStep + (chart != null && chart.PitchBaseMidi > 0 ? chart.PitchBaseMidi - 60 : 0));
                 visual.Text.rectTransform.anchoredPosition =
                     new Vector2(x - centerX, y);
                 bool current = now >= visual.StartSeconds && now < visual.EndSeconds;
@@ -741,11 +744,11 @@ namespace Uta.GameFlow
 
             if (playbackTargetPitchText != null)
                 playbackTargetPitchText.text = activeTargetNote != null
-                    ? PitchStepLabel(activeTargetNote.TargetPitchStep)
+                    ? PitchStepLabel(activeTargetNote.TargetPitchStep + (chart != null && chart.PitchBaseMidi > 0 ? chart.PitchBaseMidi - 60 : 0))
                     : "—";
             if (playbackInputPitchText != null)
                 playbackInputPitchText.text = activeInputPitchStep.HasValue
-                    ? PitchStepLabel(activeInputPitchStep.Value)
+                    ? PitchStepLabel(activeInputPitchStep.Value + (chart != null && chart.PitchBaseMidi > 0 ? chart.PitchBaseMidi - 60 : 0))
                     : "—";
 
             if (string.IsNullOrEmpty(activeLyric))
@@ -1131,6 +1134,7 @@ namespace Uta.GameFlow
                     sessionManager.TryTransition(GameSessionState.DifficultySelect);
                     break;
                 case GameSessionState.DifficultySelect:
+                    if (playConnector != null) playConnector.SelectDifficulty(difficultyIndex);
                     sessionManager.TryTransition(GameSessionState.Countdown);
                     break;
                 case GameSessionState.SongSelect:
