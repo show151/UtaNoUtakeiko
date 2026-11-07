@@ -1440,6 +1440,10 @@ namespace Uta.GameFlow
             if (judgment == JudgmentType.Perfect) return singingGoodCharacter;
             if (judgment == JudgmentType.Bad || judgment == JudgmentType.Miss)
                 return singingBadCharacter;
+            // A scene already open in the editor may not yet have the new
+            // serialized field assigned. Always load the singing artwork first.
+            if (singingNormalCharacter == null)
+                singingNormalCharacter = Resources.Load<Sprite>("character_singing_normal");
             return singingNormalCharacter != null ? singingNormalCharacter : normalCharacter;
         }
     }

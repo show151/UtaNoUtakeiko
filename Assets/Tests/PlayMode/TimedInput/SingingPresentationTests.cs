@@ -39,6 +39,20 @@ namespace Uta.Tests
         }
 
         [Test]
+        public void SingingArtworkLoadsWhenSceneHasNoSerializedReference()
+        {
+            var obj = new GameObject("presenter");
+            obj.SetActive(false);
+            var presenter = obj.AddComponent<ScreenArtworkPresenter>();
+            var expected = Resources.Load<Sprite>("character_singing_normal");
+            Assert.IsNotNull(expected, "The normal singing sprite must be included in Resources.");
+            var method = typeof(ScreenArtworkPresenter).GetMethod("SingingCharacterFor", Private);
+            Assert.AreSame(expected, method.Invoke(presenter, new object[] { JudgmentType.Great }));
+            Assert.AreSame(expected, method.Invoke(presenter, new object[] { JudgmentType.Good }));
+            Object.DestroyImmediate(obj);
+        }
+
+        [Test]
         public void PitchDifferenceIncludesDirectionAndSemitone()
         {
             var method = typeof(ScreenArtworkPresenter).GetMethod("PitchDifferenceLabel", BindingFlags.NonPublic | BindingFlags.Static);
