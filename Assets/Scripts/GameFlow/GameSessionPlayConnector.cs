@@ -24,6 +24,7 @@ namespace Uta.GameFlow
         {
             selectedDifficultyIndex = index;
             if (sessionManager != null) sessionManager.SetHardDifficulty(index == 2);
+            if (noteProgression != null) noteProgression.SetBarSpeedMultiplier(index == 2 ? 1.15f : 1f);
         }
 
         // C4 = 0、A4 = 9

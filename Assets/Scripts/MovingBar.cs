@@ -11,6 +11,7 @@ public class MovingBar : MonoBehaviour
     private int direction = 1;
     private bool isMoving = true;
     private bool isStairMode;
+    private float difficultySpeedMultiplier = 1f;
     private Vector3 initialPosition;
 
     public float NormalizedPosition =>
@@ -29,7 +30,8 @@ public class MovingBar : MonoBehaviour
         if (!isMoving) return;
 
         Vector3 position = transform.position;
-        position.y += direction * speed * (isStairMode ? stairSpeedMultiplier : 1f) * Time.deltaTime;
+        position.y += direction * speed * difficultySpeedMultiplier *
+            (isStairMode ? stairSpeedMultiplier : 1f) * Time.deltaTime;
 
         if (position.y >= maxY)
         {
@@ -55,6 +57,9 @@ public class MovingBar : MonoBehaviour
         isMoving = false;
         isStairMode = false;
     }
+
+    public void SetDifficultySpeedMultiplier(float multiplier) =>
+        difficultySpeedMultiplier = Mathf.Max(0.01f, multiplier);
 
     public void StopMovement()
     {

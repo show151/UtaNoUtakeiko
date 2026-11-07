@@ -61,6 +61,7 @@ public class NoteProgression : MonoBehaviour
     private bool resolvingSessionTimeout;
 
     public void SetPitchStepCount(int count) => judgmentSystem?.SetPitchStepCount(count);
+    public void SetBarSpeedMultiplier(float multiplier) => judgmentSystem?.SetBarSpeedMultiplier(multiplier);
     private bool stairActive;
     private int stairNextIndex;
     private int stairEndIndex;
