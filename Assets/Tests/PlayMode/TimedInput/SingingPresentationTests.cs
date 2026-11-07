@@ -53,6 +53,19 @@ namespace Uta.Tests
         }
 
         [Test]
+        public void EverySemitoneHasItsOwnAscendingStaffHeight()
+        {
+            var method = typeof(ScreenArtworkPresenter).GetMethod("PitchStepToStaffOffset", BindingFlags.NonPublic | BindingFlags.Static);
+            float previous = (float)method.Invoke(null, new object[] { -13 });
+            for (int pitch = -12; pitch <= 24; pitch++)
+            {
+                float current = (float)method.Invoke(null, new object[] { pitch });
+                Assert.Greater(current, previous, $"Pitch step {pitch} must be higher than the previous semitone.");
+                previous = current;
+            }
+        }
+
+        [Test]
         public void PitchDifferenceIncludesDirectionAndSemitone()
         {
             var method = typeof(ScreenArtworkPresenter).GetMethod("PitchDifferenceLabel", BindingFlags.NonPublic | BindingFlags.Static);

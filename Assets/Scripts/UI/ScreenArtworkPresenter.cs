@@ -542,7 +542,7 @@ namespace Uta.GameFlow
                 new Vector2(0.5f, 0.88f), new Vector2(380, 48));
             targetLegend.color = new Color(0.92f, 0.96f, 1f, 1f);
             var inputLegend = CreateChildText(
-                "Player Pitch Legend", pitchPanel, "● 入力結果", 26,
+                "Player Pitch Legend", pitchPanel, "◆ 入力結果", 26,
                 new Vector2(0.5f, 0.54f), new Vector2(380, 48));
             inputLegend.color = new Color(1f, 0.78f, 0.2f, 1f);
 
@@ -652,7 +652,7 @@ namespace Uta.GameFlow
                     {
                         AddPlaybackNoteVisual(
                             note, startSeconds, endSeconds,
-                            captured.CapturedPitchStep.Value, true, "●", 42,
+                            captured.CapturedPitchStep.Value, true, "◆", 42,
                             "Player Input Pitch");
                     }
                 }
@@ -743,14 +743,8 @@ namespace Uta.GameFlow
                 float y = visual.Note != null && visual.Note.IsRest
                     ? 80f
                     : PitchStepToStaffOffset(visual.PitchStep + (chart != null && chart.PitchBaseMidi > 0 ? chart.PitchBaseMidi - 60 : 0));
-                if (visual.Note != null && !visual.Note.IsRest)
-                {
-                    int displayPitch = visual.PitchStep +
-                        (chart != null && chart.PitchBaseMidi > 0 ? chart.PitchBaseMidi - 60 : 0);
-                    visual.Text.text = PitchStepLabel(displayPitch).Contains("♯") ? "♯●" : "●";
-                }
                 visual.Text.rectTransform.anchoredPosition =
-                    new Vector2(x - centerX, y);
+                    new Vector2(x - centerX + (visual.IsPlayerPitch ? 24f : 0f), y);
                 bool current = now >= visual.StartSeconds && now < visual.EndSeconds;
                 if (visual.IsPlayerPitch)
                     visual.Text.gameObject.SetActive(visible && current);
@@ -845,9 +839,10 @@ namespace Uta.GameFlow
                 default: diatonicStep = 6; break;
             }
 
-            // Place C4 on the bottom line for a compact, readable display.
-            // This shifts only the visual; the actual pitch stays unchanged.
-            return (octave * 7 + diatonicStep) * 20f;
+            // Place chromatic notes midway between the neighbouring natural notes.
+            bool isSharp = pitchClass == 1 || pitchClass == 3 || pitchClass == 6 ||
+                           pitchClass == 8 || pitchClass == 10;
+            return (octave * 7 + diatonicStep) * 20f + (isSharp ? 10f : 0f);
         }
 
         private static string PitchStepLabel(int semitoneStep)
@@ -901,7 +896,7 @@ namespace Uta.GameFlow
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(0f, 0f);
                 rect.pivot = new Vector2(0f, 0f);
-                rect.anchoredPosition = new Vector2(150f, -45f);
+                rect.anchoredPosition = new Vector2(150f, -125f);
                 rect.sizeDelta = new Vector2(650f, 840f);
             }
             else if (state == GameSessionState.DifficultySelect ||
@@ -909,7 +904,7 @@ namespace Uta.GameFlow
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
                 rect.pivot = new Vector2(1f, 0f);
-                rect.anchoredPosition = new Vector2(-140f, 180f);
+                rect.anchoredPosition = new Vector2(-110f, 150f);
                 rect.sizeDelta = new Vector2(630f, 820f);
             }
             else if (state == GameSessionState.Result)
