@@ -578,6 +578,14 @@ public class NoteProgression : MonoBehaviour
         OnGameplayCompleted?.Invoke();
     }
 
+    // Clear the previous run before the countdown reveals the play field.
+    public void PrepareForCountdown()
+    {
+        StopPlayback();
+        if (noteDisplay != null) noteDisplay.Initialize(Array.Empty<float>());
+        if (judgmentSystem != null) judgmentSystem.ResetMovingBarForCountdown();
+    }
+
     public void StopPlayback()
     {
         stairActive = false;

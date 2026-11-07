@@ -89,6 +89,9 @@ namespace Uta.GameFlow
                     noteProgression.StopPlayback();
             }
 
+            if (next == GameSessionState.Countdown)
+                noteProgression?.PrepareForCountdown();
+
             if (next != GameSessionState.Playing)
                 return;
 

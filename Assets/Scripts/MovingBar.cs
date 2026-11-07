@@ -11,12 +11,14 @@ public class MovingBar : MonoBehaviour
     private int direction = 1;
     private bool isMoving = true;
     private bool isStairMode;
+    private Vector3 initialPosition;
 
     public float NormalizedPosition =>
         Mathf.InverseLerp(minY, maxY, transform.position.y);
 
     private void Awake()
     {
+        initialPosition = transform.position;
         // Cover scenes and dynamically created bars without an Inspector setup.
         if (GetComponent<SpriteRenderer>() != null && GetComponent<MovingBarOutline>() == null)
             gameObject.AddComponent<MovingBarOutline>();
@@ -41,6 +43,14 @@ public class MovingBar : MonoBehaviour
         }
 
         transform.position = position;
+    }
+
+    public void ResetForCountdown()
+    {
+        transform.position = initialPosition;
+        direction = 1;
+        isMoving = false;
+        isStairMode = false;
     }
 
     public void StopMovement()
