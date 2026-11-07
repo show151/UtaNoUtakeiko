@@ -962,7 +962,7 @@ namespace Uta.GameFlow
                 "Uta Result Message", messagePanel, display.Message, 30,
                 new Vector2(0.5f, 0.42f), new Vector2(590, 145));
 
-            AddActionButton("ランキングへ　›", new Vector2(0.33f, 0.095f), Confirm);
+            AddActionButton("次へ　›", new Vector2(0.33f, 0.095f), Confirm);
         }
 
         private void BuildRanking()
@@ -1154,7 +1154,8 @@ namespace Uta.GameFlow
                     sessionManager.TryTransition(GameSessionState.Countdown);
                     break;
                 case GameSessionState.Result:
-                    sessionManager.TryTransition(GameSessionState.Ranking);
+                    // Temporarily skip the ranking screen.
+                    sessionManager.TryTransition(GameSessionState.Announcement);
                     break;
                 case GameSessionState.Ranking:
                     if (playerNameInput != null)
