@@ -744,7 +744,7 @@ namespace Uta.GameFlow
                     ? 80f
                     : PitchStepToStaffOffset(visual.PitchStep + (chart != null && chart.PitchBaseMidi > 0 ? chart.PitchBaseMidi - 60 : 0));
                 visual.Text.rectTransform.anchoredPosition =
-                    new Vector2(x - centerX + (visual.IsPlayerPitch ? 24f : 0f), y);
+                    new Vector2(x - centerX, y);
                 bool current = now >= visual.StartSeconds && now < visual.EndSeconds;
                 if (visual.IsPlayerPitch)
                     visual.Text.gameObject.SetActive(visible && current);
