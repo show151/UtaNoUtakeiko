@@ -670,11 +670,15 @@ namespace Uta.GameFlow
                 : 0f;
             float panelWidth = playbackScorePanel.rect.width;
             float centerX = panelWidth * 0.5f;
-            const float pixelsPerSecond = 86f;
             int activeMeasure = 1;
             string activeLyric = "";
 
             var chart = playConnector != null ? playConnector.CurrentSongChart : null;
+            // The faster song contains many eighth notes; give them enough room
+            // to remain legible without changing their playback timing.
+            float pixelsPerSecond = chart != null && chart.SongId == "SENBONZAKURA"
+                ? chart.Bpm * (96f / 60f)
+                : 86f;
             if (chart != null && chart.Bpm > 0 &&
                 chart.TimeSignatureNumerator > 0 &&
                 chart.TimeSignatureDenominator > 0)
