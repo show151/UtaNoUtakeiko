@@ -15,6 +15,13 @@ public class MovingBar : MonoBehaviour
     public float NormalizedPosition =>
         Mathf.InverseLerp(minY, maxY, transform.position.y);
 
+    private void Awake()
+    {
+        // Cover scenes and dynamically created bars without an Inspector setup.
+        if (GetComponent<SpriteRenderer>() != null && GetComponent<MovingBarOutline>() == null)
+            gameObject.AddComponent<MovingBarOutline>();
+    }
+
     private void Update()
     {
         if (!isMoving) return;
