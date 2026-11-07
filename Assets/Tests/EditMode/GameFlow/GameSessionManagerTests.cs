@@ -55,6 +55,16 @@ namespace Uta.Tests
         }
 
         [Test]
+        public void Result_CanSkipRankingAndReachAnnouncement()
+        {
+            foreach (var state in new[] { GameSessionState.DifficultySelect, GameSessionState.Countdown,
+                GameSessionState.Playing, GameSessionState.GameFinished, GameSessionState.Playback,
+                GameSessionState.Result, GameSessionState.Announcement })
+                Assert.IsTrue(manager.TryTransition(state), "Failed to reach " + state);
+            Assert.AreEqual(GameSessionState.Announcement, manager.CurrentState);
+        }
+
+        [Test]
         public void InvalidTransition_IsRejected()
         {
             bool result = manager.TryTransition(

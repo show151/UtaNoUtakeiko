@@ -19,6 +19,14 @@ namespace Uta.GameFlow
         [SerializeField]
         private TextAsset songChartJson;
 
+        private int selectedDifficultyIndex;
+        public void SelectDifficulty(int index)
+        {
+            selectedDifficultyIndex = index;
+            if (sessionManager != null) sessionManager.SetHardDifficulty(index == 2);
+            if (noteProgression != null) noteProgression.SetBarSpeedMultiplier(index == 2 ? 1.15f : 1f);
+        }
+
         // C4 = 0、A4 = 9
         // 画面位置への変換範囲（暫定）
         [SerializeField]
@@ -86,6 +94,9 @@ namespace Uta.GameFlow
                     noteProgression.StopPlayback();
             }
 
+            if (next == GameSessionState.Countdown)
+                noteProgression?.PrepareForCountdown();
+
             if (next != GameSessionState.Playing)
                 return;
 
@@ -122,7 +133,9 @@ namespace Uta.GameFlow
 
             CurrentSongChart = null;
 
-            if (songChartJson == null)
+            TextAsset selectedChart = selectedDifficultyIndex == 2
+                ? Resources.Load<TextAsset>("SongCharts/senbon_hard") : songChartJson;
+            if (selectedChart == null)
             {
                 Debug.LogError("Song Chart JSONが設定されていません。");
                 return false;
@@ -133,7 +146,7 @@ namespace Uta.GameFlow
             try
             {
                 chart = JsonUtility.FromJson<SongChart>(
-                    songChartJson.text
+                    selectedChart.text
                 );
             }
             catch (Exception ex)
@@ -150,6 +163,12 @@ namespace Uta.GameFlow
                 Debug.LogError("譜面データが不正です。");
                 return false;
             }
+
+            minPitchStep = 0;
+            maxPitchStep = chart.PitchStepCount >= 2 ? chart.PitchStepCount - 1 : 9;
+            var sliderTicks = FindFirstObjectByType<SliderTicks>();
+            if (sliderTicks != null) sliderTicks.ConfigureTickCount(maxPitchStep + 1);
+            noteProgression.SetPitchStepCount(chart.PitchStepCount);
 
             // ① 先にPlayPlanとPlaybackPlanを生成
             if (!PlanBuilder.TryBuild(

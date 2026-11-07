@@ -64,6 +64,17 @@ namespace UtaNoUtakeiko.Gameplay
                         return false;
                     }
 
+                    // Omitted note-level repeats reuse an earlier result and require no input.
+                    if (!note.IsRest && !playableIds.Contains(note.NoteId))
+                    {
+                        if (string.IsNullOrEmpty(note.RepeatSourceNoteId))
+                        {
+                            error = "入力対象の音符が欠落しています: " + note.NoteId;
+                            return false;
+                        }
+                        lastWasRest = true;
+                        continue;
+                    }
                     double startBeat = currentBeat;
                     currentBeat += note.DurationBeats;
                     float start = (float)(startBeat * 60.0 / chart.Bpm * TimeScale);
@@ -84,6 +95,8 @@ namespace UtaNoUtakeiko.Gameplay
 
                     InputUnit previous = result.Count > 0 ? result[result.Count - 1] : null;
                     bool merge = !lastWasRest && previous != null &&
+                        string.IsNullOrEmpty(note.StairGroupId) &&
+                        string.IsNullOrEmpty(previous.StairGroupId) &&
                         previous.TargetPitchStep == note.TargetPitchStep &&
                         Math.Abs(previous.EndSeconds - start) < 0.001f;
 
@@ -102,6 +115,7 @@ namespace UtaNoUtakeiko.Gameplay
                             StartSeconds = start,
                             EndSeconds = end,
                             IsHold = false,
+                            StairGroupId = note.StairGroupId,
                             HoldDurationSeconds = 1f,
                             SourceNoteIds = new List<string> { note.NoteId }
                         });
@@ -117,6 +131,34 @@ namespace UtaNoUtakeiko.Gameplay
             {
                 error = "入力対象音符数が一致しません。";
                 return false;
+            }
+
+            // A stair group is an explicit contiguous run, never an inferred pitch pattern.
+            var seenGroups = new HashSet<string>();
+            for (int i = 0; i < result.Count;)
+            {
+                string group = result[i].StairGroupId;
+                if (string.IsNullOrEmpty(group)) { i++; continue; }
+                if (!seenGroups.Add(group))
+                {
+                    error = "階段長押しの区間が連続していません: " + group;
+                    return false;
+                }
+                int startIndex = i++;
+                while (i < result.Count && result[i].StairGroupId == group)
+                {
+                    if (Math.Abs(result[i - 1].EndSeconds - result[i].StartSeconds) > 0.001f)
+                    {
+                        error = "階段長押しに休符または空白があります: " + group;
+                        return false;
+                    }
+                    i++;
+                }
+                if (i - startIndex < 2)
+                {
+                    error = "階段長押しには2音以上が必要です: " + group;
+                    return false;
+                }
             }
 
             units = result;

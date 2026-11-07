@@ -359,6 +359,8 @@ GameObject:
   - component: {fileID: 860801493}
   - component: {fileID: 860801494}
   - component: {fileID: 860801495}
+  - component: {fileID: 860801496}
+  - component: {fileID: 860801497}
   m_Layer: 0
   m_Name: GameSessionManager
   m_TagString: Untagged
@@ -495,9 +497,39 @@ MonoBehaviour:
   countdownSeconds: 5
   finishDisplaySeconds: 2
   announcementReturnSeconds: 10
-  warningTimeSeconds: 10
   bgmVolume: 0.5
   effectVolume: 0.7
+--- !u!114 &860801496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860801487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b35d94964074d8bb0780d7dd20b55d3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Uta.Runtime::Uta.GameFlow.GameplayProgressDisplay
+  sessionManager: {fileID: 860801488}
+  playConnector: {fileID: 860801492}
+  noteProgression: {fileID: 1438848604}
+--- !u!114 &860801497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860801487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c99d5668a0c94bd09c05bb66be03aad2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Uta.Runtime::Uta.GameFlow.ActiveNoteLane
+  sessionManager: {fileID: 860801488}
+  noteDisplay: {fileID: 1461365691}
+  width: 1
+  opacity: 0.28
 --- !u!1 &916216552
 GameObject:
   m_ObjectHideFlags: 0
@@ -509,6 +541,7 @@ GameObject:
   - component: {fileID: 916216555}
   - component: {fileID: 916216554}
   - component: {fileID: 916216553}
+  - component: {fileID: 916216556}
   m_Layer: 0
   m_Name: MovingBar
   m_TagString: Untagged
@@ -531,6 +564,18 @@ MonoBehaviour:
   minY: -3
   maxY: 3
   speed: 3
+--- !u!114 &916216556
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 916216552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 987c33d97e934b98953c744587ec2866, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Uta.Runtime::MovingBarOutline
 --- !u!212 &916216554
 SpriteRenderer:
   serializedVersion: 2

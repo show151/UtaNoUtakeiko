@@ -20,6 +20,18 @@ namespace Uta.GameFlow
             }
         }
 
+        // Snapshot of the current play's limit; remains stable as time runs down.
+        public float? InitialTimeLimit
+        {
+            get
+            {
+                var timeout = GetComponent<GameSessionTimeout>();
+                return timeout != null ? timeout.InitialTimeLimit : (float?)null;
+            }
+        }
+
+        public void SetHardDifficulty(bool hard) => GetComponent<GameSessionTimeout>()?.SetHardDifficulty(hard);
+
         public event Action<GameSessionState, GameSessionState>
             OnStateChanged;
 
@@ -174,7 +186,8 @@ namespace Uta.GameFlow
                     return next == GameSessionState.Result;
 
                 case GameSessionState.Result:
-                    return next == GameSessionState.Ranking;
+                    return next == GameSessionState.Ranking
+                        || next == GameSessionState.Announcement;
 
                 case GameSessionState.Ranking:
                     return next == GameSessionState.Announcement;

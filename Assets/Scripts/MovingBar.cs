@@ -11,16 +11,27 @@ public class MovingBar : MonoBehaviour
     private int direction = 1;
     private bool isMoving = true;
     private bool isStairMode;
+    private float difficultySpeedMultiplier = 1f;
+    private Vector3 initialPosition;
 
     public float NormalizedPosition =>
         Mathf.InverseLerp(minY, maxY, transform.position.y);
+
+    private void Awake()
+    {
+        initialPosition = transform.position;
+        // Cover scenes and dynamically created bars without an Inspector setup.
+        if (GetComponent<SpriteRenderer>() != null && GetComponent<MovingBarOutline>() == null)
+            gameObject.AddComponent<MovingBarOutline>();
+    }
 
     private void Update()
     {
         if (!isMoving) return;
 
         Vector3 position = transform.position;
-        position.y += direction * speed * (isStairMode ? stairSpeedMultiplier : 1f) * Time.deltaTime;
+        position.y += direction * speed * difficultySpeedMultiplier *
+            (isStairMode ? stairSpeedMultiplier : 1f) * Time.deltaTime;
 
         if (position.y >= maxY)
         {
@@ -35,6 +46,20 @@ public class MovingBar : MonoBehaviour
 
         transform.position = position;
     }
+
+    public void ResetForCountdown()
+    {
+        // Keep the bar on its current horizontal lane, including after a script reload.
+        var position = transform.position;
+        position.y = Mathf.Clamp(initialPosition.y, minY, maxY);
+        transform.position = position;
+        direction = 1;
+        isMoving = false;
+        isStairMode = false;
+    }
+
+    public void SetDifficultySpeedMultiplier(float multiplier) =>
+        difficultySpeedMultiplier = Mathf.Max(0.01f, multiplier);
 
     public void StopMovement()
     {

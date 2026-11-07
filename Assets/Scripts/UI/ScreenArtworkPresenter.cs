@@ -84,12 +84,12 @@ namespace Uta.GameFlow
         private List<bool> rankingPlayerRows;
 
         private Font uiFont;
-        [SerializeField, Min(0f)] private float warningTimeSeconds = 10f;
+        private const float ClimaxRemainingRatio = 0.30f;
         [SerializeField, Range(0f, 1f)] private float bgmVolume = 0.5f;
         [SerializeField, Range(0f, 1f)] private float effectVolume = 0.7f;
         private AudioSource bgmSource, effectSource;
         private AudioClip openingBgm, playBgm, warningBgm, endingBgm;
-        private AudioClip countdownSound, startSound, selectSound, decisionSound, finishSound;
+        private AudioClip countdownSound, startSound, selectSound, decisionSound, finishSound, whistleSound;
         private bool warningPlaying;
         private int lastSingingCountdown = -1;
 
@@ -161,13 +161,8 @@ namespace Uta.GameFlow
                 }
             }
             UpdateGameplayTimer(state);
-            if (state == GameSessionState.Playing && !warningPlaying &&
-                sessionManager.RemainingTime is float timeRemaining &&
-                timeRemaining > 0f && timeRemaining <= warningTimeSeconds)
-            {
-                warningPlaying = true;
-                SetBgm(warningBgm);
-            }
+            if (state == GameSessionState.Playing)
+                TryStartClimax(sessionManager.RemainingTime, sessionManager.InitialTimeLimit);
             if (state == GameSessionState.Playback)
             {
                 UpdatePlaybackScore();
@@ -242,6 +237,7 @@ namespace Uta.GameFlow
             selectSound = Resources.Load<AudioClip>("GameAudio/select");
             decisionSound = Resources.Load<AudioClip>("GameAudio/decision");
             finishSound = Resources.Load<AudioClip>("GameAudio/finish");
+            whistleSound = Resources.Load<AudioClip>("GameAudio/whistle");
             ApplyAudioState(sessionManager != null ? sessionManager.CurrentState : GameSessionState.Title);
         }
 
@@ -268,6 +264,19 @@ namespace Uta.GameFlow
                 default:
                     SetBgm(null); break;
             }
+        }
+
+        private bool TryStartClimax(float? remaining, float? initialLimit)
+        {
+            if (warningPlaying || !remaining.HasValue || !initialLimit.HasValue ||
+                initialLimit.Value <= 0f || remaining.Value <= 0f ||
+                remaining.Value > initialLimit.Value * ClimaxRemainingRatio)
+                return false;
+
+            warningPlaying = true;
+            SetBgm(warningBgm);
+            PlayEffect(whistleSound);
+            return true;
         }
 
         private void SetBgm(AudioClip clip)
@@ -446,7 +455,7 @@ namespace Uta.GameFlow
                 case GameSessionState.Playing:
                     gameplayTimerText = AddText(
                         "残り時間 00:00", 48,
-                        new Vector2(0.86f, 0.94f), new Vector2(420, 90));
+                        new Vector2(0.50f, 0.94f), new Vector2(420, 90));
                     break;
 
                 case GameSessionState.Countdown:
@@ -610,8 +619,7 @@ namespace Uta.GameFlow
                         elapsedBeats = 0d;
                     }
 
-                    float startSeconds = (float)(
-                        ((note.MeasureNumber - 1) * beatsPerMeasure + elapsedBeats)
+                    float startSeconds = (float)(SongTiming.StartBeat(chart, note.MeasureNumber, elapsedBeats)
                         * secondsPerBeat);
                     elapsedBeats += note.DurationBeats;
                     float endSeconds = startSeconds + note.DurationBeats * secondsPerBeat;
@@ -671,11 +679,15 @@ namespace Uta.GameFlow
                 : 0f;
             float panelWidth = playbackScorePanel.rect.width;
             float centerX = panelWidth * 0.5f;
-            const float pixelsPerSecond = 86f;
             int activeMeasure = 1;
             string activeLyric = "";
 
             var chart = playConnector != null ? playConnector.CurrentSongChart : null;
+            // The faster song contains many eighth notes; give them enough room
+            // to remain legible without changing their playback timing.
+            float pixelsPerSecond = chart != null && chart.SongId == "SENBONZAKURA"
+                ? chart.Bpm * (96f / 60f)
+                : 86f;
             if (chart != null && chart.Bpm > 0 &&
                 chart.TimeSignatureNumerator > 0 &&
                 chart.TimeSignatureDenominator > 0)
@@ -684,7 +696,11 @@ namespace Uta.GameFlow
                     60f / chart.Bpm *
                     chart.TimeSignatureNumerator * 4f /
                     chart.TimeSignatureDenominator;
-                activeMeasure = Mathf.FloorToInt(now / secondsPerMeasure) + 1;
+                float elapsedBeats = now * chart.Bpm / 60f;
+                float beatsPerMeasure = chart.TimeSignatureNumerator * 4f / chart.TimeSignatureDenominator;
+                activeMeasure = chart.PickupBeats > 0f && elapsedBeats >= chart.PickupBeats
+                    ? Mathf.FloorToInt((elapsedBeats - chart.PickupBeats) / beatsPerMeasure) + 2
+                    : chart.PickupBeats > 0f ? 1 : Mathf.FloorToInt(now / secondsPerMeasure) + 1;
                 if (chart.LyricLines != null)
                 {
                     foreach (var line in chart.LyricLines)
@@ -711,7 +727,7 @@ namespace Uta.GameFlow
 
                 float y = visual.Note != null && visual.Note.IsRest
                     ? 80f
-                    : PitchStepToStaffOffset(visual.PitchStep);
+                    : PitchStepToStaffOffset(visual.PitchStep + (chart != null && chart.PitchBaseMidi > 0 ? chart.PitchBaseMidi - 60 : 0));
                 visual.Text.rectTransform.anchoredPosition =
                     new Vector2(x - centerX, y);
                 bool current = now >= visual.StartSeconds && now < visual.EndSeconds;
@@ -739,13 +755,26 @@ namespace Uta.GameFlow
                     activeTargetNote = visual.Note;
             }
 
+            // Prefer note-level lyrics when available; older charts keep
+            // their existing measure-based display.
+            if (chart != null && chart.LyricLines != null && activeTargetNote != null)
+            {
+                foreach (var line in chart.LyricLines)
+                {
+                    string formatted = line?.FormatForNote(activeTargetNote.NoteId);
+                    if (formatted == null) continue;
+                    activeLyric = formatted;
+                    break;
+                }
+            }
+
             if (playbackTargetPitchText != null)
                 playbackTargetPitchText.text = activeTargetNote != null
-                    ? PitchStepLabel(activeTargetNote.TargetPitchStep)
+                    ? PitchStepLabel(activeTargetNote.TargetPitchStep + (chart != null && chart.PitchBaseMidi > 0 ? chart.PitchBaseMidi - 60 : 0))
                     : "—";
             if (playbackInputPitchText != null)
                 playbackInputPitchText.text = activeInputPitchStep.HasValue
-                    ? PitchStepLabel(activeInputPitchStep.Value)
+                    ? PitchStepLabel(activeInputPitchStep.Value + (chart != null && chart.PitchBaseMidi > 0 ? chart.PitchBaseMidi - 60 : 0))
                     : "—";
 
             if (string.IsNullOrEmpty(activeLyric))
@@ -946,7 +975,7 @@ namespace Uta.GameFlow
                 "Uta Result Message", messagePanel, display.Message, 30,
                 new Vector2(0.5f, 0.42f), new Vector2(590, 145));
 
-            AddActionButton("ランキングへ　›", new Vector2(0.33f, 0.095f), Confirm);
+            AddActionButton("次へ　›", new Vector2(0.33f, 0.095f), Confirm);
         }
 
         private void BuildRanking()
@@ -1100,6 +1129,9 @@ namespace Uta.GameFlow
             {
                 int count = Mathf.Max(1, difficultyLabels == null ? 0 : difficultyLabels.Length);
                 difficultyIndex = (difficultyIndex + 1) % count;
+                // Keep Normal hidden while retaining the Hard chart's original index.
+                if (difficultyIndex == 1 && count > 2)
+                    difficultyIndex = 2;
                 if (selectionValue != null)
                     selectionValue.text = SafeLabel(difficultyLabels, difficultyIndex);
             }
@@ -1131,13 +1163,15 @@ namespace Uta.GameFlow
                     sessionManager.TryTransition(GameSessionState.DifficultySelect);
                     break;
                 case GameSessionState.DifficultySelect:
+                    if (playConnector != null) playConnector.SelectDifficulty(difficultyIndex);
                     sessionManager.TryTransition(GameSessionState.Countdown);
                     break;
                 case GameSessionState.SongSelect:
                     sessionManager.TryTransition(GameSessionState.Countdown);
                     break;
                 case GameSessionState.Result:
-                    sessionManager.TryTransition(GameSessionState.Ranking);
+                    // Temporarily skip the ranking screen.
+                    sessionManager.TryTransition(GameSessionState.Announcement);
                     break;
                 case GameSessionState.Ranking:
                     if (playerNameInput != null)

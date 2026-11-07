@@ -9,6 +9,7 @@ public class JudgmentSystem : MonoBehaviour
     // Used only by the Issue #53 timed input trial to pin the press to its unit.
     public event Action<float> OnPressPositionCaptured;
     public event Action OnPressCaptureCanceled;
+    public event Action OnRedPress;
     public bool HasCapturedPress => hasCapturedPress;
     public float CapturedPosition => capturedPosition;
     public string CapturedPitchJudgment => GetPitchJudgment(capturedPosition);
@@ -29,6 +30,9 @@ public class JudgmentSystem : MonoBehaviour
     private bool hasJudged;
     private bool hasCapturedPress;
     private float capturedPosition;
+    private int pitchStepCount;
+
+    public void SetPitchStepCount(int count) => pitchStepCount = count >= 2 ? count : 0;
 
     private void OnEnable()
     {
@@ -38,6 +42,7 @@ public class JudgmentSystem : MonoBehaviour
         inputManager.OnPressStarted += HandlePressStarted;
         inputManager.OnPressReleased += HandlePressReleased;
         inputManager.OnPressCanceled += HandlePressCanceled;
+        inputManager.OnRedPress += HandleRedPress;
     }
 
     private void OnDisable()
@@ -47,9 +52,26 @@ public class JudgmentSystem : MonoBehaviour
             inputManager.OnPressStarted -= HandlePressStarted;
             inputManager.OnPressReleased -= HandlePressReleased;
             inputManager.OnPressCanceled -= HandlePressCanceled;
+            inputManager.OnRedPress -= HandleRedPress;
         }
 
         hasCapturedPress = false;
+    }
+
+    private void HandleRedPress() => OnRedPress?.Invoke();
+
+    public void StartStairMovement() => movingBar?.StartStairMovement();
+    public void StopStairMovement() => movingBar?.StopStairMovement();
+    public void ResetMovingBarForCountdown() => movingBar?.ResetForCountdown();
+    public void SetBarSpeedMultiplier(float multiplier) => movingBar?.SetDifficultySpeedMultiplier(multiplier);
+    public float CurrentPosition => movingBar != null ? movingBar.NormalizedPosition : 0f;
+    public string JudgePosition(float position, float target)
+    {
+        float previousTarget = targetPosition;
+        targetPosition = Mathf.Clamp01(target);
+        string result = GetPitchJudgment(position);
+        targetPosition = previousTarget;
+        return result;
     }
 
     private void HandlePressStarted()
@@ -128,6 +150,12 @@ public class JudgmentSystem : MonoBehaviour
     private string GetPitchJudgment(float position)
     {
         float difference = Mathf.Abs(position - targetPosition);
+        if (pitchStepCount >= 2)
+        {
+            int steps = Mathf.RoundToInt(difference * (pitchStepCount - 1));
+            return steps == 0 ? "Perfect" : steps == 1 ? "Great" :
+                steps == 2 ? "Good" : steps == 3 ? "Bad" : "Miss";
+        }
         if (difference <= 0.02f) return "Perfect";
         if (difference <= 0.05f) return "Great";
         if (difference <= 0.10f) return "Good";
