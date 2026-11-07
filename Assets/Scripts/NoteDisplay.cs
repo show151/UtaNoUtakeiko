@@ -198,7 +198,7 @@ public class NoteDisplay : MonoBehaviour
             string group = units[i].StairGroupId;
             if (string.IsNullOrEmpty(group))
                 continue;
-            noteRenderers[i].color = new Color32(255, 175, 66, 255);
+            noteRenderers[i].color = new Color32(36, 91, 133, 255);
             if (i + 1 >= units.Count || units[i + 1].StairGroupId != group)
                 continue;
             if (holdShaftSprite == null)
@@ -222,7 +222,7 @@ public class NoteDisplay : MonoBehaviour
         link.transform.localScale = scale;
         var renderer = link.AddComponent<SpriteRenderer>();
         renderer.sprite = holdShaftSprite;
-        renderer.color = new Color32(255, 175, 66, 255);
+        renderer.color = new Color32(36, 91, 133, 255);
         renderer.sortingOrder = 1;
         stairLinks[index].Add(renderer);
     }

@@ -52,6 +52,10 @@ namespace UtaNoUtakeiko.Tests
                 var vertical = go.transform.Find("Note_1/StairVertical");
                 Assert.IsNotNull(horizontal);
                 Assert.IsNotNull(vertical);
+                var tapColor = go.transform.Find("Note_4/NoteHead").GetComponent<SpriteRenderer>().color;
+                Assert.AreEqual(tapColor, go.transform.Find("Note_1/NoteHead").GetComponent<SpriteRenderer>().color);
+                Assert.AreEqual(tapColor, horizontal.GetComponent<SpriteRenderer>().color);
+                Assert.AreEqual(tapColor, vertical.GetComponent<SpriteRenderer>().color);
                 Assert.IsNull(go.transform.Find("Note_3/StairHorizontal"));
                 Assert.IsNull(go.transform.Find("Note_4/StairHorizontal"));
                 display.SeekToNote(1);
