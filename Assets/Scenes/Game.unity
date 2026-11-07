@@ -360,6 +360,7 @@ GameObject:
   - component: {fileID: 860801494}
   - component: {fileID: 860801495}
   - component: {fileID: 860801496}
+  - component: {fileID: 860801497}
   m_Layer: 0
   m_Name: GameSessionManager
   m_TagString: Untagged
@@ -514,6 +515,22 @@ MonoBehaviour:
   sessionManager: {fileID: 860801488}
   playConnector: {fileID: 860801492}
   noteProgression: {fileID: 1438848604}
+--- !u!114 &860801497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860801487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c99d5668a0c94bd09c05bb66be03aad2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Uta.Runtime::Uta.GameFlow.ActiveNoteLane
+  sessionManager: {fileID: 860801488}
+  noteDisplay: {fileID: 1461365691}
+  width: 1
+  opacity: 0.28
 --- !u!1 &916216552
 GameObject:
   m_ObjectHideFlags: 0
