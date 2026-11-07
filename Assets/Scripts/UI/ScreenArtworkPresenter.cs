@@ -892,7 +892,7 @@ namespace Uta.GameFlow
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(0f, 0f);
                 rect.pivot = new Vector2(0f, 0f);
-                rect.anchoredPosition = new Vector2(36f, 42f);
+                rect.anchoredPosition = new Vector2(150f, -45f);
                 rect.sizeDelta = new Vector2(720f, 930f);
             }
             else if (state == GameSessionState.DifficultySelect ||
@@ -900,15 +900,15 @@ namespace Uta.GameFlow
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
                 rect.pivot = new Vector2(1f, 0f);
-                rect.anchoredPosition = new Vector2(-70f, 180f);
+                rect.anchoredPosition = new Vector2(-170f, 180f);
                 rect.sizeDelta = new Vector2(590f, 770f);
             }
             else if (state == GameSessionState.Result)
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
                 rect.pivot = new Vector2(1f, 0f);
-                rect.anchoredPosition = new Vector2(-20f, 10f);
-                rect.sizeDelta = new Vector2(440f, 590f);
+                rect.anchoredPosition = new Vector2(-100f, 10f);
+                rect.sizeDelta = new Vector2(500f, 670f);
             }
             else
             {
