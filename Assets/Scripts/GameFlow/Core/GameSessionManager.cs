@@ -20,6 +20,8 @@ namespace Uta.GameFlow
             }
         }
 
+        public void SetHardDifficulty(bool hard) => GetComponent<GameSessionTimeout>()?.SetHardDifficulty(hard);
+
         public event Action<GameSessionState, GameSessionState>
             OnStateChanged;
 

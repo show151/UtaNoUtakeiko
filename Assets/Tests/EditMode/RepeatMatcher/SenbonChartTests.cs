@@ -25,6 +25,8 @@ namespace UtaNoUtakeiko.Tests
             Assert.AreEqual(94, playback.Sections.Sum(section => section.Notes.Count));
             Assert.IsTrue(InputUnitBuilder.TryBuild(chart, play, out var units, out error), error);
             Assert.AreEqual(4, units.Count(unit => !string.IsNullOrEmpty(unit.StairGroupId)));
+            Assert.IsTrue(units.Any(unit => unit.IsHold));
+            Assert.IsTrue(units.Where(unit => unit.IsHold).All(unit => unit.RequiredHoldSeconds == 1f));
             foreach (var note in chart.Sections.SelectMany(section => section.Notes))
                 for (int pitch = 0; pitch < chart.PitchStepCount; pitch++)
                     Assert.IsTrue(File.Exists(Path.Combine(Application.dataPath,

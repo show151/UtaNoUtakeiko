@@ -20,7 +20,11 @@ namespace Uta.GameFlow
         private TextAsset songChartJson;
 
         private int selectedDifficultyIndex;
-        public void SelectDifficulty(int index) => selectedDifficultyIndex = index;
+        public void SelectDifficulty(int index)
+        {
+            selectedDifficultyIndex = index;
+            if (sessionManager != null) sessionManager.SetHardDifficulty(index == 2);
+        }
 
         // C4 = 0、A4 = 9
         // 画面位置への変換範囲（暫定）
