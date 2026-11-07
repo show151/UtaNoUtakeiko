@@ -20,7 +20,12 @@ namespace Uta.GameFlow
         private TextAsset songChartJson;
 
         private int selectedDifficultyIndex;
-        public void SelectDifficulty(int index) => selectedDifficultyIndex = index;
+        public void SelectDifficulty(int index)
+        {
+            selectedDifficultyIndex = index;
+            if (sessionManager != null) sessionManager.SetHardDifficulty(index == 2);
+            if (noteProgression != null) noteProgression.SetBarSpeedMultiplier(index == 2 ? 1.15f : 1f);
+        }
 
         // C4 = 0、A4 = 9
         // 画面位置への変換範囲（暫定）
@@ -88,6 +93,9 @@ namespace Uta.GameFlow
                 if (noteProgression != null)
                     noteProgression.StopPlayback();
             }
+
+            if (next == GameSessionState.Countdown)
+                noteProgression?.PrepareForCountdown();
 
             if (next != GameSessionState.Playing)
                 return;

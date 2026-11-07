@@ -20,6 +20,8 @@ namespace Uta.GameFlow
             }
         }
 
+        public void SetHardDifficulty(bool hard) => GetComponent<GameSessionTimeout>()?.SetHardDifficulty(hard);
+
         public event Action<GameSessionState, GameSessionState>
             OnStateChanged;
 
@@ -174,7 +176,8 @@ namespace Uta.GameFlow
                     return next == GameSessionState.Result;
 
                 case GameSessionState.Result:
-                    return next == GameSessionState.Ranking;
+                    return next == GameSessionState.Ranking
+                        || next == GameSessionState.Announcement;
 
                 case GameSessionState.Ranking:
                     return next == GameSessionState.Announcement;

@@ -62,6 +62,8 @@ public class JudgmentSystem : MonoBehaviour
 
     public void StartStairMovement() => movingBar?.StartStairMovement();
     public void StopStairMovement() => movingBar?.StopStairMovement();
+    public void ResetMovingBarForCountdown() => movingBar?.ResetForCountdown();
+    public void SetBarSpeedMultiplier(float multiplier) => movingBar?.SetDifficultySpeedMultiplier(multiplier);
     public float CurrentPosition => movingBar != null ? movingBar.NormalizedPosition : 0f;
     public string JudgePosition(float position, float target)
     {

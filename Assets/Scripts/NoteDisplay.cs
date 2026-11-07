@@ -47,6 +47,10 @@ public class NoteDisplay : MonoBehaviour
 
     private Vector3 initialPosition;
 
+    // This position stays fixed while the note group scrolls.
+    public float InputLaneWorldX => initialPosition.x +
+        transform.TransformVector(new Vector3(startX, 0f, 0f)).x;
+
     private void Awake()
     {
         // シーン開始時の位置を一度だけ保存

@@ -61,6 +61,7 @@ public class NoteProgression : MonoBehaviour
     private bool resolvingSessionTimeout;
 
     public void SetPitchStepCount(int count) => judgmentSystem?.SetPitchStepCount(count);
+    public void SetBarSpeedMultiplier(float multiplier) => judgmentSystem?.SetBarSpeedMultiplier(multiplier);
     private bool stairActive;
     private int stairNextIndex;
     private int stairEndIndex;
@@ -576,6 +577,14 @@ public class NoteProgression : MonoBehaviour
         LastGameplayResults = completedTrialResults.AsReadOnly();
         StopPlayback();
         OnGameplayCompleted?.Invoke();
+    }
+
+    // Clear the previous run before the countdown reveals the play field.
+    public void PrepareForCountdown()
+    {
+        StopPlayback();
+        if (noteDisplay != null) noteDisplay.Initialize(Array.Empty<float>());
+        if (judgmentSystem != null) judgmentSystem.ResetMovingBarForCountdown();
     }
 
     public void StopPlayback()

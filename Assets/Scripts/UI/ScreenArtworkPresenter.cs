@@ -670,11 +670,15 @@ namespace Uta.GameFlow
                 : 0f;
             float panelWidth = playbackScorePanel.rect.width;
             float centerX = panelWidth * 0.5f;
-            const float pixelsPerSecond = 86f;
             int activeMeasure = 1;
             string activeLyric = "";
 
             var chart = playConnector != null ? playConnector.CurrentSongChart : null;
+            // The faster song contains many eighth notes; give them enough room
+            // to remain legible without changing their playback timing.
+            float pixelsPerSecond = chart != null && chart.SongId == "SENBONZAKURA"
+                ? chart.Bpm * (96f / 60f)
+                : 86f;
             if (chart != null && chart.Bpm > 0 &&
                 chart.TimeSignatureNumerator > 0 &&
                 chart.TimeSignatureDenominator > 0)
@@ -962,7 +966,7 @@ namespace Uta.GameFlow
                 "Uta Result Message", messagePanel, display.Message, 30,
                 new Vector2(0.5f, 0.42f), new Vector2(590, 145));
 
-            AddActionButton("ランキングへ　›", new Vector2(0.33f, 0.095f), Confirm);
+            AddActionButton("次へ　›", new Vector2(0.33f, 0.095f), Confirm);
         }
 
         private void BuildRanking()
@@ -1116,8 +1120,7 @@ namespace Uta.GameFlow
             {
                 int count = Mathf.Max(1, difficultyLabels == null ? 0 : difficultyLabels.Length);
                 difficultyIndex = (difficultyIndex + 1) % count;
-                // Temporarily hide Normal until its chart and audio are ready.
-                // Keep the original indices so Hard still selects its own chart.
+                // Keep Normal hidden while retaining the Hard chart's original index.
                 if (difficultyIndex == 1 && count > 2)
                     difficultyIndex = 2;
                 if (selectionValue != null)
@@ -1158,7 +1161,8 @@ namespace Uta.GameFlow
                     sessionManager.TryTransition(GameSessionState.Countdown);
                     break;
                 case GameSessionState.Result:
-                    sessionManager.TryTransition(GameSessionState.Ranking);
+                    // Temporarily skip the ranking screen.
+                    sessionManager.TryTransition(GameSessionState.Announcement);
                     break;
                 case GameSessionState.Ranking:
                     if (playerNameInput != null)
