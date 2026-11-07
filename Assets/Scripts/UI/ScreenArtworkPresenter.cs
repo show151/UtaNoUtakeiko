@@ -446,7 +446,7 @@ namespace Uta.GameFlow
                 case GameSessionState.Playing:
                     gameplayTimerText = AddText(
                         "残り時間 00:00", 48,
-                        new Vector2(0.86f, 0.94f), new Vector2(420, 90));
+                        new Vector2(0.50f, 0.94f), new Vector2(420, 90));
                     break;
 
                 case GameSessionState.Countdown:

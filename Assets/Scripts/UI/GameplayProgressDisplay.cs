@@ -41,7 +41,7 @@ namespace Uta.GameFlow
             // A dark outer frame keeps the bar readable against bright artwork.
             var frame = MakeImage("Progress Frame", canvasObject.transform, new Color32(15, 25, 40, 255));
             var rect = frame.rectTransform;
-            rect.anchorMin = rect.anchorMax = new Vector2(0.32f, 0.95f);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.20f, 0.95f);
             rect.sizeDelta = new Vector2(660f, 38f);
             var track = MakeImage("Progress Track", frame.transform, new Color32(100, 114, 126, 255));
             Stretch(track.rectTransform, 5f);
