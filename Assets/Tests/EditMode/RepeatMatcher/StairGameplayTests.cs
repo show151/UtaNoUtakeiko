@@ -62,5 +62,39 @@ namespace UtaNoUtakeiko.Tests
             Assert.AreEqual(4, vocal.UnitResults[0].CapturedPitchStep);
             Assert.AreEqual(3, vocal.UnitResults[1].CapturedPitchStep);
         }
+        [TestCase(false)]
+        [TestCase(true)]
+        public void MissingStairInput_UsesFirstPitchWithoutChangingScore(bool earlyRelease)
+        {
+            var notes = new[]
+            {
+                new Note { NoteId = "A", MeasureNumber = 1, NoteIndexInMeasure = 0, DurationBeats = 1, TargetPitchStep = 4, StairGroupId = "STAIR" },
+                new Note { NoteId = "B", MeasureNumber = 1, NoteIndexInMeasure = 1, DurationBeats = 1, TargetPitchStep = 3, StairGroupId = "STAIR" },
+                new Note { NoteId = "C", MeasureNumber = 1, NoteIndexInMeasure = 2, DurationBeats = 1, TargetPitchStep = 2, StairGroupId = "STAIR" },
+                new Note { NoteId = "D", MeasureNumber = 1, NoteIndexInMeasure = 3, DurationBeats = 1, TargetPitchStep = 1 }
+            };
+            var units = Build(notes);
+            var plan = new PlayPlan { SongId = "TEST", Notes = new List<Note>(notes) };
+            var trials = new List<TimedInputTrialResult>
+            {
+                new TimedInputTrialResult { UnitId = "A", PitchJudgment = "Perfect", CapturedPosition = 0.4f },
+                earlyRelease ? new TimedInputTrialResult { UnitId = "B", PitchJudgment = "Miss", TimedOut = true }
+                    : new TimedInputTrialResult { UnitId = "B", PitchJudgment = "Miss", CapturedPosition = 0.1f },
+                earlyRelease ? new TimedInputTrialResult { UnitId = "C", PitchJudgment = "Miss", TimedOut = true }
+                    : new TimedInputTrialResult { UnitId = "C", PitchJudgment = "Great", CapturedPosition = 0.2f },
+                new TimedInputTrialResult { UnitId = "D", PitchJudgment = "Great", CapturedPosition = 0.8f }
+            };
+            var score = GroupedInputScoreAdapter.Calculate(plan, units, trials,
+                new ScorePolicy(100, 80, 50, 20, 0, 100, 0), Difficulty.Easy, 0, 10);
+            var vocal = GroupedInputScoreAdapter.ExpandForVocalPlayback(score, units);
+            Assert.AreEqual(earlyRelease ? 2 : 1, score.MissCount);
+            Assert.AreEqual(4, vocal.UnitResults[0].CapturedPitchStep);
+            Assert.AreEqual(earlyRelease ? 4 : 1, vocal.UnitResults[1].CapturedPitchStep);
+            Assert.AreEqual(earlyRelease ? 4 : 2, vocal.UnitResults[2].CapturedPitchStep);
+            Assert.AreEqual(InputState.Completed, vocal.UnitResults[2].InputState);
+            Assert.AreEqual(8, vocal.UnitResults[3].CapturedPitchStep);
+            if (earlyRelease) Assert.AreEqual(InputState.TimedOut, score.UnitResults[2].InputState);
+        }
+
     }
 }

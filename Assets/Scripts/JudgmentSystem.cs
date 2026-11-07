@@ -30,6 +30,9 @@ public class JudgmentSystem : MonoBehaviour
     private bool hasJudged;
     private bool hasCapturedPress;
     private float capturedPosition;
+    private int pitchStepCount;
+
+    public void SetPitchStepCount(int count) => pitchStepCount = count >= 2 ? count : 0;
 
     private void OnEnable()
     {
@@ -145,6 +148,12 @@ public class JudgmentSystem : MonoBehaviour
     private string GetPitchJudgment(float position)
     {
         float difference = Mathf.Abs(position - targetPosition);
+        if (pitchStepCount >= 2)
+        {
+            int steps = Mathf.RoundToInt(difference * (pitchStepCount - 1));
+            return steps == 0 ? "Perfect" : steps == 1 ? "Great" :
+                steps == 2 ? "Good" : steps == 3 ? "Bad" : "Miss";
+        }
         if (difference <= 0.02f) return "Perfect";
         if (difference <= 0.05f) return "Great";
         if (difference <= 0.10f) return "Good";

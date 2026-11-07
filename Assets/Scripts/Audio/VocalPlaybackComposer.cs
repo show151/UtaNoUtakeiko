@@ -47,8 +47,7 @@ namespace Uta.GameFlow
             double secondsPerBeat = 60.0 / chart.Bpm;
 
             double totalSeconds =
-                chart.Sections.Max(s => s.EndMeasure) *
-                beatsPerMeasure * secondsPerBeat;
+                SongTiming.TotalBeats(chart, chart.Sections.Max(s => s.EndMeasure)) * secondsPerBeat;
 
             var results = new Dictionary<string, UnitResult>();
 
@@ -97,8 +96,7 @@ namespace Uta.GameFlow
                     }
 
                     double startBeat =
-                        (note.MeasureNumber - 1) * beatsPerMeasure
-                        + elapsedBeats;
+                        SongTiming.StartBeat(chart, note.MeasureNumber, elapsedBeats);
 
                     elapsedBeats += note.DurationBeats;
 
@@ -125,7 +123,7 @@ namespace Uta.GameFlow
 
                     int pitch = unit.CapturedPitchStep.Value;
 
-                    if (pitch < 0 || pitch > 9)
+                    if (pitch < 0 || pitch >= (chart.PitchStepCount >= 2 ? chart.PitchStepCount : 10))
                         throw new ArgumentException("‰¹’ö‚ª”ÍˆÍŠO‚Å‚·");
 
                     // WAV‚ÍÄ¶æNoteId‚Å‘I‘ğ‚·‚é

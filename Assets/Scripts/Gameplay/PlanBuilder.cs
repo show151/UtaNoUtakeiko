@@ -152,6 +152,32 @@ namespace UtaNoUtakeiko.Gameplay
                 validMappings.Add(target.SectionId, mapping);
             }
 
+            // Optional note-level repeats allow phrases that start inside a measure.
+            // They always point directly to an earlier, input-bearing note.
+            var explicitSources = new Dictionary<string, string>();
+            var previousNotes = new Dictionary<string, Note>();
+            var previousSections = new Dictionary<string, string>();
+            foreach (var section in ordered)
+            {
+                foreach (var note in GetOrderedNotes(section))
+                {
+                    if (!string.IsNullOrEmpty(note.RepeatSourceNoteId))
+                    {
+                        if (note.IsRest || validMappings.ContainsKey(section.SectionId) ||
+                            !previousNotes.TryGetValue(note.RepeatSourceNoteId, out var sourceNote) ||
+                            sourceNote.IsRest || !string.IsNullOrEmpty(sourceNote.RepeatSourceNoteId) ||
+                            validMappings.ContainsKey(previousSections[note.RepeatSourceNoteId]) ||
+                            sourceNote.TargetPitchStep != note.TargetPitchStep)
+                        {
+                            error = "Invalid direct note repeat: " + note.NoteId;
+                            return false;
+                        }
+                        explicitSources.Add(note.NoteId, note.RepeatSourceNoteId);
+                    }
+                    previousNotes.Add(note.NoteId, note);
+                    previousSections.Add(note.NoteId, section.SectionId);
+                }
+            }
             var input = new PlayPlan { SongId = songId };
             var output = new PlaybackPlan { SongId = songId };
 
@@ -167,7 +193,7 @@ namespace UtaNoUtakeiko.Gameplay
                 if (!repeated)
                 {
                     input.SectionIds.Add(section.SectionId);
-                    input.Notes.AddRange(GetPlayableNotes(section));
+                    input.Notes.AddRange(GetPlayableNotes(section).Where(n => !explicitSources.ContainsKey(n.NoteId)));
                 }
 
                 var playbackSection = new PlaybackSection
@@ -197,6 +223,10 @@ namespace UtaNoUtakeiko.Gameplay
                         {
                             sourceNoteId = sourcePlayable[sourceIndex].NoteId;
                             sourceIndex++;
+                        }
+                        else if (explicitSources.TryGetValue(note.NoteId, out var explicitSource))
+                        {
+                            sourceNoteId = explicitSource;
                         }
                         else
                         {

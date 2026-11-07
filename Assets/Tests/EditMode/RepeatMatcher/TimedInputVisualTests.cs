@@ -36,6 +36,37 @@ namespace UtaNoUtakeiko.Tests
         }
 
         [Test]
+        public void StairNotes_AreConnectedAndLinksDisappearWhenPassed()
+        {
+            var go = new GameObject("StairVisual_Test");
+            try
+            {
+                var display = go.AddComponent<NoteDisplay>();
+                display.InitializeInputUnits(new[] { 0.8f, 0.5f, 0.2f, 0.4f },
+                    new List<InputUnit> {
+                        new InputUnit { StairGroupId = "A" },
+                        new InputUnit { StairGroupId = "A" },
+                        new InputUnit { StairGroupId = "A" },
+                        new InputUnit() });
+                var horizontal = go.transform.Find("Note_1/StairHorizontal");
+                var vertical = go.transform.Find("Note_1/StairVertical");
+                Assert.IsNotNull(horizontal);
+                Assert.IsNotNull(vertical);
+                var tapColor = go.transform.Find("Note_4/NoteHead").GetComponent<SpriteRenderer>().color;
+                Assert.AreEqual(tapColor, go.transform.Find("Note_1/NoteHead").GetComponent<SpriteRenderer>().color);
+                Assert.AreEqual(tapColor, horizontal.GetComponent<SpriteRenderer>().color);
+                Assert.AreEqual(tapColor, vertical.GetComponent<SpriteRenderer>().color);
+                Assert.IsNull(go.transform.Find("Note_3/StairHorizontal"));
+                Assert.IsNull(go.transform.Find("Note_4/StairHorizontal"));
+                display.SeekToNote(1);
+                Assert.IsFalse(horizontal.GetComponent<SpriteRenderer>().enabled);
+                Assert.IsFalse(vertical.GetComponent<SpriteRenderer>().enabled);
+                Assert.IsTrue(go.transform.Find("Note_2/StairHorizontal").GetComponent<SpriteRenderer>().enabled);
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
+
+        [Test]
         public void InitializeInputUnits_RendersHoldBarOnlyForGroupedHold()
         {
             var go = new GameObject("NoteDisplay_Test");

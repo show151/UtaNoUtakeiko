@@ -30,6 +30,8 @@ public class NoteDisplay : MonoBehaviour
         = new System.Collections.Generic.List<SpriteRenderer>();
     private readonly System.Collections.Generic.List<SpriteRenderer> holdProgressRenderers
         = new System.Collections.Generic.List<SpriteRenderer>();
+    private readonly System.Collections.Generic.List<System.Collections.Generic.List<SpriteRenderer>> stairLinks
+        = new System.Collections.Generic.List<System.Collections.Generic.List<SpriteRenderer>>();
     private readonly System.Collections.Generic.List<bool> holdFlags
         = new System.Collections.Generic.List<bool>();
 
@@ -63,6 +65,7 @@ public class NoteDisplay : MonoBehaviour
         holdCapRenderers.Clear();
         holdProgressRenderers.Clear();
         holdFlags.Clear();
+        stairLinks.Clear();
 
         foreach (Transform child in transform)
         {
@@ -106,6 +109,7 @@ public class NoteDisplay : MonoBehaviour
             holdCapRenderers.Add(null);
             holdProgressRenderers.Add(null);
             holdFlags.Add(false);
+            stairLinks.Add(new System.Collections.Generic.List<SpriteRenderer>());
         }
     }
 
@@ -187,6 +191,40 @@ public class NoteDisplay : MonoBehaviour
             capRenderer.sortingOrder = head.sortingOrder;
             holdCapRenderers[i] = capRenderer;
         }
+
+        // Connect notes in the same stair group while keeping each judgeable.
+        for (int i = 0; i < units.Count; i++)
+        {
+            string group = units[i].StairGroupId;
+            if (string.IsNullOrEmpty(group))
+                continue;
+            noteRenderers[i].color = new Color32(36, 91, 133, 255);
+            if (i + 1 >= units.Count || units[i + 1].StairGroupId != group)
+                continue;
+            if (holdShaftSprite == null)
+                holdShaftSprite = Sprite.Create(Texture2D.whiteTexture,
+                    new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1);
+            Vector3 delta = (noteRoots[i + 1].localPosition - noteRoots[i].localPosition)
+                / Mathf.Max(0.01f, noteSize);
+            AddStairLink(i, "StairHorizontal", new Vector3(delta.x * 0.5f, 0f, 0f),
+                new Vector3(Mathf.Abs(delta.x), 0.35f, 1f));
+            if (Mathf.Abs(delta.y) > 0.001f)
+                AddStairLink(i, "StairVertical", new Vector3(delta.x, delta.y * 0.5f, 0f),
+                    new Vector3(0.35f, Mathf.Abs(delta.y), 1f));
+        }
+    }
+
+    private void AddStairLink(int index, string name, Vector3 position, Vector3 scale)
+    {
+        var link = new GameObject(name);
+        link.transform.SetParent(noteRoots[index], false);
+        link.transform.localPosition = position;
+        link.transform.localScale = scale;
+        var renderer = link.AddComponent<SpriteRenderer>();
+        renderer.sprite = holdShaftSprite;
+        renderer.color = new Color32(36, 91, 133, 255);
+        renderer.sortingOrder = 1;
+        stairLinks[index].Add(renderer);
     }
 
     // Crop the source texture into two sprites at the midpoint. Using source
@@ -370,6 +408,8 @@ public class NoteDisplay : MonoBehaviour
             if (holdProgressRenderers[i] != null)
                 holdProgressRenderers[i].enabled = i >= noteIndex &&
                     holdProgressRenderers[i].transform.localScale.x > 0f;
+            foreach (var link in stairLinks[i])
+                link.enabled = i >= noteIndex;
             if (judgmentLabels[i] != null && i < noteIndex)
                 judgmentLabels[i].gameObject.SetActive(false);
         }
@@ -416,6 +456,13 @@ public class NoteDisplay : MonoBehaviour
                 color.a = 1f - t;
                 renderer.color = color;
 
+                foreach (var link in stairLinks[previousIndex])
+                {
+                    Color linkColor = link.color;
+                    linkColor.a = 1f - t;
+                    link.color = linkColor;
+                }
+
                 // The hold bar uses its own child SpriteRenderer.
                 if (holdBodyRenderers[previousIndex] != null)
                 {
@@ -452,6 +499,8 @@ public class NoteDisplay : MonoBehaviour
             completedIndex < noteRenderers.Count)
         {
             noteRenderers[completedIndex].enabled = false;
+            foreach (var link in stairLinks[completedIndex])
+                link.enabled = false;
             if (holdBodyRenderers[completedIndex] != null)
                 holdBodyRenderers[completedIndex].enabled = false;
             if (holdCapRenderers[completedIndex] != null)
