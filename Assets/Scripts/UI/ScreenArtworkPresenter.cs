@@ -1114,12 +1114,8 @@ namespace Uta.GameFlow
 
             if (sessionManager.CurrentState == GameSessionState.DifficultySelect)
             {
-                int count = Mathf.Max(1, difficultyLabels == null ? 0 : difficultyLabels.Length);
-                difficultyIndex = (difficultyIndex + 1) % count;
-                // Temporarily hide Normal until its chart and audio are ready.
-                // Keep the original indices so Hard still selects its own chart.
-                if (difficultyIndex == 1 && count > 2)
-                    difficultyIndex = 2;
+                // Temporarily offer only Easy; keep the other labels for later use.
+                difficultyIndex = 0;
                 if (selectionValue != null)
                     selectionValue.text = SafeLabel(difficultyLabels, difficultyIndex);
             }
