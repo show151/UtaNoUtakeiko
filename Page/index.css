@@ -17,9 +17,14 @@ body {
   padding-top: 20px;
   margin: 0;
   color: var(--ink);
-  background: var(--paper);
+  background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
+  background-image: url("../Assets/Art/UI/play_wallpaper.png");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   font-family: "M PLUS Rounded 1c", "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
   line-height: 1.8;
+  min-height: 100vh;
 }
 
 .site-header {
@@ -28,8 +33,10 @@ body {
   left: 0;
   right: 0;
   z-index: 10;
-  background: #b9e8f5;
+  background: rgba(185, 232, 245, 0.95);
+  backdrop-filter: blur(10px);
   padding: 14px 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .site-header a {
@@ -44,16 +51,19 @@ body {
 }
 
 .page {
-  width: min(1120px, calc(100% - 48px));
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 92px 0 96px;
+  padding: 92px 40px 96px;
+  background: transparent;
 }
 
 .breadcrumb {
-  margin: 0 0 28px;
+  margin: 0 auto 28px;
   color: var(--muted);
   font-size: 13px;
   letter-spacing: .04em;
+  max-width: 800px;
 }
 
 .breadcrumb a { color: inherit; text-decoration: none; }
@@ -64,6 +74,12 @@ body {
   border-bottom: 1px solid var(--line);
   margin-bottom: 28px;
   padding: 8px 18px 10px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
@@ -95,7 +111,15 @@ h1 {
 .contents a { color: var(--accent); font-size: 14px; text-decoration: none; }
 .contents a:hover { text-decoration: underline; }
 
-section { scroll-margin-top: 20px; margin: 0 0 38px; }
+section {
+  scroll-margin-top: 20px;
+  margin: 0 auto 38px;
+  max-width: 800px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
 
 .section-title {
   display: flex;
@@ -114,6 +138,8 @@ section { scroll-margin-top: 20px; margin: 0 0 38px; }
   flex-wrap: wrap;
   gap: 12px;
   max-width: 790px;
+  justify-content: center;
+  margin: 0 auto;
 }
 
 .note-image {
@@ -121,13 +147,14 @@ section { scroll-margin-top: 20px; margin: 0 0 38px; }
   width: min(100%, 380px);
   height: auto;
   object-fit: contain;
+  margin: 0 auto;
 }
 
 .description {
   max-width: 920px;
   margin: 14px 0 0;
   color: #333;
-  font-size: 15px;
+  font-size: 24px;
 }
 
 .description strong { color: var(--ink); }
@@ -172,6 +199,12 @@ footer {
   color: var(--muted);
   font-size: 12px;
   text-align: center;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 18px;
 }
 
 @media (max-width: 640px) {
