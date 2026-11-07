@@ -742,6 +742,19 @@ namespace Uta.GameFlow
                     activeTargetNote = visual.Note;
             }
 
+            // Prefer note-level lyrics when available; older charts keep
+            // their existing measure-based display.
+            if (chart != null && chart.LyricLines != null && activeTargetNote != null)
+            {
+                foreach (var line in chart.LyricLines)
+                {
+                    string formatted = line?.FormatForNote(activeTargetNote.NoteId);
+                    if (formatted == null) continue;
+                    activeLyric = formatted;
+                    break;
+                }
+            }
+
             if (playbackTargetPitchText != null)
                 playbackTargetPitchText.text = activeTargetNote != null
                     ? PitchStepLabel(activeTargetNote.TargetPitchStep + (chart != null && chart.PitchBaseMidi > 0 ? chart.PitchBaseMidi - 60 : 0))

@@ -33,6 +33,24 @@ namespace UtaNoUtakeiko.Tests
         }
 
         [Test]
+        public void LyricsCoverEveryPlaybackNoteInOrderAndHighlightTheCurrentSyllable()
+        {
+            var chart = JsonUtility.FromJson<SongChart>(Resources.Load<TextAsset>("SongCharts/senbon_hard").text);
+            var notes = chart.Sections.SelectMany(section => section.Notes).Where(note => !note.IsRest).ToList();
+            Assert.AreEqual(8, chart.LyricLines.Count);
+            CollectionAssert.AreEqual(notes.Select(note => note.NoteId),
+                chart.LyricLines.SelectMany(line => line.NoteIds));
+            foreach (var line in chart.LyricLines)
+            {
+                Assert.AreEqual(line.NoteIds.Count, line.Syllables.Count);
+                for (int i = 0; i < line.NoteIds.Count; i++)
+                    StringAssert.Contains("<color=#FFD45C>" + line.Syllables[i] + "</color>",
+                        line.FormatForNote(line.NoteIds[i]));
+                Assert.IsNull(line.FormatForNote("NOT_A_NOTE"));
+            }
+        }
+
+        [Test]
         public void PickupBeginsImmediatelyAndSecondMeasureStartsAfterOneBeat()
         {
             var chart = new SongChart { TimeSignatureNumerator = 4, TimeSignatureDenominator = 4, PickupBeats = 1 };
