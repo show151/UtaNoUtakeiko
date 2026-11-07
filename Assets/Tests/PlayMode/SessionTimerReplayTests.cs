@@ -24,6 +24,7 @@ namespace Uta.Tests
                 Assert.IsTrue(manager.TryTransition(GameSessionState.Countdown));
                 Assert.IsTrue(manager.TryTransition(GameSessionState.Playing));
                 Assert.AreEqual(hard ? 100f : 60f, timer.RemainingTime, 0.01f);
+                Assert.AreEqual(hard ? 100f : 60f, manager.InitialTimeLimit.Value, 0.01f);
                 Assert.IsTrue(manager.TryTransition(GameSessionState.GameFinished));
                 manager.RecoverToTitle();
             }

@@ -498,7 +498,6 @@ MonoBehaviour:
   countdownSeconds: 5
   finishDisplaySeconds: 2
   announcementReturnSeconds: 10
-  warningTimeSeconds: 10
   bgmVolume: 0.5
   effectVolume: 0.7
 --- !u!114 &860801496

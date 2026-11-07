@@ -87,12 +87,12 @@ namespace Uta.GameFlow
         private List<bool> rankingPlayerRows;
 
         private Font uiFont;
-        [SerializeField, Min(0f)] private float warningTimeSeconds = 10f;
+        private const float ClimaxRemainingRatio = 0.30f;
         [SerializeField, Range(0f, 1f)] private float bgmVolume = 0.5f;
         [SerializeField, Range(0f, 1f)] private float effectVolume = 0.7f;
         private AudioSource bgmSource, effectSource;
         private AudioClip openingBgm, playBgm, warningBgm, endingBgm;
-        private AudioClip countdownSound, startSound, selectSound, decisionSound, finishSound;
+        private AudioClip countdownSound, startSound, selectSound, decisionSound, finishSound, whistleSound;
         private bool warningPlaying;
         private int lastSingingCountdown = -1;
 
@@ -164,13 +164,8 @@ namespace Uta.GameFlow
                 }
             }
             UpdateGameplayTimer(state);
-            if (state == GameSessionState.Playing && !warningPlaying &&
-                sessionManager.RemainingTime is float timeRemaining &&
-                timeRemaining > 0f && timeRemaining <= warningTimeSeconds)
-            {
-                warningPlaying = true;
-                SetBgm(warningBgm);
-            }
+            if (state == GameSessionState.Playing)
+                TryStartClimax(sessionManager.RemainingTime, sessionManager.InitialTimeLimit);
             if (state == GameSessionState.Playback)
             {
                 UpdatePlaybackScore();
@@ -245,6 +240,7 @@ namespace Uta.GameFlow
             selectSound = Resources.Load<AudioClip>("GameAudio/select");
             decisionSound = Resources.Load<AudioClip>("GameAudio/decision");
             finishSound = Resources.Load<AudioClip>("GameAudio/finish");
+            whistleSound = Resources.Load<AudioClip>("GameAudio/whistle");
             ApplyAudioState(sessionManager != null ? sessionManager.CurrentState : GameSessionState.Title);
         }
 
@@ -271,6 +267,19 @@ namespace Uta.GameFlow
                 default:
                     SetBgm(null); break;
             }
+        }
+
+        private bool TryStartClimax(float? remaining, float? initialLimit)
+        {
+            if (warningPlaying || !remaining.HasValue || !initialLimit.HasValue ||
+                initialLimit.Value <= 0f || remaining.Value <= 0f ||
+                remaining.Value > initialLimit.Value * ClimaxRemainingRatio)
+                return false;
+
+            warningPlaying = true;
+            SetBgm(warningBgm);
+            PlayEffect(whistleSound);
+            return true;
         }
 
         private void SetBgm(AudioClip clip)

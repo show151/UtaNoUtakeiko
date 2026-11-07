@@ -17,6 +17,7 @@ namespace Uta.GameFlow
         private bool hardDifficulty;
 
         public float RemainingTime => remainingTime;
+        public float InitialTimeLimit { get; private set; }
 
         private void OnEnable()
         {
@@ -63,7 +64,8 @@ namespace Uta.GameFlow
         {
             if (next == GameSessionState.Playing)
             {
-                remainingTime = hardDifficulty ? 100f : testTimeLimit;
+                InitialTimeLimit = hardDifficulty ? 100f : testTimeLimit;
+                remainingTime = InitialTimeLimit;
                 isCounting = true;
 
                 Debug.Log(
