@@ -47,7 +47,10 @@ public class MovingBar : MonoBehaviour
 
     public void ResetForCountdown()
     {
-        transform.position = initialPosition;
+        // Keep the bar on its current horizontal lane, including after a script reload.
+        var position = transform.position;
+        position.y = Mathf.Clamp(initialPosition.y, minY, maxY);
+        transform.position = position;
         direction = 1;
         isMoving = false;
         isStairMode = false;

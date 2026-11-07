@@ -25,9 +25,9 @@ namespace Uta.Tests
             notes.SeekToNote(1);
 
             var barObject = new GameObject("Moving Bar");
-            barObject.transform.position = new Vector3(0, 1, 0);
+            barObject.transform.position = new Vector3(-5.31f, 1, 0);
             var bar = barObject.AddComponent<MovingBar>();
-            barObject.transform.position = new Vector3(0, -2, 0);
+            barObject.transform.position = new Vector3(-5.31f, -2, 0);
             var judgmentObject = new GameObject("Judgment");
             judgmentObject.SetActive(false);
             var judgment = judgmentObject.AddComponent<JudgmentSystem>();
@@ -52,6 +52,7 @@ namespace Uta.Tests
             Assert.IsTrue(manager.TryTransition(GameSessionState.Countdown));
             Assert.IsFalse(oldNote.activeSelf);
             Assert.AreEqual(1f, barObject.transform.position.y, 0.001f);
+            Assert.AreEqual(-5.31f, barObject.transform.position.x, 0.001f);
             Assert.AreEqual(0f, notesObject.transform.position.x, 0.001f);
             yield return new WaitForSeconds(0.1f);
             Assert.AreEqual(1f, barObject.transform.position.y, 0.001f, "Bar stays at its start during countdown.");
