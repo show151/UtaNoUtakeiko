@@ -902,15 +902,15 @@ namespace Uta.GameFlow
                 rect.anchorMin = rect.anchorMax = new Vector2(0f, 0f);
                 rect.pivot = new Vector2(0f, 0f);
                 rect.anchoredPosition = new Vector2(150f, -45f);
-                rect.sizeDelta = new Vector2(720f, 930f);
+                rect.sizeDelta = new Vector2(650f, 840f);
             }
             else if (state == GameSessionState.DifficultySelect ||
                      state == GameSessionState.SongSelect)
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
                 rect.pivot = new Vector2(1f, 0f);
-                rect.anchoredPosition = new Vector2(-170f, 180f);
-                rect.sizeDelta = new Vector2(590f, 770f);
+                rect.anchoredPosition = new Vector2(-140f, 180f);
+                rect.sizeDelta = new Vector2(630f, 820f);
             }
             else if (state == GameSessionState.Result)
             {
