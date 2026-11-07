@@ -352,6 +352,7 @@ public class NoteDisplay : MonoBehaviour
                 label.outlineWidth = 0.25f;
             }
             label.GetComponent<MeshRenderer>().sortingOrder = 20;
+            if (Application.isPlaying) labelObject.AddComponent<NoteJudgmentOutline>();
             judgmentLabels[index] = label;
         }
 
