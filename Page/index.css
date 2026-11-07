@@ -18,7 +18,7 @@ body {
   margin: 0;
   color: var(--ink);
   background: linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%);
-  background-image: url("../Assets/Art/UI/play_wallpaper.png");
+  background-image: url("../Play/Pictures/play_wallpaper.png");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
