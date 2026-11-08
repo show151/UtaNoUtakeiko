@@ -25,6 +25,7 @@ namespace Uta.GameFlow
         [Header("Artwork (Sprite / 2D and UI)")]
         [SerializeField] private Sprite titleArtwork;
         [SerializeField] private Sprite normalCharacter;
+        [SerializeField] private Sprite singingNormalCharacter;
         [SerializeField] private Sprite singingGoodCharacter;
         [SerializeField] private Sprite singingBadCharacter;
         [SerializeField] private Sprite playWallpaper;
@@ -57,6 +58,7 @@ namespace Uta.GameFlow
         private Text playbackTitleText;
         private Text playbackTargetPitchText;
         private Text playbackInputPitchText;
+        private Text playbackPitchDifferenceText;
         private RectTransform playbackScorePanel;
         private readonly List<PlaybackNoteVisual> playbackNoteVisuals = new List<PlaybackNoteVisual>();
 
@@ -67,6 +69,7 @@ namespace Uta.GameFlow
             public float EndSeconds;
             public int PitchStep;
             public bool IsPlayerPitch;
+            public JudgmentType? Judgment;
             public Text Text;
         }
         private int difficultyIndex;
@@ -429,6 +432,7 @@ namespace Uta.GameFlow
             playbackTitleText = null;
             playbackTargetPitchText = null;
             playbackInputPitchText = null;
+            playbackPitchDifferenceText = null;
             playbackScorePanel = null;
             playbackNoteVisuals.Clear();
 
@@ -515,42 +519,49 @@ namespace Uta.GameFlow
         {
             var panelImage = CreateImage(
                 "Playback Score Panel", uiRoot,
-                new Vector2(0.40f, 0.13f), new Vector2(0.90f, 0.9f),
+                new Vector2(0.04f, 0.63f), new Vector2(0.96f, 0.98f),
                 Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.94f));
             playbackScorePanel = panelImage.rectTransform;
 
             playbackTitleText = CreateChildText(
                 "Playback Score Title", playbackScorePanel, "歌う準備をしているよ",
-                38, new Vector2(0.5f, 0.93f), new Vector2(820, 60));
+                30, new Vector2(0.5f, 0.93f), new Vector2(820, 48));
             playbackTitleText.color = new Color(0.7f, 0.9f, 1f, 1f);
 
             var measureText = CreateChildText(
                 "Playback Measure", playbackScorePanel, "", 24,
-                new Vector2(0.5f, 0.84f), new Vector2(700, 50));
+                new Vector2(0.1f, 0.88f), new Vector2(260, 40));
             measureText.color = new Color(0.75f, 0.82f, 0.9f, 1f);
 
+            var pitchPanel = CreateImage(
+                "Playback Pitch Panel", uiRoot,
+                new Vector2(0.68f, 0.12f), new Vector2(0.96f, 0.57f),
+                Vector2.zero, Vector2.zero, new Color(0.02f, 0.05f, 0.1f, 0.94f)).rectTransform;
             var targetLegend = CreateChildText(
-                "Target Pitch Legend", playbackScorePanel, "● 本来の音", 24,
-                new Vector2(0.3f, 0.75f), new Vector2(300, 52));
+                "Target Pitch Legend", pitchPanel, "● 本来の音", 26,
+                new Vector2(0.5f, 0.88f), new Vector2(380, 48));
             targetLegend.color = new Color(0.92f, 0.96f, 1f, 1f);
             var inputLegend = CreateChildText(
-                "Player Pitch Legend", playbackScorePanel, "● 入力結果", 24,
-                new Vector2(0.7f, 0.75f), new Vector2(300, 52));
+                "Player Pitch Legend", pitchPanel, "◆ 入力結果", 26,
+                new Vector2(0.5f, 0.54f), new Vector2(380, 48));
             inputLegend.color = new Color(1f, 0.78f, 0.2f, 1f);
 
             playbackTargetPitchText = CreateChildText(
-                "Target Pitch Value", playbackScorePanel, "—", 28,
-                new Vector2(0.3f, 0.67f), new Vector2(300, 48));
+                "Target Pitch Value", pitchPanel, "—", 48,
+                new Vector2(0.5f, 0.72f), new Vector2(380, 60));
             playbackInputPitchText = CreateChildText(
-                "Input Pitch Value", playbackScorePanel, "—", 28,
-                new Vector2(0.7f, 0.67f), new Vector2(300, 48));
+                "Input Pitch Value", pitchPanel, "—", 48,
+                new Vector2(0.5f, 0.38f), new Vector2(380, 60));
             playbackInputPitchText.color = new Color(1f, 0.78f, 0.2f, 1f);
+            playbackPitchDifferenceText = CreateChildText(
+                "Pitch Difference", pitchPanel, "音程差 —", 30,
+                new Vector2(0.5f, 0.14f), new Vector2(440, 55));
 
             for (int i = 0; i < 5; i++)
             {
                 var line = CreateImage(
                     "Staff Line " + (i + 1), playbackScorePanel,
-                    new Vector2(0.08f, 0.39f), new Vector2(0.94f, 0.39f),
+                    new Vector2(0.04f, 0.28f), new Vector2(0.96f, 0.28f),
                     new Vector2(0f, i * 40f), new Vector2(0f, 2f),
                     new Color(0.75f, 0.84f, 0.92f, 0.78f));
                 line.raycastTarget = false;
@@ -558,7 +569,7 @@ namespace Uta.GameFlow
 
             playbackLyricText = CreateChildText(
                 "Current Lyric", playbackScorePanel, "", 42,
-                new Vector2(0.5f, 0.18f), new Vector2(820, 100));
+                new Vector2(0.5f, 0.09f), new Vector2(1500, 64));
             playbackLyricText.color = Color.white;
 
             var chart = playConnector != null ? playConnector.CurrentSongChart : null;
@@ -624,21 +635,24 @@ namespace Uta.GameFlow
                     elapsedBeats += note.DurationBeats;
                     float endSeconds = startSeconds + note.DurationBeats * secondsPerBeat;
 
+                    capturedPitchByNoteId.TryGetValue(sourceNoteId ?? "", out var captured);
+                    JudgmentType? judgment = captured == null ? (JudgmentType?)null
+                        : captured.InputState == InputState.TimedOut ? JudgmentType.Miss
+                        : captured.Judgment ?? JudgmentType.Miss;
                     AddPlaybackNoteVisual(
                         note, startSeconds, endSeconds,
                         note.IsRest ? 4 : note.TargetPitchStep, false,
                         note.IsRest ? "𝄽" : "●", note.IsRest ? 30 : 42,
-                        "Playback Note");
+                        "Playback Note", judgment);
 
                     if (!note.IsRest && !string.IsNullOrWhiteSpace(sourceNoteId) &&
-                        capturedPitchByNoteId.TryGetValue(
-                        sourceNoteId, out var captured) &&
+                        captured != null &&
                         captured.InputState == InputState.Completed &&
                         captured.CapturedPitchStep.HasValue)
                     {
                         AddPlaybackNoteVisual(
                             note, startSeconds, endSeconds,
-                            captured.CapturedPitchStep.Value, true, "●", 42,
+                            captured.CapturedPitchStep.Value, true, "◆", 42,
                             "Player Input Pitch");
                     }
                 }
@@ -651,11 +665,11 @@ namespace Uta.GameFlow
         private void AddPlaybackNoteVisual(
             Note note, float startSeconds, float endSeconds,
             int pitchStep, bool isPlayerPitch, string symbol, int fontSize,
-            string objectName)
+            string objectName, JudgmentType? judgment = null)
         {
             var noteText = CreateChildText(
                 objectName, playbackScorePanel, symbol, fontSize,
-                new Vector2(0.5f, 0.39f), new Vector2(80, 80));
+                new Vector2(0.5f, 0.28f), new Vector2(80, 80));
             playbackNoteVisuals.Add(new PlaybackNoteVisual
             {
                 Note = note,
@@ -663,6 +677,7 @@ namespace Uta.GameFlow
                 EndSeconds = endSeconds,
                 PitchStep = pitchStep,
                 IsPlayerPitch = isPlayerPitch,
+                Judgment = judgment,
                 Text = noteText
             });
         }
@@ -743,6 +758,7 @@ namespace Uta.GameFlow
 
             Note activeTargetNote = null;
             int? activeInputPitchStep = null;
+            JudgmentType? activeJudgment = null;
             for (int i = 0; i < playbackNoteVisuals.Count; i++)
             {
                 var visual = playbackNoteVisuals[i];
@@ -752,8 +768,14 @@ namespace Uta.GameFlow
                 if (visual.IsPlayerPitch)
                     activeInputPitchStep = visual.PitchStep;
                 else if (visual.Note != null && !visual.Note.IsRest)
+                {
                     activeTargetNote = visual.Note;
+                    activeJudgment = visual.Judgment;
+                }
             }
+
+            if (characterImage != null)
+                characterImage.sprite = SingingCharacterFor(activeJudgment);
 
             // Prefer note-level lyrics when available; older charts keep
             // their existing measure-based display.
@@ -776,6 +798,10 @@ namespace Uta.GameFlow
                 playbackInputPitchText.text = activeInputPitchStep.HasValue
                     ? PitchStepLabel(activeInputPitchStep.Value + (chart != null && chart.PitchBaseMidi > 0 ? chart.PitchBaseMidi - 60 : 0))
                     : "—";
+            if (playbackPitchDifferenceText != null)
+                playbackPitchDifferenceText.text = activeTargetNote != null && activeInputPitchStep.HasValue
+                    ? PitchDifferenceLabel(activeInputPitchStep.Value - activeTargetNote.TargetPitchStep)
+                    : "音程差 —";
 
             if (string.IsNullOrEmpty(activeLyric))
                 activeLyric = FallbackLyricForMeasure(
@@ -813,9 +839,10 @@ namespace Uta.GameFlow
                 default: diatonicStep = 6; break;
             }
 
-            // Place C4 on the bottom line for a compact, readable display.
-            // This shifts only the visual; the actual pitch stays unchanged.
-            return (octave * 7 + diatonicStep) * 20f;
+            // Place chromatic notes midway between the neighbouring natural notes.
+            bool isSharp = pitchClass == 1 || pitchClass == 3 || pitchClass == 6 ||
+                           pitchClass == 8 || pitchClass == 10;
+            return (octave * 7 + diatonicStep) * 20f + (isSharp ? 10f : 0f);
         }
 
         private static string PitchStepLabel(int semitoneStep)
@@ -825,6 +852,12 @@ namespace Uta.GameFlow
             int octave = Mathf.FloorToInt(semitoneStep / 12f) + 4;
             int pitchClass = semitoneStep - Mathf.FloorToInt(semitoneStep / 12f) * 12;
             return $"{pitchNames[pitchClass]}{octave}";
+        }
+
+        private static string PitchDifferenceLabel(int difference)
+        {
+            if (difference == 0) return "音程ぴったり";
+            return $"音程差 {Mathf.Abs(difference)}半音 {(difference > 0 ? "高い ↑" : "低い ↓")}";
         }
 
         private static string FallbackLyricForMeasure(string songId, int measure)
@@ -863,23 +896,23 @@ namespace Uta.GameFlow
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(0f, 0f);
                 rect.pivot = new Vector2(0f, 0f);
-                rect.anchoredPosition = new Vector2(36f, 42f);
-                rect.sizeDelta = new Vector2(720f, 930f);
+                rect.anchoredPosition = new Vector2(150f, -125f);
+                rect.sizeDelta = new Vector2(650f, 840f);
             }
             else if (state == GameSessionState.DifficultySelect ||
                      state == GameSessionState.SongSelect)
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
                 rect.pivot = new Vector2(1f, 0f);
-                rect.anchoredPosition = new Vector2(-70f, 180f);
-                rect.sizeDelta = new Vector2(590f, 770f);
+                rect.anchoredPosition = new Vector2(-110f, 150f);
+                rect.sizeDelta = new Vector2(630f, 820f);
             }
             else if (state == GameSessionState.Result)
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
                 rect.pivot = new Vector2(1f, 0f);
-                rect.anchoredPosition = new Vector2(-20f, 10f);
-                rect.sizeDelta = new Vector2(440f, 590f);
+                rect.anchoredPosition = new Vector2(-100f, 10f);
+                rect.sizeDelta = new Vector2(500f, 670f);
             }
             else
             {
@@ -1396,13 +1429,7 @@ namespace Uta.GameFlow
             switch (state)
             {
                 case GameSessionState.Playback:
-                    float rate = playConnector != null &&
-                                 playConnector.CurrentVocalScoreResult != null
-                        ? playConnector.CurrentVocalScoreResult.AchievementRate
-                        : 0f;
-                    return rate >= goodResultThresholdPercent
-                        ? singingGoodCharacter
-                        : singingBadCharacter;
+                    return SingingCharacterFor(null);
                 case GameSessionState.DifficultySelect:
                 case GameSessionState.SongSelect:
                 case GameSessionState.Result:
@@ -1410,6 +1437,18 @@ namespace Uta.GameFlow
                 default:
                     return null;
             }
+        }
+
+        private Sprite SingingCharacterFor(JudgmentType? judgment)
+        {
+            if (judgment == JudgmentType.Perfect) return singingGoodCharacter;
+            if (judgment == JudgmentType.Bad || judgment == JudgmentType.Miss)
+                return singingBadCharacter;
+            // A scene already open in the editor may not yet have the new
+            // serialized field assigned. Always load the singing artwork first.
+            if (singingNormalCharacter == null)
+                singingNormalCharacter = Resources.Load<Sprite>("character_singing_normal");
+            return singingNormalCharacter != null ? singingNormalCharacter : normalCharacter;
         }
     }
 }
